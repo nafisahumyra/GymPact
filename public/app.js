@@ -18,6 +18,8 @@ userCards.forEach(card => {
 
         console.log(`Saved user: ${selectedUser}`);
 
+        window.location.href = "dashboard.html";
+
     });
 
 });
