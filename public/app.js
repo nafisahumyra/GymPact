@@ -1,4 +1,9 @@
-console.log("GymPact JavaScript loaded!");
+const currentUser = localStorage.getItem("currentUser");
+
+if (currentUser) {
+    window.location.href = "dashboard.html";
+}
+
 
 const userCards = document.querySelectorAll(".user-card");
 
