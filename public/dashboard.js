@@ -1,7 +1,7 @@
-const currentUser = localStorage.getItem("currentUser");
+const currentUser = GymPactStorage.getCurrentUser();
 
 let workouts =
-    JSON.parse(localStorage.getItem("workouts")) || [];
+    GymPactStorage.getWorkouts();
 
 // Welcome message
 
@@ -107,6 +107,88 @@ const workoutPhotoPreview =
 
 let selectedPhotoData = "";
 let selectedPhotoDataReady = Promise.resolve("");
+const MAX_PHOTO_DIMENSION = 1024;
+const MAX_PHOTO_DATA_LENGTH = 500 * 1024;
+
+
+function prepareWorkoutPhoto(photo) {
+
+    return new Promise((resolve, reject) => {
+
+        const reader = new FileReader();
+
+
+        reader.addEventListener("load", () => {
+
+            const image = new Image();
+
+
+            image.addEventListener("load", () => {
+
+                const scale = Math.min(
+                    1,
+                    MAX_PHOTO_DIMENSION / Math.max(image.width, image.height)
+                );
+
+                let width = Math.round(image.width * scale);
+                let height = Math.round(image.height * scale);
+                let quality = 0.75;
+
+                const canvas = document.createElement("canvas");
+                const context = canvas.getContext("2d");
+
+
+                while (true) {
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    context.drawImage(image, 0, 0, width, height);
+
+                    const photoData = canvas.toDataURL("image/jpeg", quality);
+
+
+                    if (
+                        photoData.length <= MAX_PHOTO_DATA_LENGTH ||
+                        Math.max(width, height) <= 320
+                    ) {
+
+                        resolve(photoData);
+
+                        return;
+
+                    }
+
+
+                    if (quality > 0.45) {
+
+                        quality -= 0.1;
+
+                    } else {
+
+                        width = Math.round(width * 0.75);
+                        height = Math.round(height * 0.75);
+                        quality = 0.75;
+
+                    }
+
+                }
+
+            });
+
+
+            image.addEventListener("error", reject);
+            image.src = reader.result;
+
+        });
+
+
+        reader.addEventListener("error", reject);
+        reader.readAsDataURL(photo);
+
+    });
+
+}
 
 
 workoutPhotoInput.addEventListener("change", () => {
@@ -125,32 +207,23 @@ workoutPhotoInput.addEventListener("change", () => {
 
     }
 
-    const reader = new FileReader();
+    selectedPhotoDataReady = prepareWorkoutPhoto(photo)
+        .then(photoData => {
 
-
-    selectedPhotoDataReady = new Promise(resolve => {
-
-        reader.addEventListener("load", () => {
-
-            selectedPhotoData = reader.result;
+            selectedPhotoData = photoData;
             workoutPhotoPreview.src = selectedPhotoData;
             workoutPhotoPreview.hidden = false;
 
-            resolve(selectedPhotoData);
+            return selectedPhotoData;
+
+        })
+        .catch(() => {
+
+            selectedPhotoData = "";
+
+            return "";
 
         });
-
-
-        reader.addEventListener("error", () => {
-
-            resolve("");
-
-        });
-
-    });
-
-
-    reader.readAsDataURL(photo);
 
 });
 
@@ -260,10 +333,7 @@ saveWorkoutButton.addEventListener("click", async () => {
 
     workouts.push(workout);
 
-    localStorage.setItem(
-        "workouts",
-        JSON.stringify(workouts)
-    );
+    GymPactStorage.saveWorkouts(workouts);
 
     console.log(workouts);
 
@@ -302,7 +372,7 @@ alert("Workout logged successfully 💪");
 
 function clearWorkouts() {
 
-    localStorage.removeItem("workouts");
+    GymPactStorage.clearWorkouts();
 
     console.log("Workouts cleared");
 

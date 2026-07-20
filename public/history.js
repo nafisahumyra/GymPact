@@ -1,5 +1,5 @@
 const currentUser =
-    localStorage.getItem("currentUser");
+    GymPactStorage.getCurrentUser();
 
 
 document.getElementById("history-user").textContent =
@@ -8,7 +8,7 @@ document.getElementById("history-user").textContent =
 
 
 const workouts =
-    JSON.parse(localStorage.getItem("workouts")) || [];
+    GymPactStorage.getWorkouts();
 
 
 
