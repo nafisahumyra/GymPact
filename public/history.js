@@ -72,6 +72,22 @@ if (userWorkouts.length === 0) {
         `;
 
 
+        if (
+            typeof workout.photoData === "string" &&
+            workout.photoData.startsWith("data:image/")
+        ) {
+
+            const photo = document.createElement("img");
+
+            photo.classList.add("workout-history-photo");
+            photo.src = workout.photoData;
+            photo.alt = `Workout proof for ${workout.muscles.join(", ")}`;
+
+            card.appendChild(photo);
+
+        }
+
+
         historyContainer.appendChild(card);
 
 

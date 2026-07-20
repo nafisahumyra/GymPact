@@ -183,6 +183,16 @@ body {
 
 }
 
+.workout-photo-preview {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 300px;
+    margin: 15px auto;
+    border-radius: 12px;
+    object-fit: contain;
+}
+
 
 .modal-buttons {
 
@@ -273,4 +283,13 @@ body {
 
     margin-top: 8px;
 
+}
+
+.workout-history-photo {
+    display: block;
+    width: 100%;
+    max-height: 300px;
+    margin-top: 18px;
+    border-radius: 12px;
+    object-fit: contain;
 }

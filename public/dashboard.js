@@ -99,6 +99,61 @@ closeModalButton.addEventListener("click", () => {
 const muscleChips =
     document.querySelectorAll(".muscle-chip");
 
+const workoutPhotoInput =
+    document.getElementById("workout-photo");
+
+const workoutPhotoPreview =
+    document.getElementById("workout-photo-preview");
+
+let selectedPhotoData = "";
+let selectedPhotoDataReady = Promise.resolve("");
+
+
+workoutPhotoInput.addEventListener("change", () => {
+
+    const photo = workoutPhotoInput.files[0];
+
+    selectedPhotoData = "";
+    workoutPhotoPreview.hidden = true;
+    workoutPhotoPreview.removeAttribute("src");
+
+    if (!photo) {
+
+        selectedPhotoDataReady = Promise.resolve("");
+
+        return;
+
+    }
+
+    const reader = new FileReader();
+
+
+    selectedPhotoDataReady = new Promise(resolve => {
+
+        reader.addEventListener("load", () => {
+
+            selectedPhotoData = reader.result;
+            workoutPhotoPreview.src = selectedPhotoData;
+            workoutPhotoPreview.hidden = false;
+
+            resolve(selectedPhotoData);
+
+        });
+
+
+        reader.addEventListener("error", () => {
+
+            resolve("");
+
+        });
+
+    });
+
+
+    reader.readAsDataURL(photo);
+
+});
+
 
 muscleChips.forEach(chip => {
 
@@ -114,7 +169,7 @@ const saveWorkoutButton =
     document.getElementById("save-workout");
 
 
-saveWorkoutButton.addEventListener("click", () => {
+saveWorkoutButton.addEventListener("click", async () => {
 
 
     const selectedMuscles = [];
@@ -171,6 +226,18 @@ saveWorkoutButton.addEventListener("click", () => {
     }
 
 
+    const photoData = await selectedPhotoDataReady;
+
+
+    if (!photoData) {
+
+        alert("We couldn't read that photo. Please choose it again.");
+
+        return;
+
+    }
+
+
 
     const workout = {
 
@@ -181,6 +248,8 @@ saveWorkoutButton.addEventListener("click", () => {
         duration: duration,
 
         photo: photo.name,
+
+        photoData: photoData,
 
         notes: notes,
 
@@ -208,6 +277,11 @@ workoutModal.style.display = "none";
 document.getElementById("workout-duration").value = "";
 
 document.getElementById("workout-photo").value = "";
+
+selectedPhotoData = "";
+selectedPhotoDataReady = Promise.resolve("");
+workoutPhotoPreview.hidden = true;
+workoutPhotoPreview.removeAttribute("src");
 
 document.getElementById("workout-notes").value = "";
 
