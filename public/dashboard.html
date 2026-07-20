@@ -2,16 +2,169 @@
 <html>
 
 <head>
+
     <title>GymPact Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dashboard.css">
 </head>
+
 
 <body>
 
-    <h1>Welcome to GymPact</h1>
+    <div class="dashboard-container">
 
-    <h2 id="welcome-message"></h2>
+        <h1>🏋️ GymPact</h1>
 
-    <script src="dashboard.js"></script>
+        <h2 id="welcome-message"></h2>
+
+
+        <section class="dashboard-section">
+
+            <h3>🔥 Your Progress</h3>
+
+            <div class="stats-container">
+
+                <div class="stat-card">
+                    <h4>Workouts</h4>
+                    <p id="workout-count">0</p>
+                </div>
+
+
+                <div class="stat-card">
+                    <h4>Current Streak</h4>
+                    <p id="streak-count">0 days</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <section class="dashboard-section">
+
+            <h3>🤝 Pact Status</h3>
+
+            <div class="pact-card">
+
+                <h4 id="partner-name"></h4>
+
+                <p id="partner-status">
+                    No workouts logged yet.
+                </p>
+
+            </div>
+
+        </section>
+
+       
+
+        <div class="button-group">
+
+            <button id="open-workout-modal">
+                + Log Workout
+            </button>
+        
+            <button id="history-button">
+                📖 Workout History
+            </button>
+        
+        </div>
+
+
+
+        <!-- Workout Modal -->
+
+    <div id="workout-modal" class="modal">
+
+
+        <div class="modal-content">
+
+
+            <h2>Log Workout</h2>
+
+
+            <h3>Select Muscle Groups</h3>
+
+
+            <div class="muscle-options">
+
+                <button class="muscle-chip">Abs</button>
+
+                <button class="muscle-chip">Back</button>
+
+                <button class="muscle-chip">Biceps</button>
+
+                <button class="muscle-chip">Cardio</button>
+
+                <button class="muscle-chip">Chest</button>
+
+                <button class="muscle-chip">Legs</button>
+
+                <button class="muscle-chip">Shoulders</button>
+
+                <button class="muscle-chip">Triceps</button>
+
+            </div>
+
+
+            <label>
+                Duration (minutes)
+            </label>
+
+            <input 
+                type="number"
+                id="workout-duration"
+                placeholder="Example: 80"
+            >
+
+
+            <label>
+                Workout Proof 📸
+            </label>
+
+            <input
+                type="file"
+                id="workout-photo"
+                accept="image/*"
+            >
+
+
+            <label>
+                Notes (optional)
+            </label>
+
+            <textarea
+                id="workout-notes"
+                placeholder="How did it go?"
+            ></textarea>
+
+
+            <div class="modal-buttons">
+
+                <button id="close-workout-modal">
+                    Cancel
+                </button>
+
+
+                <button id="save-workout">
+                    Save Workout
+                </button>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+    </div>
+
+
+<script src="dashboard.js"></script>
 
 </body>
 
