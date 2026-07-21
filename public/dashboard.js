@@ -12,66 +12,126 @@ document.getElementById("welcome-message").textContent =
 
 
 
-// Determine partner
+const currentChallenge = GymPactStorage.getActivePact();
+const currentChallengeContainer =
+    document.getElementById("current-challenge");
 
-let partnerName;
 
+function formatChallengeDate(date) {
 
-if (currentUser === "Nafisa") {
+    if (!date) {
 
-    partnerName = "Mahfuzur";
+        return "Not set";
 
-} else {
+    }
 
-    partnerName = "Nafisa";
+    return new Date(`${date}T00:00:00`).toLocaleDateString();
+
+}
+
+function getChallengeStatusText(status) {
+
+    const statusText = {
+        pending: "Waiting for Mahfuzur to accept.",
+        active: "Challenge in progress.",
+        completed: "Challenge completed.",
+        expired: "Challenge expired."
+    };
+
+    return statusText[status] || "Challenge status unavailable.";
 
 }
 
 
-// Display partner
+function appendChallengeDetail(container, title, value) {
 
-document.getElementById("partner-name").textContent =
-    partnerName;
+    const detail = document.createElement("div");
+    const heading = document.createElement("h4");
+    const content = document.createElement("p");
+
+    detail.classList.add("challenge-detail");
+    heading.textContent = title;
+    content.textContent = value;
+
+    detail.append(heading, content);
+    container.appendChild(detail);
+
+}
 
 
-    const partnerWorkouts = workouts.filter(workout => {
+function renderCurrentChallenge(challenge) {
 
-        return workout.user === partnerName;
-    
-    });
-    
-    
-    const latestPartnerWorkout =
-        partnerWorkouts[partnerWorkouts.length - 1];
-    
-    
-    if (latestPartnerWorkout) {
-    
-    
-        const muscles =
-            latestPartnerWorkout.muscles.join(" • ");
-    
-    
-        document.getElementById("partner-status").textContent =
-    
-            `🏋️ ${muscles}
-            
-            ⏱ ${latestPartnerWorkout.duration} minutes
-            
-            📅 ${new Date(latestPartnerWorkout.timestamp).toLocaleString()}
-            
-            You're up next 💪`;
-    
-    
-    } else {
-    
-    
-        document.getElementById("partner-status").textContent =
-    
-            "No workouts logged yet. You're both ready to start 💪";
-    
-    
+    currentChallengeContainer.innerHTML = "";
+
+
+    if (!challenge) {
+
+        const message = document.createElement("p");
+        const description = document.createElement("p");
+        const button = document.createElement("button");
+
+        message.textContent = "No active challenge.";
+        description.textContent =
+            "Start one to keep each other accountable.";
+        button.classList.add("new-challenge-button");
+        button.textContent = "New Challenge";
+
+        button.addEventListener("click", () => {
+
+            window.location.href = "create-pact.html";
+
+        });
+
+        currentChallengeContainer.append(message, description, button);
+
+        return;
+
     }
+
+
+    const workoutLabel =
+        challenge.targetAmount === 1 ? "workout" : "workouts";
+
+    appendChallengeDetail(
+        currentChallengeContainer,
+        "Goal",
+        `Complete ${challenge.targetAmount} ${workoutLabel} per ${challenge.timeframe}`
+    );
+
+    const progress = document.createElement("div");
+
+    progress.classList.add("challenge-progress");
+    appendChallengeDetail(progress, "Progress", `Nafisa: 0 / ${challenge.targetAmount}`);
+
+    const partnerProgress = document.createElement("p");
+
+    partnerProgress.textContent = `Mahfuzur: 0 / ${challenge.targetAmount}`;
+    progress.appendChild(partnerProgress);
+    currentChallengeContainer.appendChild(progress);
+
+    appendChallengeDetail(
+        currentChallengeContainer,
+        "Wager",
+        `${challenge.wagerType === "reward" ? "Reward" : "Punishment"}: ${challenge.wagerDescription}`
+    );
+
+    const timePeriod = document.createElement("div");
+
+    timePeriod.classList.add("challenge-dates");
+    appendChallengeDetail(timePeriod, "Start date", formatChallengeDate(challenge.startDate));
+    appendChallengeDetail(timePeriod, "End date", formatChallengeDate(challenge.endDate));
+    currentChallengeContainer.appendChild(timePeriod);
+
+    appendChallengeDetail(
+        currentChallengeContainer,
+        "Challenge status",
+        getChallengeStatusText(challenge.status)
+    );
+
+}
+
+
+renderCurrentChallenge(currentChallenge);
 
 const openModalButton =
     document.getElementById("open-workout-modal");
