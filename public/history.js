@@ -27,9 +27,26 @@ const userWorkouts = workouts.filter(workout => {
 
 if (userWorkouts.length === 0) {
 
+    const emptyState = document.createElement("div");
+    const message = document.createElement("p");
+    const description = document.createElement("p");
+    const logWorkoutButton = document.createElement("button");
 
-    historyContainer.innerHTML =
-        "<p>No workouts logged yet.</p>";
+    emptyState.classList.add("history-empty-state");
+    message.textContent = "No workouts logged yet.";
+    description.textContent =
+        "Log your first workout to start building your history.";
+    logWorkoutButton.textContent = "+ Log Workout";
+
+    logWorkoutButton.addEventListener("click", () => {
+
+        window.location.href = "dashboard.html";
+
+    });
+
+    historyContainer.innerHTML = "";
+    emptyState.append(message, description, logWorkoutButton);
+    historyContainer.appendChild(emptyState);
 
 
 } else {

@@ -69,6 +69,8 @@ body {
 .pact-card {
     background: #1F2937;
 
+    position: relative;
+
     border-radius: 18px;
 
     padding: 30px;
@@ -88,6 +90,36 @@ body {
 
 .challenge-detail {
     margin-top: 20px;
+}
+
+.challenge-status-pill {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.challenge-status-pill.status-pending {
+    background: #78350F;
+    color: #FCD34D;
+}
+
+.challenge-status-pill.status-active {
+    background: #14532D;
+    color: #86EFAC;
+}
+
+.challenge-status-pill.status-completed {
+    background: #1E3A8A;
+    color: #BFDBFE;
+}
+
+.challenge-status-pill.status-expired {
+    background: #374151;
+    color: #D1D5DB;
 }
 
 .challenge-detail h4 {
@@ -124,6 +156,7 @@ body {
     flex: 1;
     min-width: 220px;
 }
+
 .modal {
 
     display: none;
@@ -167,6 +200,11 @@ body {
 
     margin-bottom: 25px;
 
+}
+
+.challenge-modal-content p {
+    color: #D1D5DB;
+    line-height: 1.7;
 }
 
 
@@ -328,4 +366,69 @@ body {
     margin-top: 18px;
     border-radius: 12px;
     object-fit: contain;
+}
+
+.history-page {
+    max-width: 760px;
+}
+
+.history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.history-page h1 {
+    font-size: 2rem;
+    margin-bottom: 0;
+}
+
+.secondary-button {
+    background: #374151;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+}
+
+.history-supporting-text {
+    color: #9CA3AF;
+    margin: 16px 0 28px;
+}
+
+.history-empty-state {
+    background: #1F2937;
+    border-left: 5px solid #22C55E;
+    border-radius: 18px;
+    padding: 30px;
+}
+
+.history-empty-state p:first-child {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.history-empty-state p:nth-child(2) {
+    color: #D1D5DB;
+    margin: 8px 0 20px;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 30px 16px;
+    }
+
+    .history-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .secondary-button {
+        width: 100%;
+    }
+
+    .challenge-status-pill {
+        position: static;
+        display: inline-block;
+        margin-bottom: 4px;
+    }
 }

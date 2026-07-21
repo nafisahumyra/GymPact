@@ -43,6 +43,25 @@ function getChallengeStatusText(status) {
 }
 
 
+function createChallengeStatusPill(status) {
+
+    const labels = {
+        pending: "⏳ Pending",
+        active: "● Active",
+        completed: "🏆 Completed",
+        expired: "Expired"
+    };
+
+    const pill = document.createElement("span");
+
+    pill.classList.add("challenge-status-pill", `status-${status}`);
+    pill.textContent = labels[status] || status;
+
+    return pill;
+
+}
+
+
 function appendChallengeDetail(container, title, value) {
 
     const detail = document.createElement("div");
@@ -68,21 +87,12 @@ function renderCurrentChallenge(challenge) {
 
         const message = document.createElement("p");
         const description = document.createElement("p");
-        const button = document.createElement("button");
 
         message.textContent = "No active challenge.";
         description.textContent =
             "Start one to keep each other accountable.";
-        button.classList.add("new-challenge-button");
-        button.textContent = "New Challenge";
 
-        button.addEventListener("click", () => {
-
-            window.location.href = "create-pact.html";
-
-        });
-
-        currentChallengeContainer.append(message, description, button);
+        currentChallengeContainer.append(message, description);
 
         return;
 
@@ -91,6 +101,10 @@ function renderCurrentChallenge(challenge) {
 
     const workoutLabel =
         challenge.targetAmount === 1 ? "workout" : "workouts";
+
+    currentChallengeContainer.appendChild(
+        createChallengeStatusPill(challenge.status)
+    );
 
     appendChallengeDetail(
         currentChallengeContainer,
@@ -132,6 +146,72 @@ function renderCurrentChallenge(challenge) {
 
 
 renderCurrentChallenge(currentChallenge);
+
+const newChallengeButton =
+    document.getElementById("new-challenge-button");
+
+const challengeActiveModal =
+    document.getElementById("challenge-active-modal");
+
+const cancelChallengeModal =
+    document.getElementById("cancel-challenge-modal");
+
+const openCancelChallengeModalButton =
+    document.getElementById("open-cancel-challenge-modal");
+
+const closeChallengeActiveModalButton =
+    document.getElementById("close-challenge-active-modal");
+
+const confirmCancelChallengeButton =
+    document.getElementById("confirm-cancel-challenge");
+
+const keepChallengeButton =
+    document.getElementById("keep-challenge");
+
+
+newChallengeButton.addEventListener("click", () => {
+
+    if (!currentChallenge) {
+
+        window.location.href = "create-pact.html";
+
+        return;
+
+    }
+
+    challengeActiveModal.style.display = "flex";
+
+});
+
+
+closeChallengeActiveModalButton.addEventListener("click", () => {
+
+    challengeActiveModal.style.display = "none";
+
+});
+
+
+openCancelChallengeModalButton.addEventListener("click", () => {
+
+    challengeActiveModal.style.display = "none";
+    cancelChallengeModal.style.display = "flex";
+
+});
+
+
+keepChallengeButton.addEventListener("click", () => {
+
+    cancelChallengeModal.style.display = "none";
+
+});
+
+
+confirmCancelChallengeButton.addEventListener("click", () => {
+
+    GymPactStorage.cancelPact(currentChallenge.id);
+    window.location.reload();
+
+});
 
 const openModalButton =
     document.getElementById("open-workout-modal");

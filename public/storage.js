@@ -64,6 +64,28 @@ function getActivePact() {
 }
 
 
+function cancelPact(pactId) {
+
+    const pacts = getPacts();
+    const pact = pacts.find(currentPact => currentPact.id === pactId);
+
+
+    if (!pact) {
+
+        return null;
+
+    }
+
+    pact.status = "cancelled";
+    pact.cancelledAt = new Date().toISOString();
+
+    savePacts(pacts);
+
+    return pact;
+
+}
+
+
 function generatePactId() {
 
     if (
@@ -126,5 +148,6 @@ window.GymPactStorage = {
     getPacts,
     savePacts,
     getActivePact,
+    cancelPact,
     createPact
 };
