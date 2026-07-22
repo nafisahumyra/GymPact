@@ -1,0 +1,5 @@
+[functions.verify-gympact-pin]
+verify_jwt = false
+
+[functions.verify-gympact-session]
+verify_jwt = false

@@ -16,6 +16,90 @@ body {
     padding: 30px;
 }
 
+.pin-lock {
+    max-width: 430px;
+    margin: 0 auto;
+}
+
+.lock-icon {
+    font-size: 4rem;
+    margin-bottom: 18px;
+    transform-origin: center;
+}
+
+.pin-form {
+    display: grid;
+    gap: 14px;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.pin-form input {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #374151;
+    border-radius: 12px;
+    background: #1F2937;
+    color: #F9FAFB;
+    font-size: 1.5rem;
+    letter-spacing: .45em;
+    text-align: center;
+}
+
+.pin-form input:focus {
+    border-color: #22C55E;
+    outline: none;
+}
+
+.pin-form button:disabled {
+    cursor: wait;
+    opacity: .7;
+}
+
+.pin-error {
+    min-height: 24px;
+    margin-top: 14px;
+    color: #FCA5A5;
+}
+
+.pin-lock.is-unlocking .lock-icon {
+    animation: unlock-lock .65s ease forwards;
+}
+
+.pin-lock.is-unlocking {
+    animation: unlock-screen .65s ease forwards;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@keyframes unlock-lock {
+    45% {
+        transform: rotate(-18deg) scale(1.12);
+    }
+
+    100% {
+        transform: rotate(0) scale(.6);
+        opacity: 0;
+    }
+}
+
+@keyframes unlock-screen {
+    100% {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+}
+
 .logo {
     font-size: 2.5rem;
     margin-bottom: 12px;
@@ -78,4 +162,19 @@ body {
     font-size: 1.4rem;
 
     font-weight: 600;
+}
+
+@media (max-width: 560px) {
+    .welcome-container {
+        padding: 24px 18px;
+    }
+
+    .user-card {
+        width: min(100%, 360px);
+    }
+
+    .profile-picture {
+        width: min(70vw, 280px);
+        height: min(70vw, 280px);
+    }
 }
