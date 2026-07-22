@@ -4,17 +4,23 @@ import { verifyGymPactSession } from "../_shared/gympact-session.ts";
 const allowedOrigins = new Set([
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "https://nafisahumyra.github.io",
 ]);
 
 function getCorsHeaders(request: Request) {
   const origin = request.headers.get("origin") ?? "";
 
-  return {
-    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : "null",
+  const headers: Record<string, string> = {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
   };
+
+  if (allowedOrigins.has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+
+  return headers;
 }
 
 serve(async (request) => {
