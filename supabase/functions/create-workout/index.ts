@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
+import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -119,6 +120,10 @@ serve(async (request) => {
       await admin.storage.from("workout-proofs").remove([photoPath]);
       throw workoutError;
     }
+
+    // A Pact only finishes early when both athletes have reached its target.
+    // All other outcomes remain active until the end of the Pact period.
+    await finalizeDueActivePacts(admin);
 
     return new Response(JSON.stringify({ workout }), {
       status: 201,

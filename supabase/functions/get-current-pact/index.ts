@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
+import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -147,6 +148,7 @@ serve(async (request) => {
     }
 
     const admin = getAdminClient();
+    await finalizeDueActivePacts(admin);
     const { data: pact, error } = await admin
       .from("pacts")
       .select("id, created_by, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, active_at, start_date, end_date, cancelled_at, pact_participants(user_id, users(display_name))")

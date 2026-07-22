@@ -839,6 +839,11 @@ saveWorkoutButton.addEventListener("click", async () => {
             throw error;
         }
 
+        await Promise.all([
+            loadDashboardMetrics(),
+            loadCurrentChallenge()
+        ]);
+
     } catch (error) {
 
         console.error("Unable to log workout.", error);

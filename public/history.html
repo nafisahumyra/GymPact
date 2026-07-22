@@ -21,13 +21,26 @@
 
     <header class="history-header">
 
-        <h1>📖 Workout History</h1>
+        <h1>📖 History</h1>
 
         <button id="back-dashboard" class="secondary-button">
             Back to Dashboard
         </button>
 
     </header>
+
+
+    <div class="history-tabs" role="tablist" aria-label="History type">
+
+        <button id="workouts-tab" class="history-tab is-active" role="tab" aria-selected="true">
+            Workouts
+        </button>
+
+        <button id="challenges-tab" class="history-tab" role="tab" aria-selected="false">
+            Challenges
+        </button>
+
+    </div>
 
 
     <p id="history-user" class="history-supporting-text"></p>
@@ -38,6 +51,9 @@
         <p>No workouts logged yet.</p>
 
     </div>
+
+
+    <div id="challenge-history" hidden></div>
 
 
 </main>
