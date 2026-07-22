@@ -6,6 +6,14 @@ const unlockButton = document.getElementById("unlock-button");
 const athleteSelection = document.getElementById("athlete-selection");
 
 
+function clearAthleteIdentity() {
+
+    sessionStorage.removeItem("gymPactSelectedAthleteId");
+    localStorage.removeItem("currentUser");
+
+}
+
+
 function showAthleteSelection() {
 
     pinLock.hidden = true;
@@ -19,6 +27,8 @@ async function restoreUnlockedAthleteSelection() {
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
 
     if (!sessionToken) {
+
+        clearAthleteIdentity();
 
         return;
 
@@ -34,6 +44,8 @@ async function restoreUnlockedAthleteSelection() {
 
         if (error || !data?.valid) {
 
+            clearAthleteIdentity();
+
             return;
 
         }
@@ -44,6 +56,7 @@ async function restoreUnlockedAthleteSelection() {
 
         if (!athleteId) {
 
+            clearAthleteIdentity();
             showAthleteSelection();
 
             return;
@@ -62,6 +75,7 @@ async function restoreUnlockedAthleteSelection() {
             !["Nafisa", "Mahfuzur"].includes(athlete.display_name)
         ) {
 
+            clearAthleteIdentity();
             showAthleteSelection();
 
             return;
@@ -72,6 +86,8 @@ async function restoreUnlockedAthleteSelection() {
         window.location.replace("./dashboard.html");
 
     } catch {
+
+        clearAthleteIdentity();
 
         return;
 
@@ -121,8 +137,7 @@ pinForm.addEventListener("submit", async event => {
         }
 
         sessionStorage.setItem("gymPactSessionToken", data.sessionToken);
-        sessionStorage.removeItem("gymPactSelectedAthleteId");
-        localStorage.removeItem("currentUser");
+        clearAthleteIdentity();
         verified = true;
         pinLock.classList.add("is-unlocking");
         window.setTimeout(showAthleteSelection, 650);

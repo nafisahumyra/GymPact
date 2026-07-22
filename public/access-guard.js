@@ -4,6 +4,13 @@
         "[data-protected-page-script]"
     );
 
+    function clearAthleteIdentity() {
+
+        sessionStorage.removeItem("gymPactSelectedAthleteId");
+        localStorage.removeItem("currentUser");
+
+    }
+
     function redirectToLanding() {
 
         window.location.replace("./index.html");
@@ -45,6 +52,7 @@
 
         if (!sessionToken) {
 
+            clearAthleteIdentity();
             redirectToLanding();
 
             return;
@@ -62,6 +70,7 @@
 
             if (sessionError || !sessionData?.valid) {
 
+                clearAthleteIdentity();
                 redirectToLanding();
 
                 return;
@@ -74,6 +83,7 @@
 
             if (!athleteId) {
 
+                clearAthleteIdentity();
                 redirectToLanding();
 
                 return;
@@ -92,6 +102,7 @@
                 !["Nafisa", "Mahfuzur"].includes(athlete.display_name)
             ) {
 
+                clearAthleteIdentity();
                 redirectToLanding();
 
                 return;
@@ -104,6 +115,7 @@
         } catch (error) {
 
             console.error("Unable to verify GymPact page access.", error);
+            clearAthleteIdentity();
             redirectToLanding();
 
         }
