@@ -14,6 +14,52 @@ function showAthleteSelection() {
 }
 
 
+async function restoreUnlockedAthleteSelection() {
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+
+    if (!sessionToken) {
+
+        return;
+
+    }
+
+    try {
+
+        const supabase = GymPactSupabase.getClient();
+        const { data, error } = await supabase.functions.invoke(
+            "verify-gympact-session",
+            { body: { sessionToken } }
+        );
+
+        if (error || !data?.valid) {
+
+            sessionStorage.removeItem("gymPactSessionToken");
+            sessionStorage.removeItem("gymPactSelectedAthleteId");
+            localStorage.removeItem("currentUser");
+
+            return;
+
+        }
+
+        sessionStorage.removeItem("gymPactSelectedAthleteId");
+        localStorage.removeItem("currentUser");
+        showAthleteSelection();
+
+    } catch {
+
+        sessionStorage.removeItem("gymPactSessionToken");
+        sessionStorage.removeItem("gymPactSelectedAthleteId");
+        localStorage.removeItem("currentUser");
+
+    }
+
+}
+
+
+restoreUnlockedAthleteSelection();
+
+
 pinInput.addEventListener("input", () => {
 
     pinInput.value = pinInput.value.replace(/\D/g, "").slice(0, 6);

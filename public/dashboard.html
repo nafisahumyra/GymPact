@@ -13,7 +13,7 @@
 </head>
 
 
-<body>
+<body data-protected-content hidden>
 
     <div class="dashboard-container">
 
@@ -224,7 +224,8 @@
 <script src="supabase-config.js"></script>
 <script src="supabase-client.js"></script>
 <script src="storage.js"></script>
-<script src="dashboard.js"></script>
+<script src="access-guard.js"></script>
+<script type="application/json" data-protected-page-script="dashboard.js"></script>
 
 </body>
 
