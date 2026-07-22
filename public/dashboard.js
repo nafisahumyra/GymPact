@@ -135,8 +135,8 @@ function appendPendingChallengeActions(container) {
     const declineButton = document.createElement("button");
 
     actionButtons.classList.add("challenge-actions");
-    acceptButton.textContent = "Accept Challenge";
-    declineButton.textContent = "Decline Challenge";
+    acceptButton.textContent = "Accept";
+    declineButton.textContent = "Decline";
 
     acceptButton.addEventListener("click", () => {
 
