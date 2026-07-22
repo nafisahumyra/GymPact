@@ -4,33 +4,9 @@
         "[data-protected-page-script]"
     );
 
-    function logNavigation(event, details = {}) {
+    function redirectToLanding() {
 
-        console.info("GymPact navigation", {
-            event,
-            pathname: window.location.pathname,
-            hasSessionToken: Boolean(
-                sessionStorage.getItem("gymPactSessionToken")
-            ),
-            hasAthleteId: Boolean(
-                sessionStorage.getItem("gymPactSelectedAthleteId")
-            ),
-            currentUser: localStorage.getItem("currentUser"),
-            ...details
-        });
-
-    }
-
-    function redirectToLanding(reason) {
-
-        logNavigation("redirect", {
-            destination: `./index.html?gympactDebug=${reason}`,
-            reason
-        });
-
-        window.location.replace(
-            `./index.html?gympactDebug=${encodeURIComponent(reason)}`
-        );
+        window.location.replace("./index.html");
 
     }
 
@@ -38,7 +14,7 @@
 
         if (!protectedPageScript?.dataset.protectedPageScript) {
 
-            redirectToLanding("protected-page-script-missing");
+            redirectToLanding();
 
             return;
 
@@ -50,13 +26,12 @@
         pageScript.async = false;
         pageScript.addEventListener("load", () => {
 
-            logNavigation("protected-page-ready");
             protectedContent.hidden = false;
 
         });
         pageScript.addEventListener("error", () => {
 
-            redirectToLanding("protected-page-script-failed");
+            redirectToLanding();
 
         });
 
@@ -68,11 +43,9 @@
 
         const sessionToken = sessionStorage.getItem("gymPactSessionToken");
 
-        logNavigation("protected-page-check-start");
-
         if (!sessionToken) {
 
-            redirectToLanding("session-missing");
+            redirectToLanding();
 
             return;
 
@@ -89,18 +62,11 @@
 
             if (sessionError || !sessionData?.valid) {
 
-                logNavigation("session-verification-result", {
-                    sessionValid: Boolean(sessionData?.valid)
-                });
-                redirectToLanding("session-invalid");
+                redirectToLanding();
 
                 return;
 
             }
-
-            logNavigation("session-verification-result", {
-                sessionValid: true
-            });
 
             const athleteId = sessionStorage.getItem(
                 "gymPactSelectedAthleteId"
@@ -108,7 +74,7 @@
 
             if (!athleteId) {
 
-                redirectToLanding("athlete-missing");
+                redirectToLanding();
 
                 return;
 
@@ -126,20 +92,19 @@
                 !["Nafisa", "Mahfuzur"].includes(athlete.display_name)
             ) {
 
-                redirectToLanding("athlete-invalid");
+                redirectToLanding();
 
                 return;
 
             }
 
             localStorage.setItem("currentUser", athlete.display_name);
-            logNavigation("athlete-validated");
             loadProtectedPageScript();
 
         } catch (error) {
 
             console.error("Unable to verify GymPact page access.", error);
-            redirectToLanding("validation-error");
+            redirectToLanding();
 
         }
 
