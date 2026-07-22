@@ -41,7 +41,7 @@ function calculateEndDate(startDate, timeframe) {
 }
 
 
-createPactForm.addEventListener("submit", event => {
+createPactForm.addEventListener("submit", async event => {
 
     event.preventDefault();
 
@@ -80,26 +80,74 @@ createPactForm.addEventListener("submit", event => {
 
     const startDate = new Date();
 
-    const pact = GymPactStorage.createPact({
-        participants: ["nafisa", "mahfuzur"],
-        goalType: goalType,
-        targetAmount: targetAmount,
-        timeframe: timeframe,
-        wagerType: wagerType,
-        wagerDescription: wagerDescription,
-        status: "pending",
-        startDate: formatLocalDate(startDate),
-        endDate: calculateEndDate(startDate, timeframe)
-    });
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const createdBy = sessionStorage.getItem("gymPactSelectedAthleteId");
 
+    if (!sessionToken || !createdBy) {
 
-    if (!pact) {
+        alert("Please unlock GymPact and choose your athlete first.");
 
-        alert("You already have an active challenge.");
-
-        window.location.href = "dashboard.html";
+        window.location.href = "index.html";
 
         return;
+
+    }
+
+    const submitButton = createPactForm.querySelector("button[type='submit']");
+
+    submitButton.disabled = true;
+
+    try {
+
+        const supabase = GymPactSupabase.getClient();
+        const { error } = await supabase.functions.invoke(
+            "create-pact",
+            {
+                body: {
+                    sessionToken,
+                    createdBy,
+                    goalType,
+                    targetAmount,
+                    timeframe,
+                    wagerType,
+                    wagerDescription,
+                    startDate: formatLocalDate(startDate),
+                    endDate: calculateEndDate(startDate, timeframe)
+                }
+            }
+        );
+
+        if (error) {
+
+            const response = error.context;
+            let message = "We couldn't create that challenge. Please try again.";
+
+            if (response) {
+
+                const errorData = await response.json().catch(() => null);
+
+                if (errorData?.code === "open-pact") {
+
+                    message = "You already have an active challenge.";
+
+                }
+
+            }
+
+            throw new Error(message);
+
+        }
+
+    } catch (error) {
+
+        console.error("Unable to create pact.", error);
+        alert(error.message || "We couldn't create that challenge. Please try again.");
+
+        return;
+
+    } finally {
+
+        submitButton.disabled = false;
 
     }
 

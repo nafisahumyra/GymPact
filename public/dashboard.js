@@ -1,8 +1,5 @@
 const currentUser = GymPactStorage.getCurrentUser();
 
-let workouts =
-    GymPactStorage.getWorkouts();
-
 // Welcome message
 
 document.getElementById("welcome-message").textContent =
@@ -12,7 +9,8 @@ document.getElementById("welcome-message").textContent =
 
 
 
-const currentChallenge = GymPactStorage.getActivePact();
+let currentChallenge = null;
+let currentChallengeLoaded = false;
 const currentChallengeContainer =
     document.getElementById("current-challenge");
 
@@ -145,7 +143,45 @@ function renderCurrentChallenge(challenge) {
 }
 
 
+async function loadCurrentChallenge() {
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+
+    if (!sessionToken) {
+
+        currentChallenge = null;
+        currentChallengeLoaded = true;
+        renderCurrentChallenge(currentChallenge);
+
+        return;
+
+    }
+
+    const supabase = GymPactSupabase.getClient();
+    const { data, error } = await supabase.functions.invoke(
+        "get-current-pact",
+        { body: { sessionToken } }
+    );
+
+    if (error) {
+
+        console.error("Unable to load the current challenge.", error);
+        currentChallenge = null;
+
+    } else {
+
+        currentChallenge = data?.pact || null;
+
+    }
+
+    currentChallengeLoaded = true;
+    renderCurrentChallenge(currentChallenge);
+
+}
+
+
 renderCurrentChallenge(currentChallenge);
+loadCurrentChallenge();
 
 const newChallengeButton =
     document.getElementById("new-challenge-button");
@@ -169,7 +205,13 @@ const keepChallengeButton =
     document.getElementById("keep-challenge");
 
 
-newChallengeButton.addEventListener("click", () => {
+newChallengeButton.addEventListener("click", async () => {
+
+    if (!currentChallengeLoaded) {
+
+        await loadCurrentChallenge();
+
+    }
 
     if (!currentChallenge) {
 
@@ -206,10 +248,45 @@ keepChallengeButton.addEventListener("click", () => {
 });
 
 
-confirmCancelChallengeButton.addEventListener("click", () => {
+confirmCancelChallengeButton.addEventListener("click", async () => {
 
-    GymPactStorage.cancelPact(currentChallenge.id);
-    window.location.reload();
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+
+    if (!sessionToken || !currentChallenge) {
+
+        return;
+
+    }
+
+    confirmCancelChallengeButton.disabled = true;
+
+    try {
+
+        const supabase = GymPactSupabase.getClient();
+        const { error } = await supabase.functions.invoke(
+            "cancel-pact",
+            { body: { sessionToken, pactId: currentChallenge.id } }
+        );
+
+        if (error) {
+
+            throw error;
+
+        }
+
+        cancelChallengeModal.style.display = "none";
+        await loadCurrentChallenge();
+
+    } catch (error) {
+
+        console.error("Unable to cancel challenge.", error);
+        alert("We couldn't cancel that challenge. Please try again.");
+
+    } finally {
+
+        confirmCancelChallengeButton.disabled = false;
+
+    }
 
 });
 
@@ -452,30 +529,56 @@ saveWorkoutButton.addEventListener("click", async () => {
 
 
 
-    const workout = {
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const selectedAthleteId = sessionStorage.getItem(
+        "gymPactSelectedAthleteId"
+    );
 
-        user: currentUser,
+    if (!sessionToken || !selectedAthleteId) {
 
-        muscles: selectedMuscles,
+        alert("Please unlock GymPact and choose your athlete first.");
 
-        duration: duration,
+        return;
 
-        photo: photo.name,
+    }
 
-        photoData: photoData,
+    saveWorkoutButton.disabled = true;
 
-        notes: notes,
+    try {
 
-        timestamp: new Date()
+        const photoBlob = await fetch(photoData)
+            .then(response => response.blob());
+        const workoutForm = new FormData();
 
-    };
+        workoutForm.append("sessionToken", sessionToken);
+        workoutForm.append("userId", selectedAthleteId);
+        workoutForm.append("muscles", JSON.stringify(selectedMuscles));
+        workoutForm.append("durationMinutes", duration);
+        workoutForm.append("notes", notes);
+        workoutForm.append("photo", photoBlob, "workout-proof.jpg");
 
+        const supabase = GymPactSupabase.getClient();
+        const { error } = await supabase.functions.invoke(
+            "create-workout",
+            { body: workoutForm }
+        );
 
-    workouts.push(workout);
+        if (error) {
+            throw error;
+        }
 
-    GymPactStorage.saveWorkouts(workouts);
+    } catch (error) {
 
-    console.log(workouts);
+        console.error("Unable to log workout.", error);
+        alert("We couldn't save that workout. Please try again.");
+
+        return;
+
+    } finally {
+
+        saveWorkoutButton.disabled = false;
+
+    }
 
     // close modal
 

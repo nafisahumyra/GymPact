@@ -3,29 +3,14 @@ const currentUser =
 
 
 document.getElementById("history-user").textContent =
-    `Showing workouts for ${currentUser}`;
-
-
-
-const workouts =
-    GymPactStorage.getWorkouts();
-
+    "Showing workouts shared by Nafisa and Mahfuzur";
 
 
 const historyContainer =
     document.getElementById("workout-history");
 
 
-
-const userWorkouts = workouts.filter(workout => {
-
-    return workout.user === currentUser;
-
-});
-
-
-
-if (userWorkouts.length === 0) {
+function renderEmptyState() {
 
     const emptyState = document.createElement("div");
     const message = document.createElement("p");
@@ -48,35 +33,91 @@ if (userWorkouts.length === 0) {
     emptyState.append(message, description, logWorkoutButton);
     historyContainer.appendChild(emptyState);
 
+}
 
-} else {
 
+function parseMuscles(muscles) {
+
+    try {
+
+        const parsedMuscles = JSON.parse(muscles);
+
+        if (Array.isArray(parsedMuscles)) {
+
+            return parsedMuscles;
+
+        }
+
+    } catch {
+
+        return muscles.split(", ");
+
+    }
+
+    return [muscles];
+
+}
+
+
+async function renderWorkoutHistory() {
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+
+    if (!sessionToken) {
+
+        renderEmptyState();
+
+        return;
+
+    }
+
+    const supabase = GymPactSupabase.getClient();
+    const { data, error } = await supabase.functions.invoke(
+        "list-workouts",
+        { body: { sessionToken } }
+    );
+
+    if (error || !data?.workouts) {
+
+        console.error("Unable to load workout history.", error);
+        renderEmptyState();
+
+        return;
+
+    }
+
+    if (data.workouts.length === 0) {
+
+        renderEmptyState();
+
+        return;
+
+    }
 
     historyContainer.innerHTML = "";
 
+    data.workouts.forEach(workout => {
 
-    userWorkouts.reverse().forEach(workout => {
-
-
-        const card =
-            document.createElement("div");
-
+        const muscles = parseMuscles(workout.muscles);
+        const card = document.createElement("div");
 
         card.classList.add("workout-card");
-
-
         card.innerHTML = `
 
             <h3>
-                🏋️ ${workout.muscles.join(" • ")}
+                🏋️ ${workout.athlete_name}
             </h3>
 
+                <p>
+                  ${muscles.join(" • ")}
+                </p>
+
             <p>
-                ⏱ ${workout.duration} minutes
+                ⏱ ${workout.duration_minutes} minutes
             </p>
 
             <p>
-                📅 ${new Date(workout.timestamp).toLocaleString()}
+                📅 ${new Date(workout.logged_at).toLocaleString()}
             </p>
 
 
@@ -88,30 +129,26 @@ if (userWorkouts.length === 0) {
 
         `;
 
-
-        if (
-            typeof workout.photoData === "string" &&
-            workout.photoData.startsWith("data:image/")
-        ) {
+        if (workout.photo_url) {
 
             const photo = document.createElement("img");
 
             photo.classList.add("workout-history-photo");
-            photo.src = workout.photoData;
-            photo.alt = `Workout proof for ${workout.muscles.join(", ")}`;
+            photo.src = workout.photo_url;
+            photo.alt = `Workout proof for ${muscles.join(", ")}`;
 
             card.appendChild(photo);
 
         }
 
-
         historyContainer.appendChild(card);
-
 
     });
 
 }
 
+
+renderWorkoutHistory();
 
 
 document.getElementById("back-dashboard")

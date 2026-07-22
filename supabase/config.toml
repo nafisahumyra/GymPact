@@ -3,3 +3,18 @@ verify_jwt = false
 
 [functions.verify-gympact-session]
 verify_jwt = false
+
+[functions.create-workout]
+verify_jwt = false
+
+[functions.list-workouts]
+verify_jwt = false
+
+[functions.create-pact]
+verify_jwt = false
+
+[functions.get-current-pact]
+verify_jwt = false
+
+[functions.cancel-pact]
+verify_jwt = false

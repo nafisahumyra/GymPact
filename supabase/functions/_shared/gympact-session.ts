@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SESSION_DURATION_MS = 4 * 60 * 60 * 1000;
 
-function getAdminClient() {
+export function getAdminClient() {
   const projectUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
