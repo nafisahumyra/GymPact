@@ -4,6 +4,9 @@ const pinInput = document.getElementById("gympact-pin");
 const pinError = document.getElementById("pin-error");
 const unlockButton = document.getElementById("unlock-button");
 const athleteSelection = document.getElementById("athlete-selection");
+const UNLOCK_ANIMATION_DURATION = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+).matches ? 500 : 3000;
 
 
 function showAthleteSelection() {
@@ -101,8 +104,9 @@ pinForm.addEventListener("submit", async event => {
 
         sessionStorage.setItem("gymPactSessionToken", data.sessionToken);
         verified = true;
+        pinInput.disabled = true;
         pinLock.classList.add("is-unlocking");
-        window.setTimeout(showAthleteSelection, 650);
+        window.setTimeout(showAthleteSelection, UNLOCK_ANIMATION_DURATION);
 
     } catch {
 
