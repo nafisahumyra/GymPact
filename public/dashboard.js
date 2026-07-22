@@ -13,6 +13,145 @@ let currentChallenge = null;
 let currentChallengeLoaded = false;
 const currentChallengeContainer =
     document.getElementById("current-challenge");
+const workoutCount =
+    document.getElementById("workout-count");
+const streakCount =
+    document.getElementById("streak-count");
+
+
+function getWorkoutDay(workout) {
+
+    return new Date(workout.logged_at).toISOString().slice(0, 10);
+
+}
+
+
+function calculateCurrentStreak(workouts) {
+
+    const workoutDays = new Set(workouts.map(getWorkoutDay));
+    const cursor = new Date();
+    let streak = 0;
+
+    cursor.setUTCHours(0, 0, 0, 0);
+
+    while (workoutDays.has(cursor.toISOString().slice(0, 10))) {
+
+        streak += 1;
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
+
+    }
+
+    return streak;
+
+}
+
+
+async function loadDashboardMetrics() {
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    if (!sessionToken || !athleteId) {
+
+        return;
+
+    }
+
+    try {
+
+        const supabase = GymPactSupabase.getClient();
+        const { data, error } = await supabase.functions.invoke(
+            "list-workouts",
+            { body: { sessionToken } }
+        );
+
+        if (error || !Array.isArray(data?.workouts)) {
+
+            throw error || new Error("Workout data was unavailable.");
+
+        }
+
+        const athleteWorkouts = data.workouts.filter(workout => {
+
+            return workout.user_id === athleteId;
+
+        });
+        const streak = calculateCurrentStreak(athleteWorkouts);
+
+        workoutCount.textContent = athleteWorkouts.length;
+        streakCount.textContent = `${streak} ${streak === 1 ? "day" : "days"}`;
+
+    } catch (error) {
+
+        console.error("Unable to load dashboard workout metrics.", error);
+
+    }
+
+}
+
+
+function showPactCelebration() {
+
+    const celebration = document.createElement("div");
+    const message = document.createElement("div");
+    const colors = ["#22C55E", "#FCD34D", "#60A5FA", "#F472B6"];
+
+    celebration.classList.add("pact-celebration");
+    message.classList.add("pact-celebration-message");
+    message.textContent = "🎉 Goal reached! Keep going!";
+    celebration.appendChild(message);
+
+    for (let index = 0; index < 30; index += 1) {
+
+        const piece = document.createElement("span");
+
+        piece.classList.add("confetti-piece");
+        piece.style.left = `${(index / 29) * 100}%`;
+        piece.style.backgroundColor = colors[index % colors.length];
+        piece.style.animationDelay = `${(index % 6) * 0.08}s`;
+        celebration.appendChild(piece);
+
+    }
+
+    document.body.appendChild(celebration);
+
+    window.setTimeout(() => {
+
+        celebration.remove();
+
+    }, 3500);
+
+}
+
+
+function celebratePactCompletion(challenge) {
+
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const athleteProgress = challenge.progress?.find(participant => {
+
+        return participant.userId === athleteId;
+
+    });
+
+    if (!athleteId || !athleteProgress || athleteProgress.completed < athleteProgress.target) {
+
+        return;
+
+    }
+
+    const celebrationKey =
+        `gymPactCelebration:${challenge.id}:${athleteId}`;
+
+    if (localStorage.getItem(celebrationKey)) {
+
+        return;
+
+    }
+
+    localStorage.setItem(celebrationKey, "shown");
+    showPactCelebration();
+
+}
 
 
 function formatChallengeDate(date) {
@@ -243,6 +382,7 @@ function renderCurrentChallenge(challenge) {
         });
 
         currentChallengeContainer.appendChild(progress);
+        celebratePactCompletion(challenge);
 
     }
 
@@ -313,6 +453,7 @@ async function loadCurrentChallenge() {
 
 renderCurrentChallenge(currentChallenge);
 loadCurrentChallenge();
+loadDashboardMetrics();
 
 const newChallengeButton =
     document.getElementById("new-challenge-button");
