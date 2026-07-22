@@ -336,7 +336,7 @@ newChallengeButton.addEventListener("click", async () => {
 
     if (!currentChallenge) {
 
-        window.location.href = "create-pact.html";
+        window.location.href = "./create-pact.html";
 
         return;
 
@@ -752,7 +752,7 @@ if (historyButton) {
 
     historyButton.addEventListener("click", () => {
 
-        window.location.href = "history.html";
+        window.location.href = "./history.html";
 
     });
 

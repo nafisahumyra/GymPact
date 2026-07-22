@@ -34,23 +34,46 @@ async function restoreUnlockedAthleteSelection() {
 
         if (error || !data?.valid) {
 
-            sessionStorage.removeItem("gymPactSessionToken");
-            sessionStorage.removeItem("gymPactSelectedAthleteId");
-            localStorage.removeItem("currentUser");
+            return;
+
+        }
+
+        const athleteId = sessionStorage.getItem(
+            "gymPactSelectedAthleteId"
+        );
+
+        if (!athleteId) {
+
+            showAthleteSelection();
 
             return;
 
         }
 
-        sessionStorage.removeItem("gymPactSelectedAthleteId");
-        localStorage.removeItem("currentUser");
-        showAthleteSelection();
+        const { data: athlete, error: athleteError } = await supabase
+            .from("users")
+            .select("id, display_name")
+            .eq("id", athleteId)
+            .maybeSingle();
+
+        if (
+            athleteError ||
+            !athlete ||
+            !["Nafisa", "Mahfuzur"].includes(athlete.display_name)
+        ) {
+
+            showAthleteSelection();
+
+            return;
+
+        }
+
+        localStorage.setItem("currentUser", athlete.display_name);
+        window.location.replace("./dashboard.html");
 
     } catch {
 
-        sessionStorage.removeItem("gymPactSessionToken");
-        sessionStorage.removeItem("gymPactSelectedAthleteId");
-        localStorage.removeItem("currentUser");
+        return;
 
     }
 
@@ -98,6 +121,8 @@ pinForm.addEventListener("submit", async event => {
         }
 
         sessionStorage.setItem("gymPactSessionToken", data.sessionToken);
+        sessionStorage.removeItem("gymPactSelectedAthleteId");
+        localStorage.removeItem("currentUser");
         verified = true;
         pinLock.classList.add("is-unlocking");
         window.setTimeout(showAthleteSelection, 650);
@@ -151,7 +176,7 @@ userCards.forEach(card => {
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);
 
-            window.location.href = "dashboard.html";
+            window.location.href = "./dashboard.html";
 
         } catch (error) {
 

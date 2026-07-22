@@ -4,17 +4,9 @@
         "[data-protected-page-script]"
     );
 
-    function redirectToLanding({ clearSession = false } = {}) {
+    function redirectToLanding() {
 
-        if (clearSession) {
-
-            sessionStorage.removeItem("gymPactSessionToken");
-
-        }
-
-        sessionStorage.removeItem("gymPactSelectedAthleteId");
-        localStorage.removeItem("currentUser");
-        window.location.replace("index.html");
+        window.location.replace("./index.html");
 
     }
 
@@ -70,7 +62,7 @@
 
             if (sessionError || !sessionData?.valid) {
 
-                redirectToLanding({ clearSession: true });
+                redirectToLanding();
 
                 return;
 
@@ -112,7 +104,7 @@
         } catch (error) {
 
             console.error("Unable to verify GymPact page access.", error);
-            redirectToLanding({ clearSession: true });
+            redirectToLanding();
 
         }
 

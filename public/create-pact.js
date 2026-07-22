@@ -87,7 +87,7 @@ createPactForm.addEventListener("submit", async event => {
 
         alert("Please unlock GymPact and choose your athlete first.");
 
-        window.location.href = "index.html";
+        window.location.href = "./index.html";
 
         return;
 
@@ -151,13 +151,13 @@ createPactForm.addEventListener("submit", async event => {
 
     }
 
-    window.location.href = "dashboard.html";
+    window.location.href = "./dashboard.html";
 
 });
 
 
 cancelPactButton.addEventListener("click", () => {
 
-    window.location.href = "dashboard.html";
+    window.location.href = "./dashboard.html";
 
 });
