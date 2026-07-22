@@ -225,16 +225,26 @@ function renderCurrentChallenge(challenge) {
         `Complete ${challenge.targetAmount} ${workoutLabel} per ${challenge.timeframe}`
     );
 
-    const progress = document.createElement("div");
+    if (challenge.status === "active" && Array.isArray(challenge.progress)) {
 
-    progress.classList.add("challenge-progress");
-    appendChallengeDetail(progress, "Progress", `Nafisa: 0 / ${challenge.targetAmount}`);
+        const progress = document.createElement("div");
 
-    const partnerProgress = document.createElement("p");
+        progress.classList.add("challenge-progress");
+        appendChallengeDetail(progress, "Progress", "");
 
-    partnerProgress.textContent = `Mahfuzur: 0 / ${challenge.targetAmount}`;
-    progress.appendChild(partnerProgress);
-    currentChallengeContainer.appendChild(progress);
+        challenge.progress.forEach(participant => {
+
+            const participantProgress = document.createElement("p");
+
+            participantProgress.textContent =
+                `${participant.displayName}: ${participant.completed} / ${participant.target}`;
+            progress.appendChild(participantProgress);
+
+        });
+
+        currentChallengeContainer.appendChild(progress);
+
+    }
 
     appendChallengeDetail(
         currentChallengeContainer,

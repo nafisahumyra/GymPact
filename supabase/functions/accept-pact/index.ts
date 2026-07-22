@@ -82,10 +82,10 @@ serve(async (request) => {
 
     const { data: pact, error: updateError } = await admin
       .from("pacts")
-      .update({ status: "active" })
+      .update({ status: "active", active_at: new Date().toISOString() })
       .eq("id", pactId)
       .eq("status", "pending")
-      .select("id, status")
+      .select("id, status, active_at")
       .maybeSingle();
 
     if (updateError) {

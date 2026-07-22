@@ -23,7 +23,66 @@ function getCorsHeaders(request: Request) {
   return headers;
 }
 
-function mapPact(pact: Record<string, unknown>) {
+async function getPactProgress(
+  admin: ReturnType<typeof getAdminClient>,
+  pact: Record<string, unknown>,
+  participantDetails: Array<{ userId: string; displayName?: string }>,
+) {
+  const target = Number(pact.target_amount);
+  const progress = participantDetails.map(participant => ({
+    userId: participant.userId,
+    displayName: participant.displayName ?? "GymPact athlete",
+    completed: 0,
+    target,
+  }));
+
+  if (pact.status !== "active") {
+    return null;
+  }
+
+  // Existing active pacts created before active_at was introduced cannot be
+  // backdated safely. Returning zero avoids counting any pre-acceptance work.
+  if (
+    typeof pact.active_at !== "string" ||
+    typeof pact.start_date !== "string" ||
+    typeof pact.end_date !== "string"
+  ) {
+    return progress;
+  }
+
+  const startOfPact = `${pact.start_date}T00:00:00.000Z`;
+  const endExclusive = new Date(`${pact.end_date}T00:00:00.000Z`);
+
+  endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+
+  const { data: workouts, error } = await admin
+    .from("workouts")
+    .select("user_id")
+    .in("user_id", participantDetails.map(participant => participant.userId))
+    .gte("logged_at", startOfPact)
+    .gte("logged_at", pact.active_at)
+    .lt("logged_at", endExclusive.toISOString());
+
+  if (error) {
+    throw error;
+  }
+
+  const counts = new Map<string, number>();
+
+  for (const workout of workouts ?? []) {
+    counts.set(workout.user_id, (counts.get(workout.user_id) ?? 0) + 1);
+  }
+
+  return progress.map(participant => ({
+    ...participant,
+    completed: Math.min(counts.get(participant.userId) ?? 0, target),
+  }));
+}
+
+async function mapPact(
+  admin: ReturnType<typeof getAdminClient>,
+  pact: Record<string, unknown>,
+) {
   const participantDetails = Array.isArray(pact.pact_participants)
     ? pact.pact_participants
       .map(participant => {
@@ -43,6 +102,7 @@ function mapPact(pact: Record<string, unknown>) {
     : [];
 
   const participants = participantDetails.map(participant => participant.userId);
+  const progress = await getPactProgress(admin, pact, participantDetails);
 
   return {
     id: pact.id,
@@ -56,9 +116,11 @@ function mapPact(pact: Record<string, unknown>) {
     wagerDescription: pact.wager_description,
     status: pact.status,
     createdAt: pact.created_at,
+    activeAt: pact.active_at,
     startDate: pact.start_date,
     endDate: pact.end_date,
     cancelledAt: pact.cancelled_at,
+    progress,
   };
 }
 
@@ -87,7 +149,7 @@ serve(async (request) => {
     const admin = getAdminClient();
     const { data: pact, error } = await admin
       .from("pacts")
-      .select("id, created_by, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, start_date, end_date, cancelled_at, pact_participants(user_id, users(display_name))")
+      .select("id, created_by, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, active_at, start_date, end_date, cancelled_at, pact_participants(user_id, users(display_name))")
       .in("status", ["pending", "active"])
       .order("created_at", { ascending: false })
       .limit(1)
@@ -97,7 +159,7 @@ serve(async (request) => {
       throw error;
     }
 
-    return new Response(JSON.stringify({ pact: pact ? mapPact(pact) : null }), {
+    return new Response(JSON.stringify({ pact: pact ? await mapPact(admin, pact) : null }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
