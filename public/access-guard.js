@@ -24,11 +24,13 @@
     function redirectToLanding(reason) {
 
         logNavigation("redirect", {
-            destination: "./index.html",
+            destination: `./index.html?gympactDebug=${reason}`,
             reason
         });
 
-        window.location.replace("./index.html");
+        window.location.replace(
+            `./index.html?gympactDebug=${encodeURIComponent(reason)}`
+        );
 
     }
 
