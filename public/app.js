@@ -6,97 +6,12 @@ const unlockButton = document.getElementById("unlock-button");
 const athleteSelection = document.getElementById("athlete-selection");
 
 
-function clearAthleteIdentity() {
-
-    sessionStorage.removeItem("gymPactSelectedAthleteId");
-    localStorage.removeItem("currentUser");
-
-}
-
-
 function showAthleteSelection() {
 
     pinLock.hidden = true;
     athleteSelection.hidden = false;
 
 }
-
-
-async function restoreUnlockedAthleteSelection() {
-
-    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
-
-    if (!sessionToken) {
-
-        clearAthleteIdentity();
-
-        return;
-
-    }
-
-    try {
-
-        const supabase = GymPactSupabase.getClient();
-        const { data, error } = await supabase.functions.invoke(
-            "verify-gympact-session",
-            { body: { sessionToken } }
-        );
-
-        if (error || !data?.valid) {
-
-            clearAthleteIdentity();
-
-            return;
-
-        }
-
-        const athleteId = sessionStorage.getItem(
-            "gymPactSelectedAthleteId"
-        );
-
-        if (!athleteId) {
-
-            clearAthleteIdentity();
-            showAthleteSelection();
-
-            return;
-
-        }
-
-        const { data: athlete, error: athleteError } = await supabase
-            .from("users")
-            .select("id, display_name")
-            .eq("id", athleteId)
-            .maybeSingle();
-
-        if (
-            athleteError ||
-            !athlete ||
-            !["Nafisa", "Mahfuzur"].includes(athlete.display_name)
-        ) {
-
-            clearAthleteIdentity();
-            showAthleteSelection();
-
-            return;
-
-        }
-
-        localStorage.setItem("currentUser", athlete.display_name);
-        window.location.replace("./dashboard.html");
-
-    } catch {
-
-        clearAthleteIdentity();
-
-        return;
-
-    }
-
-}
-
-
-restoreUnlockedAthleteSelection();
 
 
 pinInput.addEventListener("input", () => {
@@ -137,7 +52,6 @@ pinForm.addEventListener("submit", async event => {
         }
 
         sessionStorage.setItem("gymPactSessionToken", data.sessionToken);
-        clearAthleteIdentity();
         verified = true;
         pinLock.classList.add("is-unlocking");
         window.setTimeout(showAthleteSelection, 650);
@@ -191,7 +105,7 @@ userCards.forEach(card => {
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);
 
-            window.location.href = "./dashboard.html";
+            window.location.href = "dashboard.html";
 
         } catch (error) {
 

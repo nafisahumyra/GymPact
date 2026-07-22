@@ -25,7 +25,7 @@ function renderEmptyState() {
 
     logWorkoutButton.addEventListener("click", () => {
 
-        window.location.href = "./dashboard.html";
+        window.location.href = "dashboard.html";
 
     });
 
@@ -154,6 +154,6 @@ renderWorkoutHistory();
 document.getElementById("back-dashboard")
 .addEventListener("click", () => {
 
-    window.location.href = "./dashboard.html";
+    window.location.href = "dashboard.html";
 
 });
