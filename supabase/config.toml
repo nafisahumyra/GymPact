@@ -18,3 +18,9 @@ verify_jwt = false
 
 [functions.cancel-pact]
 verify_jwt = false
+
+[functions.accept-pact]
+verify_jwt = false
+
+[functions.decline-pact]
+verify_jwt = false

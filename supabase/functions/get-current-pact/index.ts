@@ -24,15 +24,31 @@ function getCorsHeaders(request: Request) {
 }
 
 function mapPact(pact: Record<string, unknown>) {
-  const participants = Array.isArray(pact.pact_participants)
+  const participantDetails = Array.isArray(pact.pact_participants)
     ? pact.pact_participants
-      .map(participant => (participant as { user_id?: string }).user_id)
-      .filter((userId): userId is string => typeof userId === "string")
+      .map(participant => {
+        const { user_id: userId, users } = participant as {
+          user_id?: string;
+          users?: { display_name?: string } | null;
+        };
+
+        return {
+          userId,
+          displayName: users?.display_name,
+        };
+      })
+      .filter((participant): participant is { userId: string; displayName?: string } =>
+        typeof participant.userId === "string"
+      )
     : [];
+
+  const participants = participantDetails.map(participant => participant.userId);
 
   return {
     id: pact.id,
+    createdBy: pact.created_by,
     participants,
+    participantDetails,
     goalType: pact.goal_type,
     targetAmount: pact.target_amount,
     timeframe: pact.timeframe,
@@ -71,7 +87,7 @@ serve(async (request) => {
     const admin = getAdminClient();
     const { data: pact, error } = await admin
       .from("pacts")
-      .select("id, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, start_date, end_date, cancelled_at, pact_participants(user_id)")
+      .select("id, created_by, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, start_date, end_date, cancelled_at, pact_participants(user_id, users(display_name))")
       .in("status", ["pending", "active"])
       .order("created_at", { ascending: false })
       .limit(1)

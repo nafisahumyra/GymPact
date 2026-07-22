@@ -145,6 +145,13 @@ body {
     min-width: 180px;
 }
 
+.challenge-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
 .button-group {
     display: flex;
     gap: 20px;

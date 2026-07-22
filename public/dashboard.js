@@ -27,16 +27,131 @@ function formatChallengeDate(date) {
 
 }
 
-function getChallengeStatusText(status) {
+function getChallengeStatusText(status, challenge) {
+
+    if (status === "pending") {
+
+        const selectedAthleteId = sessionStorage.getItem(
+            "gymPactSelectedAthleteId"
+        );
+
+        if (challenge.createdBy !== selectedAthleteId) {
+
+            return "This challenge is waiting for your response.";
+
+        }
+
+        const otherAthlete = challenge.participantDetails?.find(participant => {
+
+            return participant.userId !== selectedAthleteId;
+
+        });
+
+        return `Waiting for ${otherAthlete?.displayName || "your partner"} to accept.`;
+
+    }
 
     const statusText = {
-        pending: "Waiting for Mahfuzur to accept.",
         active: "Challenge in progress.",
         completed: "Challenge completed.",
         expired: "Challenge expired."
     };
 
     return statusText[status] || "Challenge status unavailable.";
+
+}
+
+
+function isChallengeCreator(challenge) {
+
+    return challenge.createdBy === sessionStorage.getItem(
+        "gymPactSelectedAthleteId"
+    );
+
+}
+
+
+async function respondToPendingChallenge(action, actionButtons) {
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    if (!sessionToken || !athleteId || !currentChallenge) {
+
+        return;
+
+    }
+
+    const buttons = actionButtons.querySelectorAll("button");
+
+    buttons.forEach(button => {
+
+        button.disabled = true;
+
+    });
+
+    try {
+
+        const supabase = GymPactSupabase.getClient();
+        const { error } = await supabase.functions.invoke(
+            action,
+            {
+                body: {
+                    sessionToken,
+                    pactId: currentChallenge.id,
+                    athleteId
+                }
+            }
+        );
+
+        if (error) {
+
+            throw error;
+
+        }
+
+        await loadCurrentChallenge();
+
+    } catch (error) {
+
+        console.error("Unable to respond to challenge.", error);
+        alert("We couldn't update that challenge. Please try again.");
+
+        buttons.forEach(button => {
+
+            button.disabled = false;
+
+        });
+
+    }
+
+}
+
+
+function appendPendingChallengeActions(container) {
+
+    const actionButtons = document.createElement("div");
+    const acceptButton = document.createElement("button");
+    const declineButton = document.createElement("button");
+
+    actionButtons.classList.add("challenge-actions");
+    acceptButton.textContent = "Accept Challenge";
+    declineButton.textContent = "Decline Challenge";
+
+    acceptButton.addEventListener("click", () => {
+
+        respondToPendingChallenge("accept-pact", actionButtons);
+
+    });
+
+    declineButton.addEventListener("click", () => {
+
+        respondToPendingChallenge("decline-pact", actionButtons);
+
+    });
+
+    actionButtons.append(acceptButton, declineButton);
+    container.appendChild(actionButtons);
 
 }
 
@@ -137,8 +252,14 @@ function renderCurrentChallenge(challenge) {
     appendChallengeDetail(
         currentChallengeContainer,
         "Challenge status",
-        getChallengeStatusText(challenge.status)
+        getChallengeStatusText(challenge.status, challenge)
     );
+
+    if (challenge.status === "pending" && !isChallengeCreator(challenge)) {
+
+        appendPendingChallengeActions(currentChallengeContainer);
+
+    }
 
 }
 
