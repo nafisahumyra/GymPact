@@ -1,4 +1,4 @@
-const currentUser = GymPactStorage.getCurrentUser();
+const currentUser = localStorage.getItem("currentUser") || "Athlete";
 
 // Welcome message
 
@@ -889,16 +889,6 @@ alert("Workout logged successfully 💪");
 
 
 });
-
-function clearWorkouts() {
-
-    GymPactStorage.clearWorkouts();
-
-    console.log("Workouts cleared");
-
-}
-
-
 
 const historyButton =
     document.getElementById("history-button");

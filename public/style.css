@@ -20,6 +20,10 @@ body {
   
 }
 
+body[data-protected-page] {
+    visibility: hidden;
+}
+
 button {
 
     background: #22C55E;
