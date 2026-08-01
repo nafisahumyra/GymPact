@@ -17,6 +17,11 @@ const workoutCount =
     document.getElementById("workout-count");
 const streakCount =
     document.getElementById("streak-count");
+const dashboardRefreshButton =
+    document.getElementById("dashboard-refresh");
+const dashboardRefreshFeedback =
+    document.getElementById("dashboard-refresh-feedback");
+let dashboardRefreshInFlight = null;
 
 
 function getWorkoutDay(workout) {
@@ -46,7 +51,7 @@ function calculateCurrentStreak(workouts) {
 }
 
 
-async function loadDashboardMetrics() {
+async function loadDashboardMetrics({ preserveOnError = false } = {}) {
 
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
@@ -84,6 +89,12 @@ async function loadDashboardMetrics() {
     } catch (error) {
 
         console.error("Unable to load dashboard workout metrics.", error);
+
+        if (preserveOnError) {
+
+            throw error;
+
+        }
 
     }
 
@@ -414,7 +425,7 @@ function renderCurrentChallenge(challenge) {
 }
 
 
-async function loadCurrentChallenge() {
+async function loadCurrentChallenge({ preserveOnError = false } = {}) {
 
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
 
@@ -437,6 +448,13 @@ async function loadCurrentChallenge() {
     if (error) {
 
         console.error("Unable to load the current challenge.", error);
+
+        if (preserveOnError) {
+
+            throw error;
+
+        }
+
         currentChallenge = null;
 
     } else {
@@ -451,9 +469,82 @@ async function loadCurrentChallenge() {
 }
 
 
+function setDashboardRefreshFeedback(message = "") {
+
+    dashboardRefreshFeedback.textContent = message;
+    dashboardRefreshFeedback.hidden = !message;
+
+}
+
+
+async function refreshDashboard() {
+
+    if (dashboardRefreshInFlight) {
+
+        return dashboardRefreshInFlight;
+
+    }
+
+    dashboardRefreshInFlight = (async () => {
+
+        dashboardRefreshButton.disabled = true;
+        dashboardRefreshButton.classList.add("is-loading");
+        dashboardRefreshButton.setAttribute("aria-busy", "true");
+        dashboardRefreshButton.textContent = "Refreshing";
+        setDashboardRefreshFeedback();
+
+        try {
+
+            await Promise.all([
+                loadCurrentChallenge({ preserveOnError: true }),
+                loadDashboardMetrics({ preserveOnError: true })
+            ]);
+
+        } catch (error) {
+
+            console.error("Unable to refresh the dashboard.", error);
+            setDashboardRefreshFeedback(
+                "Couldn't refresh right now. Your current data is still shown."
+            );
+
+        } finally {
+
+            dashboardRefreshButton.disabled = false;
+            dashboardRefreshButton.classList.remove("is-loading");
+            dashboardRefreshButton.removeAttribute("aria-busy");
+            dashboardRefreshButton.textContent = "↻ Refresh";
+
+        }
+
+    })();
+
+    try {
+
+        await dashboardRefreshInFlight;
+
+    } finally {
+
+        dashboardRefreshInFlight = null;
+
+    }
+
+}
+
+
 renderCurrentChallenge(currentChallenge);
-loadCurrentChallenge();
-loadDashboardMetrics();
+dashboardRefreshButton.addEventListener("click", refreshDashboard);
+
+document.addEventListener("visibilitychange", () => {
+
+    if (document.visibilityState === "visible") {
+
+        refreshDashboard();
+
+    }
+
+});
+
+refreshDashboard();
 
 const newChallengeButton =
     document.getElementById("new-challenge-button");

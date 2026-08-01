@@ -9,9 +9,53 @@ body {
     max-width: 900px;
 }
 
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
 .dashboard-container h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
+}
+
+.refresh-button {
+    flex: none;
+    background: #374151;
+    padding: 9px 14px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.refresh-button.is-loading {
+    cursor: wait;
+    opacity: 0.8;
+}
+
+.refresh-button.is-loading::before {
+    content: "";
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-right: 6px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: refresh-spin 0.7s linear infinite;
+}
+
+.refresh-feedback {
+    color: #FCD34D;
+    font-size: 0.9rem;
+    margin: -22px 0 24px;
+}
+
+@keyframes refresh-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 #welcome-message {
@@ -434,6 +478,12 @@ body {
     margin-bottom: 30px;
 }
 
+.history-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .history-page h1 {
     font-size: 2rem;
     margin-bottom: 0;
@@ -539,8 +589,16 @@ body {
         flex-direction: column;
     }
 
-    .secondary-button {
+    .history-header-actions {
         width: 100%;
+    }
+
+    .secondary-button {
+        flex: 1;
+    }
+
+    .history-header-actions .refresh-button {
+        flex: 0 0 auto;
     }
 
     .challenge-status-pill {

@@ -23,11 +23,21 @@
 
         <h1>📖 History</h1>
 
-        <button id="back-dashboard" class="secondary-button">
-            Back to Dashboard
-        </button>
+        <div class="history-header-actions">
+
+            <button id="history-refresh" class="refresh-button" type="button">
+                ↻ Refresh
+            </button>
+
+            <button id="back-dashboard" class="secondary-button">
+                Back to Dashboard
+            </button>
+
+        </div>
 
     </header>
+
+    <p id="history-refresh-feedback" class="refresh-feedback" role="status" hidden></p>
 
 
     <div class="history-tabs" role="tablist" aria-label="History type">

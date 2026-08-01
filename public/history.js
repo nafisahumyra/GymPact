@@ -20,6 +20,12 @@ const workoutsTab =
 
 const challengesTab =
     document.getElementById("challenges-tab");
+const historyRefreshButton =
+    document.getElementById("history-refresh");
+const historyRefreshFeedback =
+    document.getElementById("history-refresh-feedback");
+let activeHistoryTab = "workouts";
+let historyRefreshInFlight = null;
 
 
 function renderEmptyState() {
@@ -71,7 +77,7 @@ function parseMuscles(muscles) {
 }
 
 
-async function renderWorkoutHistory() {
+async function renderWorkoutHistory({ preserveOnError = false } = {}) {
 
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
 
@@ -92,6 +98,13 @@ async function renderWorkoutHistory() {
     if (error || !data?.workouts) {
 
         console.error("Unable to load workout history.", error);
+
+        if (preserveOnError) {
+
+            throw error || new Error("Workout history was unavailable.");
+
+        }
+
         renderEmptyState();
 
         return;
@@ -201,7 +214,7 @@ function renderEmptyChallengeState() {
 }
 
 
-async function renderChallengeHistory() {
+async function renderChallengeHistory({ preserveOnError = false } = {}) {
 
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
 
@@ -222,6 +235,13 @@ async function renderChallengeHistory() {
     if (error || !Array.isArray(data?.pacts)) {
 
         console.error("Unable to load challenge history.", error);
+
+        if (preserveOnError) {
+
+            throw error || new Error("Challenge history was unavailable.");
+
+        }
+
         renderEmptyChallengeState();
 
         return;
@@ -288,6 +308,8 @@ function showHistoryTab(tab) {
 
     const showWorkouts = tab === "workouts";
 
+    activeHistoryTab = tab;
+
     workoutsTab.classList.toggle("is-active", showWorkouts);
     challengesTab.classList.toggle("is-active", !showWorkouts);
     workoutsTab.setAttribute("aria-selected", String(showWorkouts));
@@ -301,6 +323,73 @@ function showHistoryTab(tab) {
     if (!showWorkouts) {
 
         renderChallengeHistory();
+
+    }
+
+}
+
+
+function setHistoryRefreshFeedback(message = "") {
+
+    historyRefreshFeedback.textContent = message;
+    historyRefreshFeedback.hidden = !message;
+
+}
+
+
+async function refreshHistory() {
+
+    if (historyRefreshInFlight) {
+
+        return historyRefreshInFlight;
+
+    }
+
+    historyRefreshInFlight = (async () => {
+
+        historyRefreshButton.disabled = true;
+        historyRefreshButton.classList.add("is-loading");
+        historyRefreshButton.setAttribute("aria-busy", "true");
+        historyRefreshButton.textContent = "Refreshing";
+        setHistoryRefreshFeedback();
+
+        try {
+
+            if (activeHistoryTab === "workouts") {
+
+                await renderWorkoutHistory({ preserveOnError: true });
+
+            } else {
+
+                await renderChallengeHistory({ preserveOnError: true });
+
+            }
+
+        } catch (error) {
+
+            console.error("Unable to refresh history.", error);
+            setHistoryRefreshFeedback(
+                "Couldn't refresh right now. Your current history is still shown."
+            );
+
+        } finally {
+
+            historyRefreshButton.disabled = false;
+            historyRefreshButton.classList.remove("is-loading");
+            historyRefreshButton.removeAttribute("aria-busy");
+            historyRefreshButton.textContent = "↻ Refresh";
+
+        }
+
+    })();
+
+    try {
+
+        await historyRefreshInFlight;
+
+    } finally {
+
+        historyRefreshInFlight = null;
 
     }
 
@@ -321,7 +410,20 @@ challengesTab.addEventListener("click", () => {
 });
 
 
-renderWorkoutHistory();
+historyRefreshButton.addEventListener("click", refreshHistory);
+
+document.addEventListener("visibilitychange", () => {
+
+    if (document.visibilityState === "visible") {
+
+        refreshHistory();
+
+    }
+
+});
+
+
+refreshHistory();
 
 
 document.getElementById("back-dashboard")
