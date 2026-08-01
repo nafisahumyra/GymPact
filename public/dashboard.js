@@ -109,7 +109,7 @@ function showPactCelebration() {
 
     celebration.classList.add("pact-celebration");
     message.classList.add("pact-celebration-message");
-    message.textContent = "🎉 Goal reached! Keep going!";
+    message.textContent = "🎉 Goal reached!";
     celebration.appendChild(message);
 
     for (let index = 0; index < 30; index += 1) {
