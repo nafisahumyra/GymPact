@@ -940,8 +940,7 @@ saveWorkoutButton.addEventListener("click", async () => {
     });
 
 
-    const activityName =
-        document.getElementById("workout-activity-name").value.trim();
+    const activityName = selectedMuscles.join(" · ");
 
     const { measurements, hasInvalidRows } = getMeasurements();
 
@@ -955,9 +954,9 @@ saveWorkoutButton.addEventListener("click", async () => {
 
 
 
-    if (!activityName) {
+    if (selectedMuscles.length === 0) {
 
-        alert("Please enter an activity name.");
+        alert("Please select at least one muscle group.");
 
         return;
 
@@ -1067,8 +1066,6 @@ workoutModal.style.display = "none";
 
 
 // reset form
-
-document.getElementById("workout-activity-name").value = "";
 
 measurementRows.innerHTML = "";
 addMeasurementRow();

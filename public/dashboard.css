@@ -392,23 +392,15 @@ body {
     margin-top: 24px;
 }
 
-.measurements-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-}
-
-.measurements-header h3 {
-    margin-bottom: 0;
-}
-
 .add-measurement-button,
 .remove-measurement-button {
     background: #374151;
     font-size: 0.85rem;
     padding: 9px 12px;
+}
+
+.add-measurement-button {
+    margin-bottom: 10px;
 }
 
 .measurement-rows {
@@ -644,11 +636,6 @@ body {
         position: static;
         display: inline-block;
         margin-bottom: 4px;
-    }
-
-    .measurements-header {
-        align-items: flex-start;
-        flex-direction: column;
     }
 
     .measurement-row {
