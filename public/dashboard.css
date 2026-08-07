@@ -388,6 +388,45 @@ body {
 
 }
 
+.measurements-section {
+    margin-top: 24px;
+}
+
+.measurements-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.measurements-header h3 {
+    margin-bottom: 0;
+}
+
+.add-measurement-button,
+.remove-measurement-button {
+    background: #374151;
+    font-size: 0.85rem;
+    padding: 9px 12px;
+}
+
+.measurement-rows {
+    display: grid;
+    gap: 10px;
+}
+
+.measurement-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(110px, 0.7fr) auto;
+    gap: 10px;
+}
+
+.modal-content .measurement-row input,
+.modal-content .measurement-row select {
+    margin: 0;
+}
+
 
 .muscle-chip {
 
@@ -605,5 +644,19 @@ body {
         position: static;
         display: inline-block;
         margin-bottom: 4px;
+    }
+
+    .measurements-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .measurement-row {
+        grid-template-columns: minmax(0, 1fr) minmax(100px, 0.7fr);
+    }
+
+    .remove-measurement-button {
+        grid-column: 1 / -1;
+        justify-self: start;
     }
 }

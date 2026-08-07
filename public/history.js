@@ -77,6 +77,44 @@ function parseMuscles(muscles) {
 }
 
 
+function getWorkoutMeasurements(workout) {
+
+    if (Array.isArray(workout.measurements) && workout.measurements.length > 0) {
+
+        return workout.measurements.filter(measurement => {
+
+            return (
+                measurement &&
+                typeof measurement.amount === "number" &&
+                measurement.amount > 0 &&
+                ["minutes", "reps", "sets", "miles"].includes(measurement.unit)
+            );
+
+        });
+
+    }
+
+    if (Number(workout.duration_minutes) > 0) {
+
+        return [{
+            amount: Number(workout.duration_minutes),
+            unit: "minutes"
+        }];
+
+    }
+
+    return [];
+
+}
+
+
+function formatMeasurement(measurement) {
+
+    return `${measurement.amount} ${measurement.unit}`;
+
+}
+
+
 async function renderWorkoutHistory({ preserveOnError = false } = {}) {
 
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
@@ -124,6 +162,8 @@ async function renderWorkoutHistory({ preserveOnError = false } = {}) {
     data.workouts.forEach(workout => {
 
         const muscles = parseMuscles(workout.muscles);
+        const activityName = workout.activity_name || muscles.join(" • ");
+        const measurements = getWorkoutMeasurements(workout);
         const card = document.createElement("div");
 
         card.classList.add("workout-card");
@@ -133,13 +173,7 @@ async function renderWorkoutHistory({ preserveOnError = false } = {}) {
                 🏋️ ${workout.athlete_name}
             </h3>
 
-                <p>
-                  ${muscles.join(" • ")}
-                </p>
-
-            <p>
-                ⏱ ${workout.duration_minutes} minutes
-            </p>
+            <p>${[activityName, ...measurements.map(formatMeasurement)].join(" · ")}</p>
 
             <p>
                 📅 ${new Date(workout.logged_at).toLocaleString()}
@@ -160,7 +194,7 @@ async function renderWorkoutHistory({ preserveOnError = false } = {}) {
 
             photo.classList.add("workout-history-photo");
             photo.src = workout.photo_url;
-            photo.alt = `Workout proof for ${muscles.join(", ")}`;
+            photo.alt = `Workout proof for ${activityName}`;
 
             card.appendChild(photo);
 

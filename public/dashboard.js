@@ -679,6 +679,14 @@ closeModalButton.addEventListener("click", () => {
 const muscleChips =
     document.querySelectorAll(".muscle-chip");
 
+const measurementRows =
+    document.getElementById("measurement-rows");
+
+const addMeasurementButton =
+    document.getElementById("add-measurement");
+
+const MEASUREMENT_UNITS = ["minutes", "reps", "sets", "miles"];
+
 const workoutPhotoInput =
     document.getElementById("workout-photo");
 
@@ -818,6 +826,99 @@ muscleChips.forEach(chip => {
 
 });
 
+
+function addMeasurementRow(measurement = {}) {
+
+    const row = document.createElement("div");
+    const amount = document.createElement("input");
+    const unit = document.createElement("select");
+    const removeButton = document.createElement("button");
+
+    row.classList.add("measurement-row");
+
+    amount.classList.add("measurement-amount");
+    amount.type = "number";
+    amount.min = "0.01";
+    amount.step = "any";
+    amount.inputMode = "decimal";
+    amount.placeholder = "Amount";
+    amount.value = measurement.amount ?? "";
+    amount.setAttribute("aria-label", "Measurement amount");
+
+    unit.classList.add("measurement-unit");
+    unit.setAttribute("aria-label", "Measurement unit");
+
+    MEASUREMENT_UNITS.forEach(unitName => {
+
+        const option = document.createElement("option");
+
+        option.value = unitName;
+        option.textContent = unitName;
+        option.selected = (measurement.unit || "minutes") === unitName;
+        unit.appendChild(option);
+
+    });
+
+    removeButton.classList.add("remove-measurement-button");
+    removeButton.type = "button";
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", () => {
+
+        row.remove();
+
+    });
+
+    row.append(amount, unit, removeButton);
+    measurementRows.appendChild(row);
+
+}
+
+
+function getMeasurements() {
+
+    const rows = measurementRows.querySelectorAll(".measurement-row");
+    const measurements = [];
+
+    if (rows.length === 0) {
+
+        return { measurements, hasInvalidRows: false };
+
+    }
+
+    for (const row of rows) {
+
+        const amountInput = row.querySelector(".measurement-amount");
+        const unitSelect = row.querySelector(".measurement-unit");
+        const amount = Number(amountInput.value);
+
+        if (
+            !amountInput.value.trim() ||
+            !Number.isFinite(amount) ||
+            amount <= 0 ||
+            !MEASUREMENT_UNITS.includes(unitSelect.value)
+        ) {
+
+            return { measurements: [], hasInvalidRows: true };
+
+        }
+
+        measurements.push({ amount, unit: unitSelect.value });
+
+    }
+
+    return { measurements, hasInvalidRows: false };
+
+}
+
+
+addMeasurementButton.addEventListener("click", () => {
+
+    addMeasurementRow();
+
+});
+
+addMeasurementRow();
+
 const saveWorkoutButton =
     document.getElementById("save-workout");
 
@@ -839,8 +940,10 @@ saveWorkoutButton.addEventListener("click", async () => {
     });
 
 
-    const duration =
-        document.getElementById("workout-duration").value;
+    const activityName =
+        document.getElementById("workout-activity-name").value.trim();
+
+    const { measurements, hasInvalidRows } = getMeasurements();
 
 
     const photo =
@@ -852,18 +955,27 @@ saveWorkoutButton.addEventListener("click", async () => {
 
 
 
-    if (selectedMuscles.length === 0) {
+    if (!activityName) {
 
-        alert("Please select at least one muscle group.");
+        alert("Please enter an activity name.");
 
         return;
 
     }
 
 
-    if (!duration) {
+    if (hasInvalidRows) {
 
-        alert("Please enter workout duration.");
+        alert("Each measurement needs an amount greater than zero.");
+
+        return;
+
+    }
+
+
+    if (measurements.length === 0) {
+
+        alert("Please add at least one measurement.");
 
         return;
 
@@ -916,7 +1028,8 @@ saveWorkoutButton.addEventListener("click", async () => {
         workoutForm.append("sessionToken", sessionToken);
         workoutForm.append("userId", selectedAthleteId);
         workoutForm.append("muscles", JSON.stringify(selectedMuscles));
-        workoutForm.append("durationMinutes", duration);
+        workoutForm.append("activityName", activityName);
+        workoutForm.append("measurements", JSON.stringify(measurements));
         workoutForm.append("notes", notes);
         workoutForm.append("photo", photoBlob, "workout-proof.jpg");
 
@@ -955,7 +1068,10 @@ workoutModal.style.display = "none";
 
 // reset form
 
-document.getElementById("workout-duration").value = "";
+document.getElementById("workout-activity-name").value = "";
+
+measurementRows.innerHTML = "";
+addMeasurementRow();
 
 document.getElementById("workout-photo").value = "";
 

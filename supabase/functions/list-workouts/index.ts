@@ -48,7 +48,7 @@ serve(async (request) => {
     const admin = getAdminClient();
     const { data, error } = await admin
       .from("workouts")
-      .select("id, user_id, muscles, duration_minutes, notes, photo_path, logged_at, users(display_name)")
+      .select("id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at, users(display_name)")
       .order("logged_at", { ascending: false });
 
     if (error) {

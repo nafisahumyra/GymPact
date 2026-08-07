@@ -2,6 +2,13 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 
+const measurementUnits = new Set(["minutes", "reps", "sets", "miles"]);
+
+type Measurement = {
+  amount: number;
+  unit: string;
+};
+
 const allowedOrigins = new Set([
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -47,10 +54,11 @@ serve(async (request) => {
     }
 
     const userId = formData.get("userId");
-    const duration = Number(formData.get("durationMinutes"));
+    const activityName = String(formData.get("activityName") ?? "").trim();
     const notes = formData.get("notes");
     const photo = formData.get("photo");
     let muscles: unknown;
+    let rawMeasurements: unknown;
 
     try {
       muscles = JSON.parse(String(formData.get("muscles") ?? ""));
@@ -58,13 +66,35 @@ serve(async (request) => {
       muscles = null;
     }
 
+    try {
+      rawMeasurements = JSON.parse(String(formData.get("measurements") ?? ""));
+    } catch {
+      rawMeasurements = null;
+    }
+
+    const measurements: Measurement[] = Array.isArray(rawMeasurements)
+      ? rawMeasurements.filter((measurement): measurement is Measurement => (
+        typeof measurement === "object" &&
+        measurement !== null &&
+        !Array.isArray(measurement) &&
+        typeof (measurement as Measurement).amount === "number" &&
+        Number.isFinite((measurement as Measurement).amount) &&
+        (measurement as Measurement).amount > 0 &&
+        typeof (measurement as Measurement).unit === "string" &&
+        measurementUnits.has((measurement as Measurement).unit)
+      ))
+      : [];
+
+    const selectedMuscles = Array.isArray(muscles)
+      ? muscles.filter(muscle => typeof muscle === "string" && muscle.trim())
+      : [];
+
     if (
       typeof userId !== "string" ||
-      !Array.isArray(muscles) ||
-      muscles.length === 0 ||
-      !muscles.every(muscle => typeof muscle === "string") ||
-      !Number.isInteger(duration) ||
-      duration <= 0 ||
+      !activityName ||
+      !Array.isArray(rawMeasurements) ||
+      rawMeasurements.length === 0 ||
+      measurements.length !== rawMeasurements.length ||
       !(photo instanceof File) ||
       photo.size === 0 ||
       photo.size > 500 * 1024
@@ -107,13 +137,15 @@ serve(async (request) => {
       .insert({
         id: workoutId,
         user_id: userId,
-        muscles: JSON.stringify(muscles),
-        duration_minutes: duration,
+        muscles: JSON.stringify(selectedMuscles.length > 0 ? selectedMuscles : [activityName]),
+        activity_name: activityName,
+        measurements,
+        duration_minutes: null,
         notes: typeof notes === "string" && notes ? notes : null,
         photo_path: photoPath,
         logged_at: new Date().toISOString(),
       })
-      .select("id, user_id, muscles, duration_minutes, notes, photo_path, logged_at")
+      .select("id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at")
       .single();
 
     if (workoutError) {
