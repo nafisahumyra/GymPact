@@ -306,7 +306,7 @@ body {
 
 .muscle-options {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 8px;
 }
 .muscle-chip {
@@ -325,12 +325,13 @@ body {
 }
 .muscle-chip::before { content: none; }
 .muscle-icon {
-    width: 60px;
-    height: 60px;
-    flex: 0 0 60px;
+    width: 120px;
+    height: 120px;
+    flex: 0 0 120px;
     object-fit: contain;
     object-position: center;
 }
+.muscle-chip[data-muscle="Triceps"] .muscle-icon { transform: scale(.5); }
 .muscle-chip:hover { border-color: rgba(145, 242, 100, .7); background: #1a201c; }
 .muscle-chip.selected {
     border-color: var(--green);
@@ -340,7 +341,7 @@ body {
 }
 .muscle-chip.selected::before { content: none; }
 
-.measurements-section { margin-top: 20px; }
+.measurements-section { margin-top: 32px; }
 .add-measurement-button {
     width: 100%;
     min-height: 48px;
@@ -464,11 +465,15 @@ body {
 .challenge-history-score { font-weight: 700; }
 .challenge-history-result { margin-top: 16px !important; color: var(--green) !important; font-weight: 800; }
 
+@media (min-width: 520px) {
+    .muscle-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (min-width: 680px) {
     .dashboard-container { padding-top: 18px; }
     .dashboard-section { margin-bottom: 28px; }
     .stat-card { padding: 22px; }
-    .muscle-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .muscle-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .modal-content { padding: 30px; }
 }
 
