@@ -325,9 +325,9 @@ body {
 }
 .muscle-chip::before { content: none; }
 .muscle-icon {
-    width: 34px;
-    height: 34px;
-    flex: 0 0 34px;
+    width: 60px;
+    height: 60px;
+    flex: 0 0 60px;
     object-fit: contain;
     object-position: center;
 }
