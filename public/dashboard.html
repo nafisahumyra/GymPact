@@ -8,6 +8,8 @@
 
     <title>GymPact Dashboard</title>
 
+    <link rel="icon" href="assets/gympact-mark.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="assets/gympact-mark.svg">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="dashboard.css">
 </head>
@@ -19,7 +21,10 @@
 
         <div class="dashboard-header">
 
-            <h1>🏋️ GymPact</h1>
+            <h1 class="brand-lockup">
+                <img src="assets/gympact-mark.svg" alt="" aria-hidden="true">
+                <span>Gym<span>Pact</span></span>
+            </h1>
 
             <button id="dashboard-refresh" class="refresh-button" type="button">
                 ↻ Refresh
@@ -91,10 +96,10 @@
         <div class="modal-content">
 
 
-            <h2>Log Workout</h2>
+            <h2>Add Workout</h2>
 
 
-            <h3>Muscle Groups</h3>
+            <h3>Muscle Groups <span class="required-marker">*</span></h3>
 
 
             <div class="muscle-options">
@@ -104,6 +109,8 @@
                 <button class="muscle-chip">Back</button>
 
                 <button class="muscle-chip">Biceps</button>
+
+                <button class="muscle-chip">HIIT</button>
 
                 <button class="muscle-chip">Boxing</button>
 
@@ -135,14 +142,16 @@
             </section>
 
 
-            <label>
-                Workout Proof 📸
+            <label class="proof-upload" for="workout-photo">
+                <span>Proof Photo <span class="required-marker">*</span></span>
+                <strong>⌾&nbsp; Tap to upload photo</strong>
             </label>
 
             <input
                 type="file"
                 id="workout-photo"
                 accept="image/*"
+                class="proof-file-input"
             >
 
             <img
