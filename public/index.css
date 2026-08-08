@@ -77,7 +77,18 @@ body {
 .logo img {
     width: 48px;
     height: 48px;
+    border-radius: 13px;
+    object-fit: contain;
     filter: drop-shadow(0 0 10px rgba(145, 242, 100, .18));
+}
+
+.logo > span {
+    font-family: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+    font-size: 1.12em;
+    font-weight: 800;
+    letter-spacing: .015em;
+    line-height: .9;
+    text-transform: uppercase;
 }
 
 .logo span span {

@@ -33,8 +33,18 @@ body {
 .page-title img {
     width: 42px;
     height: 42px;
+    border-radius: 11px;
     object-fit: contain;
     filter: drop-shadow(0 0 9px rgba(145, 242, 100, .15));
+}
+
+.brand-lockup > span {
+    font-family: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+    font-size: 1.12em;
+    font-weight: 800;
+    letter-spacing: .015em;
+    line-height: .9;
+    text-transform: uppercase;
 }
 
 .brand-lockup span span { color: var(--green); }
@@ -315,9 +325,9 @@ body {
 }
 .muscle-chip::before { content: none; }
 .muscle-icon {
-    width: 26px;
-    height: 30px;
-    flex: 0 0 26px;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
     object-fit: contain;
     object-position: center;
 }
@@ -464,7 +474,7 @@ body {
 
 @media (max-width: 520px) {
     .dashboard-header { margin-bottom: 12px; }
-    .brand-lockup img { width: 36px; height: 36px; }
+    .brand-lockup img { width: 36px; height: 36px; border-radius: 10px; }
     .refresh-button { padding: 8px 10px; }
     .modal { align-items: flex-end; padding: 0; }
     .modal-content { max-height: min(88dvh, 760px); padding: 24px 18px max(24px, env(safe-area-inset-bottom)); border-radius: 25px 25px 0 0; }
