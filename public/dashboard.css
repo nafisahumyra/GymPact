@@ -313,7 +313,6 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    overflow: hidden;
     min-height: 47px;
     padding: 10px 12px;
     border-color: var(--line-soft);
@@ -328,23 +327,20 @@ body {
 .muscle-icon-container {
     display: grid;
     place-items: center;
-    width: 70px;
-    height: 110px;
-    flex: 0 0 70px;
-    overflow: hidden;
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
+    overflow: visible;
 }
 .muscle-icon {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: 56px;
+    height: 56px;
     max-width: none !important;
     max-height: none !important;
     object-fit: contain;
     object-position: center;
-    transform: scale(1.35);
-    transform-origin: center;
 }
-.muscle-chip[data-muscle="Triceps"] .muscle-icon { transform: scale(1.2); }
 .muscle-chip:hover { border-color: rgba(145, 242, 100, .7); background: #1a201c; }
 .muscle-chip.selected {
     border-color: var(--green);
