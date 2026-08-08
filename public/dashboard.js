@@ -933,7 +933,7 @@ saveWorkoutButton.addEventListener("click", async () => {
 
         if (chip.classList.contains("selected")) {
 
-            selectedMuscles.push(chip.textContent);
+            selectedMuscles.push(chip.dataset.muscle);
 
         }
 

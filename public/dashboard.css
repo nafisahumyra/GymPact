@@ -33,6 +33,7 @@ body {
 .page-title img {
     width: 42px;
     height: 42px;
+    object-fit: contain;
     filter: drop-shadow(0 0 9px rgba(145, 242, 100, .15));
 }
 
@@ -299,6 +300,9 @@ body {
     gap: 8px;
 }
 .muscle-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
     min-height: 47px;
     padding: 10px 12px;
     border-color: var(--line-soft);
@@ -309,7 +313,14 @@ body {
     font-weight: 650;
     text-align: left;
 }
-.muscle-chip::before { content: "○ "; color: var(--green); }
+.muscle-chip::before { content: none; }
+.muscle-icon {
+    width: 26px;
+    height: 30px;
+    flex: 0 0 26px;
+    object-fit: contain;
+    object-position: center;
+}
 .muscle-chip:hover { border-color: rgba(145, 242, 100, .7); background: #1a201c; }
 .muscle-chip.selected {
     border-color: var(--green);
@@ -317,7 +328,7 @@ body {
     color: var(--text);
     box-shadow: inset 0 0 0 1px rgba(145, 242, 100, .12);
 }
-.muscle-chip.selected::before { content: "✓ "; }
+.muscle-chip.selected::before { content: none; }
 
 .measurements-section { margin-top: 20px; }
 .add-measurement-button {
