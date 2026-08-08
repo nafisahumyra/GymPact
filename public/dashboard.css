@@ -327,15 +327,15 @@ body {
 .muscle-icon-container {
     display: grid;
     place-items: center;
-    width: 56px;
-    height: 56px;
-    flex: 0 0 56px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
     overflow: visible;
 }
 .muscle-icon {
     display: block;
-    width: 56px;
-    height: 56px;
+    width: 40px;
+    height: 40px;
     max-width: none !important;
     max-height: none !important;
     object-fit: contain;
@@ -350,7 +350,7 @@ body {
 }
 .muscle-chip.selected::before { content: none; }
 
-.measurements-section { margin-top: 32px; }
+.measurements-section { margin-top: 26px; }
 .add-measurement-button {
     width: 100%;
     min-height: 48px;
@@ -384,7 +384,7 @@ body {
     display: grid;
     gap: 12px;
     min-height: 116px;
-    margin-top: 22px;
+    margin-top: 26px;
     padding: 17px;
     border: 1px dashed #68706f;
     border-radius: 14px;
