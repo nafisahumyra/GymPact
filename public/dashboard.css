@@ -49,6 +49,15 @@ body {
 
 .brand-lockup span span { color: var(--green); }
 
+.brand-lockup .wordmark-image {
+    width: min(210px, calc(100vw - 190px));
+    height: auto;
+    min-width: 0;
+    border-radius: 0;
+    filter: none;
+    object-fit: contain;
+}
+
 .page-title { font-size: clamp(1.45rem, 5vw, 2rem); }
 
 .refresh-button,
