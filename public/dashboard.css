@@ -485,6 +485,12 @@ body {
 @media (max-width: 520px) {
     .dashboard-header { margin-bottom: 12px; }
     .brand-lockup img { width: 36px; height: 36px; border-radius: 10px; }
+    .muscle-icon-container {
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+    }
+    .muscle-icon { width: 32px; height: 32px; }
     .refresh-button { padding: 8px 10px; }
     .modal { align-items: flex-end; padding: 0; }
     .modal-content { max-height: min(88dvh, 760px); padding: 24px 18px max(24px, env(safe-area-inset-bottom)); border-radius: 25px 25px 0 0; }
