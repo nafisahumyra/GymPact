@@ -47,6 +47,8 @@ body {
     object-fit: contain;
 }
 
+.lock-image--open { opacity: 0; }
+
 .lock-shackle {
     position: absolute;
     top: 9px;
@@ -202,6 +204,8 @@ body {
 .pin-lock.is-unlocking .lock-icon { animation: unlock-lock 3s ease forwards; }
 .pin-lock.is-unlocking { animation: unlock-screen 3s ease forwards; }
 .pin-lock.is-unlocking .lock-shackle { animation: shackle-open 3s ease forwards; }
+.pin-lock.is-unlocking .lock-image--closed { animation: lock-closed-fade 3s ease forwards; }
+.pin-lock.is-unlocking .lock-image--open { animation: lock-open-reveal 3s ease forwards; }
 .pin-lock.is-unlocking .unlock-status { animation: unlock-status 3s ease forwards; }
 
 @keyframes unlock-lock {
@@ -223,6 +227,17 @@ body {
     100% { opacity: 0; transform: rotate(-36deg); }
 }
 
+@keyframes lock-closed-fade {
+    0%, 24% { opacity: 1; }
+    32%, 100% { opacity: 0; }
+}
+
+@keyframes lock-open-reveal {
+    0%, 24% { opacity: 0; transform: scale(.95); }
+    32%, 70% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(.82); }
+}
+
 @keyframes unlock-status {
     0%, 48% { opacity: 0; transform: translateY(-4px) scale(.95); }
     58%, 76% { opacity: 1; transform: translateY(0) scale(1.08); }
@@ -233,6 +248,8 @@ body {
     .pin-lock.is-unlocking,
     .pin-lock.is-unlocking .lock-icon,
     .pin-lock.is-unlocking .lock-shackle,
+    .pin-lock.is-unlocking .lock-image--closed,
+    .pin-lock.is-unlocking .lock-image--open,
     .pin-lock.is-unlocking .unlock-status { animation-duration: .45s; }
 }
 
