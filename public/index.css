@@ -31,9 +31,6 @@ body {
     width: 76px;
     height: 76px;
     margin-bottom: 18px;
-    border: 1px solid rgba(145, 242, 100, .45);
-    border-radius: 24px;
-    background: rgba(145, 242, 100, .08);
     color: var(--green);
     font-size: 2.3rem;
     transform-origin: center;
@@ -263,4 +260,9 @@ body {
 @media (max-width: 420px) {
     .pin-lock,
     .athlete-selection-screen { padding: 30px 18px; border-radius: 24px; }
+
+    .pin-lock .lock-icon {
+        margin-top: -8px;
+        margin-bottom: 22px;
+    }
 }
