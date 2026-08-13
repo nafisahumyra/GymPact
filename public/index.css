@@ -39,17 +39,35 @@ body {
     transform-origin: center;
 }
 
-.lock-shackle {
+.lock-image,
+.lock-shackle-image {
     position: absolute;
-    top: 9px;
-    left: 24px;
-    width: 27px;
-    height: 25px;
-    border: 4px solid var(--green);
-    border-bottom: 0;
-    border-radius: 16px 16px 0 0;
+    display: block;
+    object-fit: contain;
+}
+
+.lock-image--closed {
+    top: 0;
+    left: 8px;
+    width: 60px;
+    height: 76px;
+}
+
+.lock-image--open {
+    top: 31px;
+    left: 10px;
+    width: 55px;
+    height: 44px;
     opacity: 0;
-    transform-origin: 4px 100%;
+}
+
+.lock-shackle-image {
+    top: 0;
+    left: 16px;
+    width: 43px;
+    height: 33px;
+    opacity: 0;
+    transform-origin: 2px 32px;
 }
 
 .unlock-status {
@@ -193,7 +211,9 @@ body {
 
 .pin-lock.is-unlocking .lock-icon { animation: unlock-lock 3s ease forwards; }
 .pin-lock.is-unlocking { animation: unlock-screen 3s ease forwards; }
-.pin-lock.is-unlocking .lock-shackle { animation: shackle-open 3s ease forwards; }
+.pin-lock.is-unlocking .lock-image--closed { animation: lock-closed-hide 3s steps(1, end) forwards; }
+.pin-lock.is-unlocking .lock-image--open { animation: lock-base-reveal 3s steps(1, end) forwards; }
+.pin-lock.is-unlocking .lock-shackle-image { animation: shackle-open 3s ease forwards; }
 .pin-lock.is-unlocking .unlock-status { animation: unlock-status 3s ease forwards; }
 
 @keyframes unlock-lock {
@@ -215,6 +235,16 @@ body {
     100% { opacity: 0; transform: rotate(-36deg); }
 }
 
+@keyframes lock-closed-hide {
+    0%, 31% { opacity: 1; }
+    32%, 100% { opacity: 0; }
+}
+
+@keyframes lock-base-reveal {
+    0%, 31% { opacity: 0; }
+    32%, 100% { opacity: 1; }
+}
+
 @keyframes unlock-status {
     0%, 48% { opacity: 0; transform: translateY(-4px) scale(.95); }
     58%, 76% { opacity: 1; transform: translateY(0) scale(1.08); }
@@ -224,7 +254,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .pin-lock.is-unlocking,
     .pin-lock.is-unlocking .lock-icon,
-    .pin-lock.is-unlocking .lock-shackle,
+    .pin-lock.is-unlocking .lock-image--closed,
+    .pin-lock.is-unlocking .lock-image--open,
+    .pin-lock.is-unlocking .lock-shackle-image,
     .pin-lock.is-unlocking .unlock-status { animation-duration: .45s; }
 }
 
