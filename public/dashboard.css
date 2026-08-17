@@ -630,8 +630,19 @@ body {
     .history-header-actions .secondary-button { flex: 1; }
     .history-header-actions .refresh-button { flex: 0 0 auto; }
     .challenge-status-pill { position: static; display: inline-block; margin-bottom: 4px; }
-    .exercise-tracker-card { padding: 15px; }
-    .exercise-tracker-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .exercise-tracker-actions button { min-width: 0; }
-    .exercise-tracker-actions button:first-child:last-child { grid-column: span 2; }
+    .exercise-tracker-card { padding: 19px 18px; }
+    .exercise-tracker-title p { margin-top: 5px; }
+    .exercise-progress-bar { margin-top: 21px; }
+    .exercise-tracker-actions {
+        flex-wrap: nowrap;
+        gap: 6px;
+        margin-top: 26px;
+    }
+    .exercise-tracker-actions button {
+        min-width: 0;
+        flex: 1 1 0;
+        padding: 8px 4px;
+        font-size: .67rem;
+        white-space: nowrap;
+    }
 }
