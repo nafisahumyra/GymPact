@@ -650,6 +650,21 @@ body {
     .history-header-actions .secondary-button { flex: 1; }
     .history-header-actions .refresh-button { flex: 0 0 auto; }
     .challenge-status-pill { position: static; display: inline-block; margin-bottom: 4px; }
+    .pact-card {
+        margin-inline: 4px;
+        padding: 24px 22px 30px;
+    }
+    .pact-card > .challenge-detail { margin-top: 24px; }
+    .challenge-progress {
+        margin-top: 24px;
+        padding: 17px;
+    }
+    .pact-card > .challenge-dates {
+        gap: 18px;
+        margin-top: 25px;
+        padding-block: 3px;
+    }
+    .pact-card > .challenge-detail:last-of-type { padding-bottom: 6px; }
     .exercise-tracker-card { padding: 19px 18px; }
     .exercise-tracker-title p { margin-top: 5px; }
     .exercise-progress-bar { margin-top: 21px; }
