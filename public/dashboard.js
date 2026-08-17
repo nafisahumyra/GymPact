@@ -918,6 +918,7 @@ const cancelExerciseSetButton = document.getElementById("cancel-exercise-set");
 const saveExerciseSetButton = document.getElementById("save-exercise-set");
 let pendingTrackedExercise = null;
 let targetModalResetsProgress = false;
+let returnToDashboardAfterTarget = false;
 
 
 function setExerciseFormError(element, message = "") {
@@ -937,10 +938,16 @@ function openExerciseTrackingChoice(exerciseName) {
 }
 
 
-function openExerciseTargetModal(exerciseName, target = "", resetsProgress = false) {
+function openExerciseTargetModal(
+    exerciseName,
+    target = "",
+    resetsProgress = false,
+    returnToDashboard = false
+) {
 
     pendingTrackedExercise = exerciseName;
     targetModalResetsProgress = resetsProgress;
+    returnToDashboardAfterTarget = returnToDashboard;
     exerciseTargetTitle.textContent = target
         ? `Change ${exerciseName} target`
         : `Set ${exerciseName} target`;
@@ -1060,7 +1067,7 @@ skipExerciseTrackingButton.addEventListener("click", () => {
 startExerciseTrackingButton.addEventListener("click", () => {
 
     exerciseTrackingChoiceModal.style.display = "none";
-    openExerciseTargetModal(pendingTrackedExercise);
+    openExerciseTargetModal(pendingTrackedExercise, "", false, true);
 
 });
 
@@ -1095,6 +1102,13 @@ saveExerciseTargetButton.addEventListener("click", async () => {
             targetModalResetsProgress
         );
         exerciseTargetModal.style.display = "none";
+
+        if (returnToDashboardAfterTarget) {
+
+            workoutModal.style.display = "none";
+            resetWorkoutForm();
+
+        }
 
     } catch (error) {
 
@@ -1427,6 +1441,27 @@ function getMeasurements() {
 }
 
 
+function resetWorkoutForm() {
+
+    measurementRows.innerHTML = "";
+    addMeasurementRow();
+
+    workoutPhotoInput.value = "";
+    selectedPhotoData = "";
+    selectedPhotoDataReady = Promise.resolve("");
+    workoutPhotoPreview.hidden = true;
+    workoutPhotoPreview.removeAttribute("src");
+    document.getElementById("workout-notes").value = "";
+
+    muscleChips.forEach(chip => {
+
+        chip.classList.remove("selected");
+
+    });
+
+}
+
+
 addMeasurementButton.addEventListener("click", () => {
 
     addMeasurementRow();
@@ -1583,26 +1618,7 @@ workoutModal.style.display = "none";
 
 // reset form
 
-measurementRows.innerHTML = "";
-addMeasurementRow();
-
-document.getElementById("workout-photo").value = "";
-
-selectedPhotoData = "";
-selectedPhotoDataReady = Promise.resolve("");
-workoutPhotoPreview.hidden = true;
-workoutPhotoPreview.removeAttribute("src");
-
-document.getElementById("workout-notes").value = "";
-
-
-// reset selected chips
-
-muscleChips.forEach(chip => {
-
-    chip.classList.remove("selected");
-
-});
+resetWorkoutForm();
 
 
 alert("Workout logged successfully 💪");
