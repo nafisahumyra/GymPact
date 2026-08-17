@@ -1324,33 +1324,43 @@ muscleChips.forEach(chip => {
 
         }
 
-        if (!exerciseTrackersLoaded) {
-
-            try {
-
-                await loadExerciseTrackers({ preserveOnError: true });
-
-            } catch (error) {
-
-                console.error("Unable to check exercise tracking.", error);
-
-                return;
-
-            }
-
-        }
-
         const tracker = getExerciseTracker(exerciseName);
 
-        if (!tracker) {
+        if (tracker) {
 
-            openExerciseTrackingChoice(exerciseName);
+            autoFillTrackedWorkout(exerciseName);
 
             return;
 
         }
 
-        autoFillTrackedWorkout(exerciseName);
+        // The decision must feel immediate. A background refresh may still be
+        // in flight, but it must never make the Pushups/Pullups chip inert.
+        openExerciseTrackingChoice(exerciseName);
+
+        if (!exerciseTrackersLoaded) {
+
+            loadExerciseTrackers()
+                .then(() => {
+
+                    const refreshedTracker = getExerciseTracker(exerciseName);
+
+                    if (refreshedTracker) {
+
+                        exerciseTrackingChoiceModal.style.display = "none";
+                        autoFillTrackedWorkout(exerciseName);
+
+                    }
+
+                })
+                .catch(error => {
+
+                    console.error("Unable to check exercise tracking.", error);
+
+                });
+
+        }
+
 
     });
 
