@@ -990,13 +990,24 @@ async function saveExerciseGoal(exerciseName, targetReps, reset = false) {
         { body: { sessionToken, userId: athleteId, exerciseName, targetReps, reset } }
     );
 
-    if (error || !Array.isArray(data?.trackers)) {
+    if (error || !data?.tracker) {
 
         throw error || new Error("Exercise goal was unavailable.");
 
     }
 
-    exerciseTrackers = data.trackers;
+    exerciseTrackers = [
+        ...exerciseTrackers.filter(tracker => {
+
+            return tracker.exerciseName !== data.tracker.exerciseName;
+
+        }),
+        data.tracker
+    ].sort((first, second) => {
+
+        return first.exerciseName.localeCompare(second.exerciseName);
+
+    });
     exerciseTrackersLoaded = true;
     renderExerciseTrackers();
 

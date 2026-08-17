@@ -3,7 +3,6 @@ import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session
 import {
   ensureAthlete,
   getCorsHeaders,
-  getExerciseTrackers,
   isTrackedExercise,
 } from "../_shared/exercise-tracking.ts";
 
@@ -46,30 +45,69 @@ serve(async request => {
       if (deleteError) throw deleteError;
     }
 
+    let totalReps = 0;
+    let totalSets = 0;
+
+    if (existing && !reset) {
+      const { data: logs, error: logsError } = await admin
+        .from("exercise_set_logs")
+        .select("reps")
+        .eq("goal_id", existing.id);
+
+      if (logsError) throw logsError;
+
+      totalSets = (logs ?? []).length;
+      totalReps = (logs ?? []).reduce((sum, log) => sum + log.reps, 0);
+    }
+
+    const completed = !reset && totalReps >= target;
+    let savedGoal;
+
     if (existing) {
-      const trackers = await getExerciseTrackers(userId);
-      const current = trackers.find(tracker => tracker.id === existing.id);
-      const completed = !reset && (current?.totalReps ?? 0) >= target;
       const { error } = await admin
         .from("exercise_goals")
         .update({
           target_reps: target,
           status: completed ? "completed" : "active",
-          completed_at: completed ? (current?.completedAt ?? new Date().toISOString()) : null,
+          completed_at: completed ? new Date().toISOString() : null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existing.id);
 
       if (error) throw error;
+
+      savedGoal = {
+        id: existing.id,
+        user_id: userId,
+        exercise_name: exerciseName,
+        target_reps: target,
+        status: completed ? "completed" : "active",
+        completed_at: completed ? new Date().toISOString() : null,
+      };
     } else {
-      const { error } = await admin
+      const { data: insertedGoal, error } = await admin
         .from("exercise_goals")
-        .insert({ user_id: userId, exercise_name: exerciseName, target_reps: target });
+        .insert({ user_id: userId, exercise_name: exerciseName, target_reps: target })
+        .select("id, user_id, exercise_name, target_reps, status, completed_at")
+        .single();
 
       if (error) throw error;
+
+      savedGoal = insertedGoal;
     }
 
-    return Response.json({ trackers: await getExerciseTrackers(userId) }, { headers: corsHeaders });
+    return Response.json({
+      tracker: {
+        id: savedGoal.id,
+        userId: savedGoal.user_id,
+        exerciseName: savedGoal.exercise_name,
+        targetReps: savedGoal.target_reps,
+        status: savedGoal.status,
+        completedAt: savedGoal.completed_at,
+        totalReps,
+        totalSets,
+      },
+    }, { headers: corsHeaders });
   } catch {
     return Response.json({ error: "Unable to save exercise goal." }, { status: 500, headers: corsHeaders });
   }
