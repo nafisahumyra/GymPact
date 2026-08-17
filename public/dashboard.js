@@ -692,11 +692,15 @@ function renderCurrentChallenge(challenge) {
     appendChallengeDetail(timePeriod, "End date", formatChallengeDate(challenge.endDate));
     currentChallengeContainer.appendChild(timePeriod);
 
-    appendChallengeDetail(
-        currentChallengeContainer,
-        "Challenge status",
-        getChallengeStatusText(challenge.status, challenge)
-    );
+    if (challenge.status !== "active") {
+
+        appendChallengeDetail(
+            currentChallengeContainer,
+            "Challenge status",
+            getChallengeStatusText(challenge.status, challenge)
+        );
+
+    }
 
     if (challenge.status === "pending" && !isChallengeCreator(challenge)) {
 
