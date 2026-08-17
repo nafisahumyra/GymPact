@@ -24,3 +24,12 @@ verify_jwt = false
 
 [functions.decline-pact]
 verify_jwt = false
+
+[functions.get-exercise-progress]
+verify_jwt = false
+
+[functions.save-exercise-goal]
+verify_jwt = false
+
+[functions.log-exercise-set]
+verify_jwt = false

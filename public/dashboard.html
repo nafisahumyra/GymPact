@@ -60,6 +60,15 @@
         </section>
 
 
+        <section class="dashboard-section exercise-tracking-section" aria-labelledby="exercise-progress-title">
+
+            <h3 id="exercise-progress-title">🎯 Exercise Progress</h3>
+
+            <div id="exercise-trackers" class="exercise-trackers" aria-live="polite"></div>
+
+        </section>
+
+
 
         <section class="dashboard-section">
 
@@ -239,6 +248,66 @@
                 <button id="keep-challenge">
                     Keep Challenge
                 </button>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="exercise-tracking-choice-modal" class="modal">
+
+        <div class="modal-content exercise-modal-content">
+
+            <h2>Track <span id="tracking-exercise-name"></span>?</h2>
+
+            <p>Would you like to track progress for this exercise?</p>
+
+            <div class="modal-buttons">
+                <button id="skip-exercise-tracking" type="button">No, just log workout</button>
+                <button id="start-exercise-tracking" type="button">Yes, track progress</button>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="exercise-target-modal" class="modal">
+
+        <div class="modal-content exercise-modal-content">
+
+            <h2 id="exercise-target-title">Set rep target</h2>
+
+            <label for="exercise-target-reps">Target reps</label>
+            <input id="exercise-target-reps" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 50">
+
+            <p id="exercise-target-error" class="exercise-form-error" role="alert" hidden></p>
+
+            <div class="modal-buttons">
+                <button id="cancel-exercise-target" type="button">Cancel</button>
+                <button id="save-exercise-target" type="button">Save target</button>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="log-exercise-set-modal" class="modal">
+
+        <div class="modal-content exercise-modal-content">
+
+            <h2>Log <span id="set-exercise-name"></span> set</h2>
+
+            <label for="exercise-set-reps">Reps in this set</label>
+            <input id="exercise-set-reps" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 12">
+
+            <p id="exercise-set-error" class="exercise-form-error" role="alert" hidden></p>
+
+            <div class="modal-buttons">
+                <button id="cancel-exercise-set" type="button">Cancel</button>
+                <button id="save-exercise-set" type="button">Log set</button>
             </div>
 
         </div>
