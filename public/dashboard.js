@@ -152,7 +152,6 @@ function renderExerciseTrackers() {
 
         const card = document.createElement("article");
         const header = document.createElement("div");
-        const icon = document.createElement("span");
         const title = document.createElement("div");
         const heading = document.createElement("h4");
         const score = document.createElement("p");
@@ -170,13 +169,11 @@ function renderExerciseTrackers() {
         }
 
         header.classList.add("exercise-tracker-header");
-        icon.classList.add("exercise-tracker-icon");
-        icon.appendChild(createExerciseIcon(tracker.exerciseName));
         title.classList.add("exercise-tracker-title");
         heading.textContent = tracker.exerciseName;
         score.textContent = `${tracker.totalReps} / ${tracker.targetReps} reps · ${tracker.totalSets} ${tracker.totalSets === 1 ? "set" : "sets"}`;
         title.append(heading, score);
-        header.append(icon, title);
+        header.appendChild(title);
 
         if (tracker.status === "completed") {
 
