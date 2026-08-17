@@ -139,19 +139,21 @@ function createExerciseIcon(exerciseName) {
 
 function renderExerciseTrackers() {
 
+    const exerciseTrackingSection = exerciseTrackersContainer.closest(
+        ".exercise-tracking-section"
+    );
+
     exerciseTrackersContainer.innerHTML = "";
 
     if (exerciseTrackers.length === 0) {
 
-        const empty = document.createElement("p");
-
-        empty.classList.add("exercise-tracker-empty");
-        empty.textContent = "Track a Pushups or Pullups goal from Add Workout.";
-        exerciseTrackersContainer.appendChild(empty);
+        exerciseTrackingSection.hidden = true;
 
         return;
 
     }
+
+    exerciseTrackingSection.hidden = false;
 
     exerciseTrackers.forEach(tracker => {
 
