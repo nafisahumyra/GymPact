@@ -203,7 +203,7 @@ body {
     flex: 0 0 30px;
     width: 30px;
     min-height: 30px;
-    margin-left: 8px;
+    margin-left: auto;
     padding: 0;
     border-color: var(--line);
     border-radius: 9px;
@@ -254,6 +254,7 @@ body {
 
 .exercise-tracker-actions {
     display: flex;
+    justify-content: flex-end;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 22px;
@@ -653,6 +654,7 @@ body {
     .exercise-tracker-title p { margin-top: 5px; }
     .exercise-progress-bar { margin-top: 21px; }
     .exercise-tracker-actions {
+        justify-content: center;
         flex-wrap: nowrap;
         gap: 6px;
         margin-top: 26px;
