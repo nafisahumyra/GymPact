@@ -929,6 +929,38 @@ function setExerciseFormError(element, message = "") {
 }
 
 
+async function getExerciseFunctionError(error, fallbackMessage) {
+
+    try {
+
+        const response = error?.context;
+        const payload = response?.clone
+            ? await response.clone().json()
+            : null;
+
+        if (payload?.diagnostic) {
+
+            return `${fallbackMessage} (${payload.diagnostic})`;
+
+        }
+
+        if (payload?.error) {
+
+            return payload.error;
+
+        }
+
+    } catch {
+
+        // The safe fallback below is shown when no JSON response is available.
+
+    }
+
+    return fallbackMessage;
+
+}
+
+
 function openExerciseTrackingChoice(exerciseName) {
 
     pendingTrackedExercise = exerciseName;
@@ -1124,7 +1156,13 @@ saveExerciseTargetButton.addEventListener("click", async () => {
     } catch (error) {
 
         console.error("Unable to save exercise target.", error);
-        setExerciseFormError(exerciseTargetError, "We couldn't save that target. Please try again.");
+        setExerciseFormError(
+            exerciseTargetError,
+            await getExerciseFunctionError(
+                error,
+                "We couldn't save that target. Please try again."
+            )
+        );
 
     } finally {
 

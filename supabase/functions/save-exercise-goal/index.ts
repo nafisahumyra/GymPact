@@ -8,12 +8,15 @@ import {
 
 serve(async request => {
   const corsHeaders = getCorsHeaders(request);
+  let stage = "request";
 
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
   try {
+    stage = "reading request";
     const { sessionToken, userId, exerciseName, targetReps, reset = false } = await request.json();
+    stage = "verifying session";
     const session = await verifyGymPactSession(sessionToken);
     const target = Number(targetReps);
 
@@ -27,6 +30,7 @@ serve(async request => {
     }
 
     const admin = getAdminClient();
+    stage = "loading goal";
     const { data: existing, error: existingError } = await admin
       .from("exercise_goals")
       .select("id")
@@ -37,6 +41,7 @@ serve(async request => {
     if (existingError) throw existingError;
 
     if (existing && reset) {
+      stage = "resetting sets";
       const { error: deleteError } = await admin
         .from("exercise_set_logs")
         .delete()
@@ -49,6 +54,7 @@ serve(async request => {
     let totalSets = 0;
 
     if (existing && !reset) {
+      stage = "counting sets";
       const { data: logs, error: logsError } = await admin
         .from("exercise_set_logs")
         .select("reps")
@@ -64,6 +70,7 @@ serve(async request => {
     let savedGoal;
 
     if (existing) {
+      stage = "updating goal";
       const { error } = await admin
         .from("exercise_goals")
         .update({
@@ -85,6 +92,7 @@ serve(async request => {
         completed_at: completed ? new Date().toISOString() : null,
       };
     } else {
+      stage = "creating goal";
       const { data: insertedGoal, error } = await admin
         .from("exercise_goals")
         .insert({ user_id: userId, exercise_name: exerciseName, target_reps: target })
@@ -108,7 +116,11 @@ serve(async request => {
         totalSets,
       },
     }, { headers: corsHeaders });
-  } catch {
-    return Response.json({ error: "Unable to save exercise goal." }, { status: 500, headers: corsHeaders });
+  } catch (error) {
+    console.error("save-exercise-goal failed", { stage, error: String(error) });
+    return Response.json({
+      error: "Unable to save exercise goal.",
+      diagnostic: stage,
+    }, { status: 500, headers: corsHeaders });
   }
 });
