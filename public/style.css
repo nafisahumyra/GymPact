@@ -61,6 +61,7 @@ button {
 
 button:hover:not(:disabled) {
     background: #a7ff80;
+    color: #071006;
     box-shadow: 0 0 22px var(--green-shadow);
     transform: translateY(-1px);
 }

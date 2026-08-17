@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.log-exercise-set]
 verify_jwt = false
+
+[functions.remove-exercise-goal]
+verify_jwt = false

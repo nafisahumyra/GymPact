@@ -23,6 +23,10 @@ const dashboardRefreshFeedback =
     document.getElementById("dashboard-refresh-feedback");
 let dashboardRefreshInFlight = null;
 const exerciseTrackersContainer = document.getElementById("exercise-trackers");
+const removeExerciseTrackerModal = document.getElementById("remove-exercise-tracker-modal");
+const removeExerciseTrackerCopy = document.getElementById("remove-exercise-tracker-copy");
+const keepExerciseTrackerButton = document.getElementById("keep-exercise-tracker");
+const confirmRemoveExerciseTrackerButton = document.getElementById("confirm-remove-exercise-tracker");
 const TRACKED_EXERCISES = ["Pushups", "Pullups"];
 const EXERCISE_ICONS = {
     Pushups: "assets/gp-images/pushup.png",
@@ -30,6 +34,7 @@ const EXERCISE_ICONS = {
 };
 let exerciseTrackers = [];
 let exerciseTrackersLoaded = false;
+let pendingExerciseTrackerRemoval = null;
 
 
 function getWorkoutDay(workout) {
@@ -185,6 +190,20 @@ function renderExerciseTrackers() {
 
         }
 
+        const remove = document.createElement("button");
+
+        remove.type = "button";
+        remove.classList.add("remove-exercise-tracker-button");
+        remove.textContent = "−";
+        remove.title = `Remove ${tracker.exerciseName} tracker`;
+        remove.setAttribute("aria-label", `Remove ${tracker.exerciseName} tracker`);
+        remove.addEventListener("click", () => {
+
+            openRemoveExerciseTrackerModal(tracker);
+
+        });
+        header.appendChild(remove);
+
         bar.classList.add("exercise-progress-bar");
         bar.style.setProperty("--progress", `${progress}%`);
         fill.classList.add("exercise-progress-fill");
@@ -246,6 +265,70 @@ function renderExerciseTrackers() {
         exerciseTrackersContainer.appendChild(card);
 
     });
+
+}
+
+
+function closeRemoveExerciseTrackerModal() {
+
+    pendingExerciseTrackerRemoval = null;
+    removeExerciseTrackerModal.style.display = "none";
+
+}
+
+
+function openRemoveExerciseTrackerModal(tracker) {
+
+    pendingExerciseTrackerRemoval = tracker;
+    removeExerciseTrackerCopy.textContent =
+        `Remove your ${tracker.exerciseName} target and ${tracker.totalSets} logged ${tracker.totalSets === 1 ? "set" : "sets"}? You can start a new target later from Add Workout.`;
+    removeExerciseTrackerModal.style.display = "flex";
+
+}
+
+
+async function removeExerciseTracker() {
+
+    const tracker = pendingExerciseTrackerRemoval;
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    if (!tracker || !sessionToken || !athleteId) {
+
+        return;
+
+    }
+
+    confirmRemoveExerciseTrackerButton.disabled = true;
+
+    try {
+
+        const supabase = GymPactSupabase.getClient();
+        const { data, error } = await supabase.functions.invoke(
+            "remove-exercise-goal",
+            { body: { sessionToken, userId: athleteId, exerciseName: tracker.exerciseName } }
+        );
+
+        if (error || !data?.removed) {
+
+            throw error || new Error("Exercise tracker was not removed.");
+
+        }
+
+        exerciseTrackers = exerciseTrackers.filter(item => item.id !== tracker.id);
+        renderExerciseTrackers();
+        closeRemoveExerciseTrackerModal();
+
+    } catch (error) {
+
+        console.error("Unable to remove exercise tracker.", error);
+        removeExerciseTrackerCopy.textContent = "We couldn't remove that tracker. Please try again.";
+
+    } finally {
+
+        confirmRemoveExerciseTrackerButton.disabled = false;
+
+    }
 
 }
 
@@ -1070,6 +1153,12 @@ skipExerciseTrackingButton.addEventListener("click", () => {
     exerciseTrackingChoiceModal.style.display = "none";
 
 });
+
+
+keepExerciseTrackerButton.addEventListener("click", closeRemoveExerciseTrackerModal);
+
+
+confirmRemoveExerciseTrackerButton.addEventListener("click", removeExerciseTracker);
 
 
 startExerciseTrackingButton.addEventListener("click", () => {
