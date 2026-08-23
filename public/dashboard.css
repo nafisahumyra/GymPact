@@ -123,15 +123,6 @@ body {
 .dashboard-tab { padding: 10px; border-radius: 10px; background: transparent; color: var(--muted); font-size: .84rem; }
 .dashboard-tab:hover { background: #1a1f1f; color: var(--text); box-shadow: none; transform: none; }
 .dashboard-tab.is-active { background: rgba(145, 242, 100, .12); color: var(--green); }
-.dashboard-tabs--history { margin-top: 20px; }
-
-.dashboard-actions {
-    display: flex;
-    gap: 10px;
-    margin: -8px 0 22px;
-}
-.dashboard-actions button { min-height: 42px; }
-.dashboard-actions #open-workout-modal { flex: 1; }
 .pact-navigation-card {
     display: grid;
     gap: 9px;
@@ -664,25 +655,6 @@ body {
 .history-header { margin-bottom: 20px; }
 .history-header-actions { display: flex; gap: 8px; }
 .history-supporting-text { margin: 17px 0 22px; color: var(--muted); font-size: .9rem; }
-.history-tabs {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    padding: 5px;
-    border: 1px solid var(--line-soft);
-    border-radius: 14px;
-    background: #101314;
-}
-.history-tab {
-    padding: 10px;
-    border-radius: 10px;
-    background: transparent;
-    color: var(--muted);
-    font-size: .84rem;
-}
-.history-tab:hover { background: #1a1f1f; color: var(--text); box-shadow: none; transform: none; }
-.history-tab.is-active { background: rgba(145, 242, 100, .12); color: var(--green); }
-
 .workout-card,
 .challenge-history-card { margin-bottom: 12px; padding: 18px; }
 .workout-card h3,
@@ -730,11 +702,8 @@ body {
     .refresh-button { padding: 8px 10px; }
     .modal { align-items: flex-end; padding: 0; }
     .modal-content { max-height: min(88dvh, 760px); padding: 24px 18px max(24px, env(safe-area-inset-bottom)); border-radius: 25px 25px 0 0; }
-    .dashboard-actions { margin-top: -10px; }
-    .dashboard-actions #new-challenge-button { padding-inline: 11px; }
     .history-header { align-items: flex-start; flex-direction: column; }
     .history-header-actions { width: 100%; }
-    .history-header-actions .secondary-button { flex: 1; }
     .history-header-actions .refresh-button { flex: 0 0 auto; }
     .challenge-status-pill { position: static; display: inline-block; margin-bottom: 4px; }
     .pact-card { margin-inline: 4px; padding: 20px; }

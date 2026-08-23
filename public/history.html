@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>GymPact History</title>
+    <title>GymPact</title>
 
     <link rel="icon" href="assets/gp-images/favicon.png" type="image/png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
@@ -26,7 +26,7 @@
 
         <h1 class="page-title">
             <img src="assets/gp-images/logo.png" alt="GymPact">
-            <span>History</span>
+            <span id="history-page-title">Workout History</span>
         </h1>
 
         <div class="history-header-actions">
@@ -35,35 +35,11 @@
                 ↻ Refresh
             </button>
 
-            <button id="back-dashboard" class="secondary-button">
-                Back to Dashboard
-            </button>
-
         </div>
 
     </header>
 
     <p id="history-refresh-feedback" class="refresh-feedback" role="status" hidden></p>
-
-    <nav class="dashboard-tabs dashboard-tabs--history" aria-label="Dashboard sections">
-        <button class="dashboard-tab" type="button" data-dashboard-link="dashboard.html">Overview</button>
-        <button class="dashboard-tab" type="button" data-dashboard-link="dashboard.html?tab=progress">Progress</button>
-        <button class="dashboard-tab is-active" type="button" aria-current="page">History</button>
-    </nav>
-
-
-    <div class="history-tabs" role="tablist" aria-label="History type">
-
-        <button id="workouts-tab" class="history-tab is-active" role="tab" aria-selected="true">
-            Workouts
-        </button>
-
-        <button id="challenges-tab" class="history-tab" role="tab" aria-selected="false">
-            Challenges
-        </button>
-
-    </div>
-
 
     <p id="history-user" class="history-supporting-text"></p>
 

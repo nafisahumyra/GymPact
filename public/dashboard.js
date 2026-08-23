@@ -1025,14 +1025,14 @@ newChallengeButton.addEventListener("click", async () => {
 
 workoutHistoryButton.addEventListener("click", () => {
 
-    window.location.href = "history.html";
+    window.location.href = "history.html?view=workouts";
 
 });
 
 
 pactHistoryButton.addEventListener("click", () => {
 
-    window.location.href = "history.html?tab=challenges";
+    window.location.href = "history.html?view=pacts";
 
 });
 
@@ -1111,11 +1111,15 @@ const workoutModal =
     document.getElementById("workout-modal");
 
 
-openModalButton.addEventListener("click", () => {
+if (openModalButton) {
 
-    workoutModal.style.display = "flex";
+    openModalButton.addEventListener("click", () => {
 
-});
+        workoutModal.style.display = "flex";
+
+    });
+
+}
 
 
 closeModalButton.addEventListener("click", () => {

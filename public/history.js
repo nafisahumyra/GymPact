@@ -13,30 +13,18 @@ const historyContainer =
 const challengeHistoryContainer =
     document.getElementById("challenge-history");
 
-
-const workoutsTab =
-    document.getElementById("workouts-tab");
-
-
-const challengesTab =
-    document.getElementById("challenges-tab");
 const historyRefreshButton =
     document.getElementById("history-refresh");
 const historyRefreshFeedback =
     document.getElementById("history-refresh-feedback");
-const dashboardLinks = document.querySelectorAll("[data-dashboard-link]");
-let activeHistoryTab = "workouts";
+const historyPageTitle =
+    document.getElementById("history-page-title");
+const requestedHistoryView = new URLSearchParams(window.location.search).get("view");
+const activeHistoryTab = requestedHistoryView === "pacts" ? "challenges" : "workouts";
 let historyRefreshInFlight = null;
 
-dashboardLinks.forEach(link => {
-
-    link.addEventListener("click", () => {
-
-        window.location.href = link.dataset.dashboardLink;
-
-    });
-
-});
+historyPageTitle.textContent = activeHistoryTab === "challenges" ? "Pact History" : "Workout History";
+document.title = `GymPact ${historyPageTitle.textContent}`;
 
 
 function renderEmptyState() {
@@ -251,8 +239,8 @@ function renderEmptyChallengeState() {
 
     challengeHistoryContainer.innerHTML = `
         <div class="history-empty-state">
-            <p>No completed challenges yet.</p>
-            <p>Finish a challenge to see its final score here.</p>
+            <p>No completed Pacts yet.</p>
+            <p>Finish a Pact to see its final score here.</p>
         </div>
     `;
 
@@ -314,7 +302,7 @@ async function renderChallengeHistory({ preserveOnError = false } = {}) {
         const wager = document.createElement("p");
 
         card.classList.add("challenge-history-card");
-        heading.textContent = "🤝 Challenge";
+        heading.textContent = "🤝 Pact";
         dateRange.classList.add("challenge-history-date");
         dateRange.textContent = formatDateRange(
             challenge.startDate,
@@ -355,23 +343,11 @@ function showHistoryTab(tab) {
 
     const showWorkouts = tab === "workouts";
 
-    activeHistoryTab = tab;
-
-    workoutsTab.classList.toggle("is-active", showWorkouts);
-    challengesTab.classList.toggle("is-active", !showWorkouts);
-    workoutsTab.setAttribute("aria-selected", String(showWorkouts));
-    challengesTab.setAttribute("aria-selected", String(!showWorkouts));
     historyContainer.hidden = !showWorkouts;
     challengeHistoryContainer.hidden = showWorkouts;
     historySupportingText.textContent = showWorkouts
         ? "Showing workouts shared by Nafisa and Mahfuzur"
-        : "Completed challenges shared by Nafisa and Mahfuzur";
-
-    if (!showWorkouts) {
-
-        renderChallengeHistory();
-
-    }
+        : "Completed Pacts shared by Nafisa and Mahfuzur";
 
 }
 
@@ -443,20 +419,6 @@ async function refreshHistory() {
 }
 
 
-workoutsTab.addEventListener("click", () => {
-
-    showHistoryTab("workouts");
-
-});
-
-
-challengesTab.addEventListener("click", () => {
-
-    showHistoryTab("challenges");
-
-});
-
-
 historyRefreshButton.addEventListener("click", refreshHistory);
 
 document.addEventListener("visibilitychange", () => {
@@ -470,22 +432,5 @@ document.addEventListener("visibilitychange", () => {
 });
 
 
-const requestedHistoryTab = new URLSearchParams(window.location.search).get("tab");
-
-if (requestedHistoryTab === "challenges") {
-
-    showHistoryTab("challenges");
-
-} else {
-
-    refreshHistory();
-
-}
-
-
-document.getElementById("back-dashboard")
-.addEventListener("click", () => {
-
-    window.location.href = "dashboard.html";
-
-});
+showHistoryTab(activeHistoryTab);
+refreshHistory();
