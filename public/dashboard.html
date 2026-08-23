@@ -40,6 +40,12 @@
         <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
             <button id="overview-tab" class="dashboard-tab is-active" type="button" role="tab" aria-selected="true">Overview</button>
             <button id="progress-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">Progress</button>
+            <button id="history-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">History</button>
+        </div>
+
+        <div class="dashboard-actions" aria-label="Dashboard actions">
+            <button id="open-workout-modal" type="button">+ Log Workout</button>
+            <button id="new-challenge-button" class="secondary-button" type="button">New Challenge</button>
         </div>
 
         <section class="dashboard-section" data-dashboard-tab-content="overview">
@@ -86,26 +92,6 @@
             <div id="current-challenge" class="pact-card"></div>
 
         </section>
-
-       
-
-        <div class="button-group" data-dashboard-tab-content="overview">
-
-            <button id="open-workout-modal">
-                + Log Workout
-            </button>
-        
-            <button id="history-button">
-                📖 History
-            </button>
-
-            <button id="new-challenge-button">
-                🤝 New Challenge
-            </button>
-        
-        </div>
-
-
 
         <!-- Workout Modal -->
 

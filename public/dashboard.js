@@ -718,6 +718,13 @@ function renderPactProgressDetail(challenge) {
 
 function showDashboardTab(tab) {
 
+    if (tab === "history") {
+
+        window.location.href = "history.html";
+        return;
+
+    }
+
     activeDashboardTab = tab;
     dashboardTabs.forEach(button => {
 
@@ -764,20 +771,24 @@ function renderCurrentChallenge(challenge) {
         createChallengeStatusPill(challenge.status)
     );
 
-    appendChallengeDetail(
-        currentChallengeContainer,
-        "Goal",
-        challenge.requirements?.length
-            ? `${challenge.timeframe.charAt(0).toUpperCase()}${challenge.timeframe.slice(1)} Goals`
-            : `Complete ${challenge.targetAmount} workout${challenge.targetAmount === 1 ? "" : "s"} per ${challenge.timeframe}`
-    );
+    const goalTitle = document.createElement("h4");
+
+    goalTitle.classList.add("challenge-goal-title");
+    goalTitle.textContent = challenge.requirements?.length
+        ? `${challenge.timeframe.charAt(0).toUpperCase()}${challenge.timeframe.slice(1)} Goals`
+        : `Complete ${challenge.targetAmount} workout${challenge.targetAmount === 1 ? "" : "s"} per ${challenge.timeframe}`;
+    currentChallengeContainer.appendChild(goalTitle);
 
     if (challenge.status === "active" && Array.isArray(challenge.progress)) {
 
         const progress = document.createElement("div");
 
         progress.classList.add("challenge-progress");
-        appendChallengeDetail(progress, "Progress", "");
+        const progressTitle = document.createElement("h4");
+
+        progressTitle.classList.add("challenge-progress-title");
+        progressTitle.textContent = "Your progress";
+        progress.appendChild(progressTitle);
         const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
         const athleteProgress = challenge.progress.find(participant => participant.userId === athleteId);
 
@@ -813,11 +824,10 @@ function renderCurrentChallenge(challenge) {
         `${challenge.wagerType === "reward" ? "Reward" : "Punishment"}: ${challenge.wagerDescription}`
     );
 
-    const timePeriod = document.createElement("div");
+    const timePeriod = document.createElement("p");
 
-    timePeriod.classList.add("challenge-dates");
-    appendChallengeDetail(timePeriod, "Start date", formatChallengeDate(challenge.startDate));
-    appendChallengeDetail(timePeriod, "End date", formatChallengeDate(challenge.endDate));
+    timePeriod.classList.add("challenge-period");
+    timePeriod.textContent = `${formatChallengeDate(challenge.startDate)} → ${formatChallengeDate(challenge.endDate)}`;
     currentChallengeContainer.appendChild(timePeriod);
 
     if (challenge.status !== "active") {
@@ -958,7 +968,9 @@ dashboardTabs.forEach(button => {
     });
 
 });
-showDashboardTab("overview");
+const requestedDashboardTab = new URLSearchParams(window.location.search).get("tab");
+
+showDashboardTab(requestedDashboardTab === "progress" ? "progress" : "overview");
 dashboardRefreshButton.addEventListener("click", refreshDashboard);
 
 document.addEventListener("visibilitychange", () => {

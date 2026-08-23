@@ -24,8 +24,19 @@ const historyRefreshButton =
     document.getElementById("history-refresh");
 const historyRefreshFeedback =
     document.getElementById("history-refresh-feedback");
+const dashboardLinks = document.querySelectorAll("[data-dashboard-link]");
 let activeHistoryTab = "workouts";
 let historyRefreshInFlight = null;
+
+dashboardLinks.forEach(link => {
+
+    link.addEventListener("click", () => {
+
+        window.location.href = link.dataset.dashboardLink;
+
+    });
+
+});
 
 
 function renderEmptyState() {
