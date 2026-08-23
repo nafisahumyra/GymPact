@@ -701,10 +701,11 @@ body.dashboard-page {
 .pact-form { margin: 24px auto 0; }
 .pact-requirements { margin: 0; padding: 0; border: 0; }
 .pact-requirements legend { margin-bottom: 10px; color: var(--text); font-size: .92rem; font-weight: 650; }
-.pact-requirement-rows { display: grid; gap: 10px; }
+#pact-requirement-rows { display: grid; }
 .pact-requirement-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(92px, .72fr) 42px; gap: 8px; }
-.pact-requirement-row + .pact-requirement-row::before { content: "AND"; position: absolute; top: -20px; left: 50%; color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .08em; transform: translateX(-50%); }
-.pact-requirement-row + .pact-requirement-row { margin-top: 18px; }
+.pact-requirement-row + .pact-requirement-row::before { content: "AND"; position: absolute; top: -30px; left: 50%; color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .08em; transform: translateX(-50%); }
+.pact-requirement-row + .pact-requirement-row { margin-top: 42px; }
+#add-pact-requirement { margin-top: 24px; }
 .pact-requirement-row .remove-measurement-button:only-child { visibility: hidden; }
 
 .pact-celebration { position: fixed; z-index: 20; inset: 0; overflow: hidden; pointer-events: none; }
