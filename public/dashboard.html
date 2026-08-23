@@ -16,11 +16,15 @@
 </head>
 
 
-<body data-protected-page data-protected-script="dashboard.js">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js">
 
-    <div class="dashboard-container">
+    <div class="dashboard-shell">
 
-        <div class="dashboard-header">
+        <header class="dashboard-app-header">
+
+            <div class="dashboard-container dashboard-header-content">
+
+                <div class="dashboard-header">
 
             <h1 class="brand-lockup">
                 <img src="assets/gp-images/logo.png" alt="GymPact">
@@ -31,17 +35,19 @@
                 ↻ Refresh
             </button>
 
-        </div>
+                </div>
 
-        <h2 id="welcome-message"></h2>
+                <h2 id="welcome-message"></h2>
 
-        <p id="dashboard-refresh-feedback" class="refresh-feedback" role="status" hidden></p>
+                <p id="dashboard-refresh-feedback" class="refresh-feedback" role="status" hidden></p>
 
-        <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
-            <button id="overview-tab" class="dashboard-tab is-active" type="button" role="tab" aria-selected="true">Overview</button>
-            <button id="progress-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">Progress</button>
-            <button id="pact-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">Pact</button>
-        </div>
+            </div>
+
+        </header>
+
+        <main class="dashboard-content" id="dashboard-content" tabindex="-1">
+
+            <div class="dashboard-container dashboard-content-inner">
 
         <section class="dashboard-section" data-dashboard-tab-content="overview">
 
@@ -109,6 +115,29 @@
             <div id="current-challenge" class="pact-card"></div>
 
         </section>
+
+            </div>
+
+        </main>
+
+        <nav class="dashboard-bottom-nav" aria-label="Dashboard sections">
+
+            <div class="dashboard-bottom-nav-inner" role="tablist">
+                <button id="overview-tab" class="dashboard-tab is-active" type="button" role="tab" aria-selected="true">
+                    <span class="dashboard-tab-icon" aria-hidden="true">⌂</span>
+                    <span>Overview</span>
+                </button>
+                <button id="progress-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
+                    <span class="dashboard-tab-icon" aria-hidden="true">↗</span>
+                    <span>Progress</span>
+                </button>
+                <button id="pact-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
+                    <span class="dashboard-tab-icon" aria-hidden="true">∞</span>
+                    <span>Pact</span>
+                </button>
+            </div>
+
+        </nav>
 
         <!-- Workout Modal -->
 
