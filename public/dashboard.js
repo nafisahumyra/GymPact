@@ -768,14 +768,6 @@ function renderCurrentChallenge(challenge) {
         createChallengeStatusPill(challenge.status)
     );
 
-    const goalTitle = document.createElement("h4");
-
-    goalTitle.classList.add("challenge-goal-title");
-    goalTitle.textContent = challenge.requirements?.length
-        ? `${challenge.timeframe.charAt(0).toUpperCase()}${challenge.timeframe.slice(1)} Goals`
-        : `Complete ${challenge.targetAmount} workout${challenge.targetAmount === 1 ? "" : "s"} per ${challenge.timeframe}`;
-    currentChallengeContainer.appendChild(goalTitle);
-
     if (challenge.status === "active" && Array.isArray(challenge.progress)) {
 
         const progress = document.createElement("div");
