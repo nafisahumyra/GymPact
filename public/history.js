@@ -87,7 +87,7 @@ function getWorkoutMeasurements(workout) {
                 measurement &&
                 typeof measurement.amount === "number" &&
                 measurement.amount > 0 &&
-                ["minutes", "reps", "sets", "miles"].includes(measurement.unit)
+                ["minutes", "reps", "sets", "miles", "steps"].includes(measurement.unit)
             );
 
         });
@@ -309,8 +309,9 @@ async function renderChallengeHistory({ preserveOnError = false } = {}) {
             challenge.startDate,
             challenge.endDate
         );
-        goal.textContent =
-            `Goal: ${challenge.targetAmount} workout${challenge.targetAmount === 1 ? "" : "s"} per ${challenge.timeframe}`;
+        goal.textContent = `Goals: ${(challenge.requirements || []).map(requirement =>
+            `${requirement.targetAmount.toLocaleString()} ${requirement.type === "hiit" ? "HIIT" : requirement.type}`
+        ).join(" · ")} per ${challenge.timeframe}`;
         scoreHeading.textContent = "Final score";
         result.classList.add("challenge-history-result");
         result.textContent = getChallengeResultText(challenge);
@@ -324,8 +325,9 @@ async function renderChallengeHistory({ preserveOnError = false } = {}) {
             const score = document.createElement("p");
 
             score.classList.add("challenge-history-score");
-            score.textContent =
-                `${participant.displayName}: ${participant.completed} / ${participant.target}`;
+            score.textContent = `${participant.displayName}: ${(participant.requirements || []).map(requirement =>
+                `${requirement.type === "hiit" ? "HIIT" : requirement.type}: ${requirement.completed.toLocaleString()} / ${requirement.targetAmount.toLocaleString()}`
+            ).join(" · ")}`;
             card.appendChild(score);
 
         });

@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 
-const measurementUnits = new Set(["minutes", "reps", "sets", "miles"]);
+const measurementUnits = new Set(["minutes", "reps", "sets", "miles", "steps"]);
 
 type Measurement = {
   amount: number;

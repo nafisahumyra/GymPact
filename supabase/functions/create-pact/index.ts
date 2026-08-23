@@ -51,8 +51,7 @@ serve(async (request) => {
 
     const {
       createdBy,
-      goalType,
-      targetAmount,
+      requirements,
       timeframe,
       wagerType,
       wagerDescription,
@@ -62,9 +61,15 @@ serve(async (request) => {
 
     if (
       typeof createdBy !== "string" ||
-      goalType !== "workouts" ||
-      !Number.isInteger(targetAmount) ||
-      targetAmount < 1 ||
+      !Array.isArray(requirements) ||
+      requirements.length === 0 ||
+      requirements.some(requirement => (
+        !requirement ||
+        !["workouts", "hiit", "steps"].includes(requirement.type) ||
+        !Number.isInteger(requirement.targetAmount) ||
+        requirement.targetAmount < 1
+      )) ||
+      new Set(requirements.map(requirement => requirement.type)).size !== requirements.length ||
       !["day", "week", "month"].includes(timeframe) ||
       !["reward", "punishment"].includes(wagerType) ||
       typeof wagerDescription !== "string" ||
@@ -86,16 +91,15 @@ serve(async (request) => {
     }
 
     const participantIds = athletes.map(athlete => athlete.id);
-    const { data: pact, error: pactError } = await admin.rpc("create_gympact_pact", {
+    const { data: pact, error: pactError } = await admin.rpc("create_gympact_pact_with_requirements", {
       p_created_by: createdBy,
-      p_goal_type: goalType,
-      p_target_amount: targetAmount,
       p_timeframe: timeframe,
       p_wager_type: wagerType,
       p_wager_description: wagerDescription.trim(),
       p_start_date: startDate,
       p_end_date: endDate,
       p_participant_ids: participantIds,
+      p_requirements: requirements,
     });
 
     if (pactError) {
@@ -110,8 +114,7 @@ serve(async (request) => {
       pact: {
         id: pact.id,
         participants: participantIds,
-        goalType: pact.goal_type,
-        targetAmount: pact.target_amount,
+        requirements,
         timeframe: pact.timeframe,
         wagerType: pact.wager_type,
         wagerDescription: pact.wager_description,

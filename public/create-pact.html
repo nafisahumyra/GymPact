@@ -26,20 +26,11 @@
 
         <form id="create-pact-form" class="modal-content pact-form">
 
-            <label for="pact-goal-type">Goal type</label>
-            <select id="pact-goal-type" required>
-                <option value="workouts">Workouts</option>
-            </select>
-
-            <label for="pact-target-amount">Target amount</label>
-            <input
-                type="number"
-                id="pact-target-amount"
-                min="1"
-                step="1"
-                placeholder="Example: 5"
-                required
-            >
+            <fieldset class="pact-requirements" id="pact-requirements">
+                <legend>Requirements</legend>
+                <div id="pact-requirement-rows"></div>
+                <button type="button" id="add-pact-requirement" class="add-measurement-button">+ Add requirement</button>
+            </fieldset>
 
             <label for="pact-timeframe">Timeframe</label>
             <select id="pact-timeframe" required>

@@ -1,6 +1,48 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
+import {
+  getPactRequirementProgress,
+  getPactRequirements,
+} from "../_shared/pact-requirements.ts";
+
+const PACT_TIME_ZONE = "America/New_York";
+
+function addUtcDays(date: string, days: number) {
+  const value = new Date(`${date}T00:00:00.000Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function getTimeZoneOffsetMs(instant: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+
+  return Date.UTC(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+    Number(values.hour),
+    Number(values.minute),
+    Number(values.second),
+  ) - instant.getTime();
+}
+
+function getLocalMidnightUtc(date: string) {
+  const utcMidnight = new Date(`${date}T00:00:00.000Z`);
+  let result = new Date(utcMidnight.getTime() - getTimeZoneOffsetMs(utcMidnight, PACT_TIME_ZONE));
+  result = new Date(utcMidnight.getTime() - getTimeZoneOffsetMs(result, PACT_TIME_ZONE));
+  return result;
+}
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -51,10 +93,8 @@ async function getPactProgress(
     return progress;
   }
 
-  const startOfPact = `${pact.start_date}T00:00:00.000Z`;
-  const endExclusive = new Date(`${pact.end_date}T00:00:00.000Z`);
-
-  endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+  const startOfPact = getLocalMidnightUtc(pact.start_date).toISOString();
+  const endExclusive = getLocalMidnightUtc(addUtcDays(pact.end_date, 1));
 
   const { data: workouts, error } = await admin
     .from("workouts")
@@ -103,7 +143,24 @@ async function mapPact(
     : [];
 
   const participants = participantDetails.map(participant => participant.userId);
-  const progress = await getPactProgress(admin, pact, participantDetails);
+  const requirements = await getPactRequirements(admin, String(pact.id));
+  const requirementProgress = await getPactRequirementProgress(
+    admin,
+    pact as { id: string; start_date: string; end_date: string; active_at: string | null },
+    participantDetails.map(participant => ({
+      userId: participant.userId,
+      displayName: participant.displayName ?? "GymPact athlete",
+    })),
+    requirements,
+  );
+  const progress = requirementProgress.map(participant => {
+    const workouts = participant.requirements.find(requirement => requirement.type === "workouts");
+    return {
+      ...participant,
+      completed: workouts?.completed ?? 0,
+      target: workouts?.targetAmount ?? 0,
+    };
+  });
 
   return {
     id: pact.id,
@@ -112,6 +169,7 @@ async function mapPact(
     participantDetails,
     goalType: pact.goal_type,
     targetAmount: pact.target_amount,
+    requirements,
     timeframe: pact.timeframe,
     wagerType: pact.wager_type,
     wagerDescription: pact.wager_description,

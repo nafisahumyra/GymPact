@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
+import { getPactRequirements } from "../_shared/pact-requirements.ts";
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -49,7 +50,7 @@ serve(async (request) => {
     await finalizeDueActivePacts(admin);
     const { data: pacts, error } = await admin
       .from("pacts")
-      .select("id, goal_type, target_amount, timeframe, wager_type, wager_description, start_date, end_date, final_result, final_workout_counts, winner_id, completed_at, pact_participants(user_id, users(display_name))")
+      .select("id, goal_type, target_amount, timeframe, wager_type, wager_description, start_date, end_date, final_result, final_workout_counts, final_requirement_progress, winner_id, completed_at, pact_participants(user_id, users(display_name))")
       .eq("status", "completed")
       .order("completed_at", { ascending: false });
 
@@ -57,19 +58,22 @@ serve(async (request) => {
       throw error;
     }
 
-    const history = (pacts ?? []).map(pact => {
+    const history = await Promise.all((pacts ?? []).map(async pact => {
+      const requirements = await getPactRequirements(admin, pact.id);
       const participants = (pact.pact_participants ?? []).map(participant => ({
         userId: participant.user_id,
         displayName: participant.users?.display_name ?? "GymPact athlete",
-        completed: Number(pact.final_workout_counts?.[participant.user_id] ?? 0),
-        target: pact.target_amount,
+        requirements: requirements.map(requirement => ({
+          ...requirement,
+          completed: Number(pact.final_requirement_progress?.[participant.user_id]?.[requirement.type]?.completed
+            ?? (requirement.type === "workouts" ? pact.final_workout_counts?.[participant.user_id] : 0)),
+        })),
       }));
       const winner = participants.find(participant => participant.userId === pact.winner_id);
 
       return {
         id: pact.id,
-        goalType: pact.goal_type,
-        targetAmount: pact.target_amount,
+        requirements,
         timeframe: pact.timeframe,
         wagerType: pact.wager_type,
         wagerDescription: pact.wager_description,
@@ -80,7 +84,7 @@ serve(async (request) => {
         winnerName: winner?.displayName ?? null,
         participants,
       };
-    });
+    }));
 
     return new Response(JSON.stringify({ pacts: history }), {
       status: 200,

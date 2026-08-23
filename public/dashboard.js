@@ -21,6 +21,11 @@ const dashboardRefreshButton =
     document.getElementById("dashboard-refresh");
 const dashboardRefreshFeedback =
     document.getElementById("dashboard-refresh-feedback");
+const dashboardTabs = document.querySelectorAll(".dashboard-tab");
+const dashboardTabContent = document.querySelectorAll("[data-dashboard-tab-content]");
+const pactProgressSection = document.getElementById("pact-progress-section");
+const pactProgressDetail = document.getElementById("pact-progress-detail");
+let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
 const exerciseTrackersContainer = document.getElementById("exercise-trackers");
 const removeExerciseTrackerModal = document.getElementById("remove-exercise-tracker-modal");
@@ -153,7 +158,7 @@ function renderExerciseTrackers() {
 
     }
 
-    exerciseTrackingSection.hidden = false;
+    exerciseTrackingSection.hidden = activeDashboardTab !== "progress";
 
     exerciseTrackers.forEach(tracker => {
 
@@ -623,6 +628,116 @@ function appendChallengeDetail(container, title, value) {
 }
 
 
+function getRequirementLabel(type) {
+
+    return { workouts: "🏋️ Workouts", hiit: "⚡ HIIT", steps: "👟 Steps" }[type] || type;
+
+}
+
+
+function appendRequirementProgress(container, requirement) {
+
+    const row = document.createElement("div");
+    const label = document.createElement("div");
+    const text = document.createElement("span");
+    const score = document.createElement("span");
+    const meter = document.createElement("div");
+    const fill = document.createElement("span");
+    const percentage = Math.min((requirement.completed / requirement.targetAmount) * 100, 100);
+
+    row.classList.add("pact-requirement");
+    label.classList.add("pact-requirement-label");
+    text.textContent = getRequirementLabel(requirement.type);
+    score.textContent = `${requirement.completed.toLocaleString()} / ${requirement.targetAmount.toLocaleString()}`;
+    label.append(text, score);
+    row.appendChild(label);
+
+    if (requirement.type === "hiit") {
+
+        const icons = document.createElement("div");
+
+        icons.classList.add("hiit-icons");
+        for (let index = 0; index < requirement.targetAmount; index += 1) {
+
+            const icon = document.createElement("span");
+            const image = document.createElement("img");
+
+            icon.classList.add("hiit-icon");
+            if (index < requirement.completed) icon.classList.add("is-complete");
+            image.src = "assets/gp-images/HIIT.png";
+            image.alt = "";
+            icon.appendChild(image);
+            icons.appendChild(icon);
+
+        }
+        row.appendChild(icons);
+
+    } else {
+
+        meter.classList.add("pact-requirement-meter");
+        fill.style.width = `${percentage}%`;
+        meter.appendChild(fill);
+        row.appendChild(meter);
+
+    }
+
+    container.appendChild(row);
+
+}
+
+
+function renderPactProgressDetail(challenge) {
+
+    pactProgressDetail.innerHTML = "";
+
+    if (!challenge || challenge.status !== "active") {
+
+        pactProgressSection.hidden = true;
+
+        return;
+
+    }
+
+    pactProgressSection.hidden = activeDashboardTab !== "progress";
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const athleteProgress = challenge.progress?.find(participant => participant.userId === athleteId);
+
+    if (!athleteProgress) return;
+
+    const card = document.createElement("article");
+    const heading = document.createElement("h4");
+
+    card.classList.add("pact-progress-athlete");
+    heading.textContent = `${athleteProgress.displayName}'s progress`;
+    card.appendChild(heading);
+    athleteProgress.requirements.forEach(requirement => appendRequirementProgress(card, requirement));
+    pactProgressDetail.appendChild(card);
+
+}
+
+
+function showDashboardTab(tab) {
+
+    activeDashboardTab = tab;
+    dashboardTabs.forEach(button => {
+
+        const active = button.id === `${tab}-tab`;
+
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-selected", String(active));
+
+    });
+    dashboardTabContent.forEach(content => {
+
+        content.hidden = content.dataset.dashboardTabContent !== tab;
+
+    });
+    renderPactProgressDetail(currentChallenge);
+    renderExerciseTrackers();
+
+}
+
+
 function renderCurrentChallenge(challenge) {
 
     currentChallengeContainer.innerHTML = "";
@@ -638,14 +753,12 @@ function renderCurrentChallenge(challenge) {
             "Start one to keep each other accountable.";
 
         currentChallengeContainer.append(message, description);
+        renderPactProgressDetail(null);
 
         return;
 
     }
 
-
-    const workoutLabel =
-        challenge.targetAmount === 1 ? "workout" : "workouts";
 
     currentChallengeContainer.appendChild(
         createChallengeStatusPill(challenge.status)
@@ -654,7 +767,9 @@ function renderCurrentChallenge(challenge) {
     appendChallengeDetail(
         currentChallengeContainer,
         "Goal",
-        `Complete ${challenge.targetAmount} ${workoutLabel} per ${challenge.timeframe}`
+        challenge.requirements?.length
+            ? `${challenge.timeframe.charAt(0).toUpperCase()}${challenge.timeframe.slice(1)} Goals`
+            : `Complete ${challenge.targetAmount} workout${challenge.targetAmount === 1 ? "" : "s"} per ${challenge.timeframe}`
     );
 
     if (challenge.status === "active" && Array.isArray(challenge.progress)) {
@@ -663,16 +778,29 @@ function renderCurrentChallenge(challenge) {
 
         progress.classList.add("challenge-progress");
         appendChallengeDetail(progress, "Progress", "");
+        const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+        const athleteProgress = challenge.progress.find(participant => participant.userId === athleteId);
 
-        challenge.progress.forEach(participant => {
+        if (athleteProgress?.requirements?.length) {
 
-            const participantProgress = document.createElement("p");
+            athleteProgress.requirements.forEach(requirement => {
 
-            participantProgress.textContent =
-                `${participant.displayName}: ${participant.completed} / ${participant.target}`;
-            progress.appendChild(participantProgress);
+                appendRequirementProgress(progress, requirement);
 
-        });
+            });
+
+        } else {
+
+            challenge.progress.forEach(participant => {
+
+                const participantProgress = document.createElement("p");
+
+                participantProgress.textContent = `${participant.displayName}: ${participant.completed} / ${participant.target}`;
+                progress.appendChild(participantProgress);
+
+            });
+
+        }
 
         currentChallengeContainer.appendChild(progress);
         celebratePactCompletion(challenge);
@@ -707,6 +835,8 @@ function renderCurrentChallenge(challenge) {
         appendPendingChallengeActions(currentChallengeContainer);
 
     }
+
+    renderPactProgressDetail(challenge);
 
 }
 
@@ -819,6 +949,16 @@ async function refreshDashboard() {
 
 
 renderCurrentChallenge(currentChallenge);
+dashboardTabs.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        showDashboardTab(button.id.replace("-tab", ""));
+
+    });
+
+});
+showDashboardTab("overview");
 dashboardRefreshButton.addEventListener("click", refreshDashboard);
 
 document.addEventListener("visibilitychange", () => {
@@ -972,7 +1112,7 @@ const measurementRows =
 const addMeasurementButton =
     document.getElementById("add-measurement");
 
-const MEASUREMENT_UNITS = ["minutes", "reps", "sets", "miles"];
+const MEASUREMENT_UNITS = ["minutes", "reps", "sets", "miles", "steps"];
 
 const workoutPhotoInput =
     document.getElementById("workout-photo");

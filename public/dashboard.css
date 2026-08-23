@@ -110,6 +110,34 @@ body {
 
 .dashboard-section { margin-bottom: 22px; }
 
+.dashboard-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin: 0 0 22px;
+    padding: 5px;
+    border: 1px solid var(--line-soft);
+    border-radius: 14px;
+    background: #101314;
+}
+.dashboard-tab { padding: 10px; border-radius: 10px; background: transparent; color: var(--muted); font-size: .84rem; }
+.dashboard-tab:hover { background: #1a1f1f; color: var(--text); box-shadow: none; transform: none; }
+.dashboard-tab.is-active { background: rgba(145, 242, 100, .12); color: var(--green); }
+.pact-progress-detail { display: grid; gap: 12px; }
+.pact-progress-athlete { padding: 17px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
+.pact-progress-athlete h4 { margin-bottom: 12px; color: var(--text); font-size: .95rem; }
+.pact-requirement { display: grid; gap: 7px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.07); }
+.pact-requirement:first-of-type { border-top: 0; }
+.pact-requirement-label { display: flex; justify-content: space-between; gap: 12px; color: #e1e6e2; font-size: .9rem; }
+.pact-requirement-meter { height: 7px; overflow: hidden; border-radius: 999px; background: #080a0a; }
+.pact-requirement-meter span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+.hiit-icons { display: flex; gap: 7px; }
+.hiit-icon { position: relative; display: grid; place-items: center; width: 30px; height: 30px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: #070909; }
+.hiit-icon img { width: 100%; height: 100%; object-fit: contain; opacity: .5; }
+.hiit-icon.is-complete { border-color: var(--green); box-shadow: 0 0 10px rgba(145,242,100,.2); }
+.hiit-icon.is-complete img { opacity: 1; }
+.hiit-icon.is-complete::after { content: "✓"; position: absolute; right: -5px; bottom: -5px; display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; background: var(--green); color: #071006; font-size: .66rem; font-weight: 900; }
+
 .dashboard-section > h3 {
     margin-bottom: 11px;
     color: #e9efea;
@@ -553,6 +581,13 @@ body {
 .exercise-modal-content label { display: block; margin: 4px 0 8px; color: var(--text); font-size: .92rem; font-weight: 650; }
 .exercise-form-error { margin-top: 10px !important; color: #ff8a8c !important; font-size: .84rem; }
 .pact-form { margin: 24px auto 0; }
+.pact-requirements { margin: 0; padding: 0; border: 0; }
+.pact-requirements legend { margin-bottom: 10px; color: var(--text); font-size: .92rem; font-weight: 650; }
+.pact-requirement-rows { display: grid; gap: 10px; }
+.pact-requirement-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(92px, .72fr) 42px; gap: 8px; }
+.pact-requirement-row + .pact-requirement-row::before { content: "AND"; position: absolute; top: -20px; left: 50%; color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .08em; transform: translateX(-50%); }
+.pact-requirement-row + .pact-requirement-row { margin-top: 18px; }
+.pact-requirement-row .remove-measurement-button:only-child { visibility: hidden; }
 
 .pact-celebration { position: fixed; z-index: 20; inset: 0; overflow: hidden; pointer-events: none; }
 .pact-celebration-message {

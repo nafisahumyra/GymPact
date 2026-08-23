@@ -37,8 +37,12 @@
 
         <p id="dashboard-refresh-feedback" class="refresh-feedback" role="status" hidden></p>
 
+        <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
+            <button id="overview-tab" class="dashboard-tab is-active" type="button" role="tab" aria-selected="true">Overview</button>
+            <button id="progress-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">Progress</button>
+        </div>
 
-        <section class="dashboard-section">
+        <section class="dashboard-section" data-dashboard-tab-content="overview">
 
             <h3>🔥 Your Progress</h3>
 
@@ -60,7 +64,12 @@
         </section>
 
 
-        <section class="dashboard-section exercise-tracking-section" aria-labelledby="exercise-progress-title" hidden>
+        <section id="pact-progress-section" class="dashboard-section" data-dashboard-tab-content="progress" hidden>
+            <h3>🔥 Pact Progress</h3>
+            <div id="pact-progress-detail" class="pact-progress-detail"></div>
+        </section>
+
+        <section class="dashboard-section exercise-tracking-section" data-dashboard-tab-content="progress" aria-labelledby="exercise-progress-title" hidden>
 
             <h3 id="exercise-progress-title">🔥 Exercise Progress</h3>
 
@@ -70,7 +79,7 @@
 
 
 
-        <section class="dashboard-section">
+        <section class="dashboard-section" data-dashboard-tab-content="overview">
 
             <h3>🔥 Current Challenge</h3>
 
@@ -80,7 +89,7 @@
 
        
 
-        <div class="button-group">
+        <div class="button-group" data-dashboard-tab-content="overview">
 
             <button id="open-workout-modal">
                 + Log Workout
