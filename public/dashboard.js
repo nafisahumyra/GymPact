@@ -718,13 +718,6 @@ function renderPactProgressDetail(challenge) {
 
 function showDashboardTab(tab) {
 
-    if (tab === "history") {
-
-        window.location.href = "history.html";
-        return;
-
-    }
-
     activeDashboardTab = tab;
     dashboardTabs.forEach(button => {
 
@@ -970,7 +963,7 @@ dashboardTabs.forEach(button => {
 });
 const requestedDashboardTab = new URLSearchParams(window.location.search).get("tab");
 
-showDashboardTab(requestedDashboardTab === "progress" ? "progress" : "overview");
+showDashboardTab(["progress", "pact"].includes(requestedDashboardTab) ? requestedDashboardTab : "overview");
 dashboardRefreshButton.addEventListener("click", refreshDashboard);
 
 document.addEventListener("visibilitychange", () => {
@@ -987,6 +980,8 @@ refreshDashboard();
 
 const newChallengeButton =
     document.getElementById("new-challenge-button");
+const workoutHistoryButton = document.getElementById("open-workout-history");
+const pactHistoryButton = document.getElementById("open-pact-history");
 
 const challengeActiveModal =
     document.getElementById("challenge-active-modal");
@@ -1024,6 +1019,20 @@ newChallengeButton.addEventListener("click", async () => {
     }
 
     challengeActiveModal.style.display = "flex";
+
+});
+
+
+workoutHistoryButton.addEventListener("click", () => {
+
+    window.location.href = "history.html";
+
+});
+
+
+pactHistoryButton.addEventListener("click", () => {
+
+    window.location.href = "history.html?tab=challenges";
 
 });
 
@@ -1890,17 +1899,3 @@ alert("Workout logged successfully 💪");
 
 
 });
-
-const historyButton =
-    document.getElementById("history-button");
-
-
-if (historyButton) {
-
-    historyButton.addEventListener("click", () => {
-
-        window.location.href = "history.html";
-
-    });
-
-}

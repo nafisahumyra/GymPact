@@ -132,7 +132,29 @@ body {
 }
 .dashboard-actions button { min-height: 42px; }
 .dashboard-actions #open-workout-modal { flex: 1; }
-.dashboard-actions #new-challenge-button { flex: 0 0 auto; }
+.pact-navigation-card {
+    display: grid;
+    gap: 9px;
+    padding: 9px;
+    border: 1px solid var(--line-soft);
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(25, 29, 30, .94), rgba(13, 16, 17, .98));
+}
+.pact-navigation-action {
+    display: grid;
+    gap: 3px;
+    min-height: 58px;
+    padding: 13px 14px;
+    border-color: var(--line);
+    background: var(--panel-elevated);
+    color: var(--text);
+    text-align: left;
+}
+.pact-navigation-action span { font-size: .94rem; }
+.pact-navigation-action small { color: var(--muted); font-size: .75rem; font-weight: 600; }
+.pact-navigation-action:hover:not(:disabled) { color: #071006; }
+.pact-navigation-action:hover:not(:disabled) small { color: #1d3920; }
+.pact-navigation-primary { border-color: var(--green); background: var(--green); color: #071006; text-align: center; }
 .pact-progress-detail { display: grid; gap: 12px; }
 .pact-progress-athlete { padding: 17px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
 .pact-progress-athlete h4 { margin-bottom: 12px; color: var(--text); font-size: .95rem; }

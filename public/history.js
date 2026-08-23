@@ -470,7 +470,17 @@ document.addEventListener("visibilitychange", () => {
 });
 
 
-refreshHistory();
+const requestedHistoryTab = new URLSearchParams(window.location.search).get("tab");
+
+if (requestedHistoryTab === "challenges") {
+
+    showHistoryTab("challenges");
+
+} else {
+
+    refreshHistory();
+
+}
 
 
 document.getElementById("back-dashboard")

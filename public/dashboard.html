@@ -40,12 +40,11 @@
         <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
             <button id="overview-tab" class="dashboard-tab is-active" type="button" role="tab" aria-selected="true">Overview</button>
             <button id="progress-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">Progress</button>
-            <button id="history-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">History</button>
+            <button id="pact-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">Pact</button>
         </div>
 
-        <div class="dashboard-actions" aria-label="Dashboard actions">
+        <div class="dashboard-actions" data-dashboard-tab-content="overview" aria-label="Dashboard actions">
             <button id="open-workout-modal" type="button">+ Log Workout</button>
-            <button id="new-challenge-button" class="secondary-button" type="button">New Challenge</button>
         </div>
 
         <section class="dashboard-section" data-dashboard-tab-content="overview">
@@ -65,6 +64,26 @@
                     <p id="streak-count">0 days</p>
                 </div>
 
+            </div>
+
+        </section>
+
+        <section class="dashboard-section" data-dashboard-tab-content="pact" hidden>
+
+            <h3>🤝 Pact</h3>
+
+            <div class="pact-navigation-card">
+                <button id="open-workout-history" class="pact-navigation-action" type="button">
+                    <span>🏋️ Workouts</span>
+                    <small>View shared workout history</small>
+                </button>
+                <button id="open-pact-history" class="pact-navigation-action" type="button">
+                    <span>🤝 Pact History</span>
+                    <small>View completed Pacts and results</small>
+                </button>
+                <button id="new-challenge-button" class="pact-navigation-action pact-navigation-primary" type="button">
+                    + New Pact
+                </button>
             </div>
 
         </section>
@@ -204,15 +223,15 @@
 
         <div class="modal-content challenge-modal-content">
 
-            <h2>Current Challenge Active</h2>
+            <h2>Current Pact Active</h2>
 
             <p>
-                You can only have one challenge at a time.
+                You can only have one Pact at a time.
             </p>
 
             <div class="modal-buttons">
                 <button id="open-cancel-challenge-modal">
-                    Cancel Challenge
+                    Cancel Pact
                 </button>
 
                 <button id="close-challenge-active-modal">
@@ -229,19 +248,19 @@
 
         <div class="modal-content challenge-modal-content">
 
-            <h2>Cancel Challenge?</h2>
+            <h2>Cancel Pact?</h2>
 
             <p>
-                This challenge will be marked as cancelled and cannot be resumed.
+                This Pact will be marked as cancelled and cannot be resumed.
             </p>
 
             <div class="modal-buttons">
                 <button id="confirm-cancel-challenge">
-                    Yes, Cancel Challenge
+                    Yes, Cancel Pact
                 </button>
 
                 <button id="keep-challenge">
-                    Keep Challenge
+                    Keep Pact
                 </button>
             </div>
 
