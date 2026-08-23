@@ -703,9 +703,8 @@ body {
     .refresh-button { padding: 8px 10px; }
     .modal { align-items: flex-end; padding: 0; }
     .modal-content { max-height: min(88dvh, 760px); padding: 24px 18px max(24px, env(safe-area-inset-bottom)); border-radius: 25px 25px 0 0; }
-    .history-header { align-items: flex-start; flex-direction: column; }
-    .history-header-actions { width: 100%; }
-    .history-header-actions .secondary-button { flex: 1; }
+    .history-header { align-items: center; flex-direction: row; gap: 8px; }
+    .history-header-actions { width: auto; margin-left: auto; }
     .challenge-status-pill { position: static; display: inline-block; margin-bottom: 4px; }
     .pact-card { margin-inline: 4px; padding: 20px; }
     .pact-card > .challenge-detail { margin-top: 17px; }
