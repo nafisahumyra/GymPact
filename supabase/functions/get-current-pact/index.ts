@@ -6,44 +6,6 @@ import {
   getPactRequirements,
 } from "../_shared/pact-requirements.ts";
 
-const PACT_TIME_ZONE = "America/New_York";
-
-function addUtcDays(date: string, days: number) {
-  const value = new Date(`${date}T00:00:00.000Z`);
-  value.setUTCDate(value.getUTCDate() + days);
-  return value.toISOString().slice(0, 10);
-}
-
-function getTimeZoneOffsetMs(instant: Date, timeZone: string) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(instant);
-  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
-
-  return Date.UTC(
-    Number(values.year),
-    Number(values.month) - 1,
-    Number(values.day),
-    Number(values.hour),
-    Number(values.minute),
-    Number(values.second),
-  ) - instant.getTime();
-}
-
-function getLocalMidnightUtc(date: string) {
-  const utcMidnight = new Date(`${date}T00:00:00.000Z`);
-  let result = new Date(utcMidnight.getTime() - getTimeZoneOffsetMs(utcMidnight, PACT_TIME_ZONE));
-  result = new Date(utcMidnight.getTime() - getTimeZoneOffsetMs(result, PACT_TIME_ZONE));
-  return result;
-}
-
 const allowedOrigins = new Set([
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -64,60 +26,6 @@ function getCorsHeaders(request: Request) {
   }
 
   return headers;
-}
-
-async function getPactProgress(
-  admin: ReturnType<typeof getAdminClient>,
-  pact: Record<string, unknown>,
-  participantDetails: Array<{ userId: string; displayName?: string }>,
-) {
-  const target = Number(pact.target_amount);
-  const progress = participantDetails.map(participant => ({
-    userId: participant.userId,
-    displayName: participant.displayName ?? "GymPact athlete",
-    completed: 0,
-    target,
-  }));
-
-  if (pact.status !== "active") {
-    return null;
-  }
-
-  // Existing active pacts created before active_at was introduced cannot be
-  // backdated safely. Returning zero avoids counting any pre-acceptance work.
-  if (
-    typeof pact.active_at !== "string" ||
-    typeof pact.start_date !== "string" ||
-    typeof pact.end_date !== "string"
-  ) {
-    return progress;
-  }
-
-  const startOfPact = getLocalMidnightUtc(pact.start_date).toISOString();
-  const endExclusive = getLocalMidnightUtc(addUtcDays(pact.end_date, 1));
-
-  const { data: workouts, error } = await admin
-    .from("workouts")
-    .select("user_id")
-    .in("user_id", participantDetails.map(participant => participant.userId))
-    .gte("logged_at", startOfPact)
-    .gte("logged_at", pact.active_at)
-    .lt("logged_at", endExclusive.toISOString());
-
-  if (error) {
-    throw error;
-  }
-
-  const counts = new Map<string, number>();
-
-  for (const workout of workouts ?? []) {
-    counts.set(workout.user_id, (counts.get(workout.user_id) ?? 0) + 1);
-  }
-
-  return progress.map(participant => ({
-    ...participant,
-    completed: Math.min(counts.get(participant.userId) ?? 0, target),
-  }));
 }
 
 async function mapPact(
