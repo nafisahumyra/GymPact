@@ -146,6 +146,7 @@ body {
 .pact-navigation-action:hover:not(:disabled) { color: #071006; }
 .pact-navigation-action:hover:not(:disabled) small { color: #1d3920; }
 .pact-navigation-primary { border-color: var(--green); background: var(--green); color: #071006; text-align: center; }
+.progress-workout-action { width: 100%; }
 .pact-progress-detail { display: grid; gap: 12px; }
 .pact-progress-athlete { padding: 17px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
 .pact-progress-athlete h4 { margin-bottom: 12px; color: var(--text); font-size: .95rem; }
@@ -704,7 +705,7 @@ body {
     .modal-content { max-height: min(88dvh, 760px); padding: 24px 18px max(24px, env(safe-area-inset-bottom)); border-radius: 25px 25px 0 0; }
     .history-header { align-items: flex-start; flex-direction: column; }
     .history-header-actions { width: 100%; }
-    .history-header-actions .refresh-button { flex: 0 0 auto; }
+    .history-header-actions .secondary-button { flex: 1; }
     .challenge-status-pill { position: static; display: inline-block; margin-bottom: 4px; }
     .pact-card { margin-inline: 4px; padding: 20px; }
     .pact-card > .challenge-detail { margin-top: 17px; }

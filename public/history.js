@@ -13,10 +13,10 @@ const historyContainer =
 const challengeHistoryContainer =
     document.getElementById("challenge-history");
 
-const historyRefreshButton =
-    document.getElementById("history-refresh");
-const historyRefreshFeedback =
-    document.getElementById("history-refresh-feedback");
+const historyLoadFeedback =
+    document.getElementById("history-load-feedback");
+const backToPactButton =
+    document.getElementById("back-to-pact");
 const historyPageTitle =
     document.getElementById("history-page-title");
 const requestedHistoryView = new URLSearchParams(window.location.search).get("view");
@@ -354,8 +354,8 @@ function showHistoryTab(tab) {
 
 function setHistoryRefreshFeedback(message = "") {
 
-    historyRefreshFeedback.textContent = message;
-    historyRefreshFeedback.hidden = !message;
+    historyLoadFeedback.textContent = message;
+    historyLoadFeedback.hidden = !message;
 
 }
 
@@ -370,10 +370,6 @@ async function refreshHistory() {
 
     historyRefreshInFlight = (async () => {
 
-        historyRefreshButton.disabled = true;
-        historyRefreshButton.classList.add("is-loading");
-        historyRefreshButton.setAttribute("aria-busy", "true");
-        historyRefreshButton.textContent = "Refreshing";
         setHistoryRefreshFeedback();
 
         try {
@@ -397,11 +393,6 @@ async function refreshHistory() {
 
         } finally {
 
-            historyRefreshButton.disabled = false;
-            historyRefreshButton.classList.remove("is-loading");
-            historyRefreshButton.removeAttribute("aria-busy");
-            historyRefreshButton.textContent = "↻ Refresh";
-
         }
 
     })();
@@ -419,7 +410,11 @@ async function refreshHistory() {
 }
 
 
-historyRefreshButton.addEventListener("click", refreshHistory);
+backToPactButton.addEventListener("click", () => {
+
+    window.location.href = "dashboard.html?tab=pact";
+
+});
 
 document.addEventListener("visibilitychange", () => {
 
