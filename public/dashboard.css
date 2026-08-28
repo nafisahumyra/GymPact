@@ -44,7 +44,8 @@ body.dashboard-page {
     gap: 14px;
 }
 
-.dashboard-header { margin-bottom: 9px; }
+.dashboard-header { min-width: 0; margin-bottom: 9px; }
+.dashboard-header .brand-lockup { min-width: 0; }
 
 .dashboard-content {
     flex: 1 1 auto;
@@ -115,23 +116,28 @@ body.dashboard-page {
 }
 
 .header-workout-action {
-    display: grid;
-    width: 46px;
-    min-width: 46px;
-    height: 46px;
-    min-height: 46px;
-    padding: 0;
-    border-color: var(--green);
-    border-radius: 50%;
-    background: var(--green);
-    color: #071006;
-    font-size: 1.8rem;
-    font-weight: 800;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 9px 12px;
+    border-color: rgba(145, 242, 100, .42);
+    border-radius: 12px;
+    background: var(--panel-elevated);
+    color: var(--text);
+    font-size: .76rem;
+    font-weight: 750;
     line-height: 1;
-    place-items: center;
     white-space: nowrap;
 }
-.header-workout-action:hover:not(:disabled) { background: #a3fb7a; }
+.header-workout-plus { color: var(--green); font-size: 1rem; font-weight: 850; }
+.header-workout-action:hover:not(:disabled) {
+    border-color: rgba(145, 242, 100, .7);
+    background: #1b2020;
+    color: var(--text);
+}
 
 .refresh-button:hover:not(:disabled),
 .secondary-button:hover:not(:disabled) {
@@ -239,17 +245,22 @@ body.dashboard-page {
 .pact-navigation-action:hover:not(:disabled) { color: #071006; }
 .pact-navigation-action:hover:not(:disabled) small { color: #1d3920; }
 .pact-navigation-primary {
-    position: relative;
-    display: grid;
-    place-items: center;
-    padding: 13px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 18px;
     border-color: var(--green);
     background: var(--green);
     color: #071006;
     line-height: 1;
     text-align: center;
 }
-.pact-navigation-plus { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); }
+.pact-navigation-primary-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
 .pact-progress-detail { display: grid; gap: 12px; }
 .pact-progress-athlete { padding: 17px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
 .pact-progress-athlete h4 { margin-bottom: 12px; color: var(--text); font-size: .95rem; }
@@ -787,6 +798,10 @@ body.dashboard-page {
 @media (max-width: 520px) {
     .dashboard-header { margin-bottom: 12px; }
     .brand-lockup img { width: 36px; height: 36px; border-radius: 10px; }
+    .dashboard-header { gap: 8px; }
+    .brand-lockup { gap: 7px; }
+    .brand-lockup .wordmark-image { width: min(170px, calc(100vw - 190px)); }
+    .header-workout-action { padding-inline: 10px; font-size: .72rem; }
     .muscle-chip {
         flex-direction: column;
         justify-content: center;
