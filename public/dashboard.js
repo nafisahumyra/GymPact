@@ -902,10 +902,14 @@ async function refreshDashboard() {
 
     dashboardRefreshInFlight = (async () => {
 
-        dashboardRefreshButton.disabled = true;
-        dashboardRefreshButton.classList.add("is-loading");
-        dashboardRefreshButton.setAttribute("aria-busy", "true");
-        dashboardRefreshButton.textContent = "Refreshing";
+        if (dashboardRefreshButton) {
+
+            dashboardRefreshButton.disabled = true;
+            dashboardRefreshButton.classList.add("is-loading");
+            dashboardRefreshButton.setAttribute("aria-busy", "true");
+            dashboardRefreshButton.textContent = "Refreshing";
+
+        }
         setDashboardRefreshFeedback();
 
         try {
@@ -925,10 +929,14 @@ async function refreshDashboard() {
 
         } finally {
 
-            dashboardRefreshButton.disabled = false;
-            dashboardRefreshButton.classList.remove("is-loading");
-            dashboardRefreshButton.removeAttribute("aria-busy");
-            dashboardRefreshButton.textContent = "↻ Refresh";
+            if (dashboardRefreshButton) {
+
+                dashboardRefreshButton.disabled = false;
+                dashboardRefreshButton.classList.remove("is-loading");
+                dashboardRefreshButton.removeAttribute("aria-busy");
+                dashboardRefreshButton.textContent = "↻ Refresh";
+
+            }
 
         }
 
@@ -960,7 +968,11 @@ dashboardTabs.forEach(button => {
 const requestedDashboardTab = new URLSearchParams(window.location.search).get("tab");
 
 showDashboardTab(["progress", "pact"].includes(requestedDashboardTab) ? requestedDashboardTab : "overview");
-dashboardRefreshButton.addEventListener("click", refreshDashboard);
+if (dashboardRefreshButton) {
+
+    dashboardRefreshButton.addEventListener("click", refreshDashboard);
+
+}
 
 document.addEventListener("visibilitychange", () => {
 
