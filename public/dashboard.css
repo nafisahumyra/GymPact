@@ -115,15 +115,20 @@ body.dashboard-page {
 }
 
 .header-workout-action {
-    flex: none;
-    min-height: 42px;
-    padding: 10px 14px;
+    display: grid;
+    width: 46px;
+    min-width: 46px;
+    height: 46px;
+    min-height: 46px;
+    padding: 0;
     border-color: var(--green);
-    border-radius: 13px;
+    border-radius: 50%;
     background: var(--green);
     color: #071006;
-    font-size: .82rem;
+    font-size: 1.8rem;
     font-weight: 800;
+    line-height: 1;
+    place-items: center;
     white-space: nowrap;
 }
 .header-workout-action:hover:not(:disabled) { background: #a3fb7a; }
@@ -233,8 +238,18 @@ body.dashboard-page {
 .pact-navigation-action small { color: var(--muted); font-size: .75rem; font-weight: 600; }
 .pact-navigation-action:hover:not(:disabled) { color: #071006; }
 .pact-navigation-action:hover:not(:disabled) small { color: #1d3920; }
-.pact-navigation-primary { border-color: var(--green); background: var(--green); color: #071006; text-align: center; }
-.progress-workout-action { width: 100%; }
+.pact-navigation-primary {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: 13px 48px;
+    border-color: var(--green);
+    background: var(--green);
+    color: #071006;
+    line-height: 1;
+    text-align: center;
+}
+.pact-navigation-plus { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); }
 .pact-progress-detail { display: grid; gap: 12px; }
 .pact-progress-athlete { padding: 17px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
 .pact-progress-athlete h4 { margin-bottom: 12px; color: var(--text); font-size: .95rem; }
