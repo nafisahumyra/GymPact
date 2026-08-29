@@ -765,6 +765,9 @@ body.dashboard-page {
 }
 
 .challenge-modal-content p { color: var(--muted); line-height: 1.55; }
+.challenge-modal-content .pact-cancel-warning { margin-top: 18px; color: #f8cb69; font-size: .86rem; font-weight: 750; text-align: center; }
+.modal#new-pact-choice-modal .modal-content,
+.modal#challenge-active-modal .modal-content { transition: transform .18s ease-out; touch-action: pan-y; }
 .exercise-modal-content p { color: var(--muted); line-height: 1.55; }
 .exercise-modal-content label { display: block; margin: 4px 0 8px; color: var(--text); font-size: .92rem; font-weight: 650; }
 .exercise-form-error { margin-top: 10px !important; color: #ff8a8c !important; font-size: .84rem; }

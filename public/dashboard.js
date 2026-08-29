@@ -1115,15 +1115,88 @@ const cancelChallengeModal =
 const openCancelChallengeModalButton =
     document.getElementById("open-cancel-challenge-modal");
 
-const closeChallengeActiveModalButton =
-    document.getElementById("close-challenge-active-modal");
-
 const confirmCancelChallengeButton =
     document.getElementById("confirm-cancel-challenge");
 
 const keepChallengeButton =
     document.getElementById("keep-challenge");
 const newPactChoiceModal = document.getElementById("new-pact-choice-modal");
+
+function dismissSheet(sheet) {
+
+    sheet.style.display = "none";
+    const content = sheet.querySelector(".modal-content");
+
+    if (content) {
+
+        content.style.transform = "";
+
+    }
+
+}
+
+function makeSheetDismissible(sheet) {
+
+    const content = sheet.querySelector(".modal-content");
+    let startY = null;
+
+    sheet.addEventListener("click", event => {
+
+        if (event.target === sheet) {
+
+            dismissSheet(sheet);
+
+        }
+
+    });
+
+    content.addEventListener("pointerdown", event => {
+
+        startY = event.clientY;
+
+    });
+
+    content.addEventListener("pointermove", event => {
+
+        if (startY === null) return;
+
+        const distance = Math.max(0, event.clientY - startY);
+
+        if (distance > 0) {
+
+            content.style.transform = `translateY(${distance}px)`;
+
+        }
+
+    });
+
+    content.addEventListener("pointerup", event => {
+
+        if (startY !== null && event.clientY - startY > 72) {
+
+            dismissSheet(sheet);
+
+        } else {
+
+            content.style.transform = "";
+
+        }
+
+        startY = null;
+
+    });
+
+    content.addEventListener("pointercancel", () => {
+
+        startY = null;
+        content.style.transform = "";
+
+    });
+
+}
+
+makeSheetDismissible(newPactChoiceModal);
+makeSheetDismissible(challengeActiveModal);
 
 
 async function startWeeklyPact() {
@@ -1173,13 +1246,6 @@ workoutHistoryButton.addEventListener("click", () => {
 pactHistoryButton.addEventListener("click", () => {
 
     window.location.href = "history.html?view=pacts";
-
-});
-
-
-closeChallengeActiveModalButton.addEventListener("click", () => {
-
-    challengeActiveModal.style.display = "none";
 
 });
 
