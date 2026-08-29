@@ -312,34 +312,62 @@
 
     <div id="monthly-pact-create-modal" class="modal">
         <div class="modal-content exercise-modal-content">
-            <h2 id="monthly-create-title">Create Month Pact</h2>
-            <p id="monthly-create-copy"></p>
-            <label for="monthly-goal">Your goal</label>
-            <textarea id="monthly-goal" placeholder="Example: Complete 12 strength workouts"></textarea>
-            <label for="monthly-consequence">Shared consequence</label>
-            <textarea id="monthly-consequence" placeholder="Example: Both complete the agreed consequence"></textarea>
-            <label for="monthly-signature">Your initials / signature</label>
-            <input id="monthly-signature" type="text" maxlength="60" placeholder="Your initials">
-            <p id="monthly-create-error" class="exercise-form-error" hidden></p>
-            <div class="modal-buttons">
-                <button id="cancel-monthly-create" type="button">Cancel</button>
-                <button id="save-monthly-create" type="button">Create Pact</button>
+            <div id="monthly-create-details-step">
+                <h2>Create Month Pact</h2>
+                <p id="monthly-create-copy"></p>
+                <p class="monthly-pact-supporting">Choose individual goals. Either you both achieve them, or you both face the consequence.</p>
+                <label for="monthly-goal">Your goal</label>
+                <textarea id="monthly-goal" placeholder="Run a mile in 10 minutes."></textarea>
+                <label for="monthly-consequence">Shared consequence</label>
+                <textarea id="monthly-consequence" placeholder="Enter your punishment"></textarea>
+                <p id="monthly-create-error" class="exercise-form-error" hidden></p>
+                <div class="modal-buttons">
+                    <button id="cancel-monthly-create" type="button">Cancel</button>
+                    <button id="next-monthly-create" type="button">Next</button>
+                </div>
+            </div>
+            <div id="monthly-create-pledge-step" hidden>
+                <h2>Your Pledge</h2>
+                <p id="monthly-create-pledge" class="monthly-pledge"></p>
+                <p class="monthly-pledge-consequence">If I fail to achieve my goal, we both face the agreed consequence:</p>
+                <p id="monthly-create-pledge-consequence" class="monthly-pledge-value"></p>
+                <label for="monthly-signature">Your initials</label>
+                <input id="monthly-signature" class="initials-input" type="text" maxlength="8" placeholder="NH">
+                <p id="monthly-create-pledge-error" class="exercise-form-error" hidden></p>
+                <div class="modal-buttons">
+                    <button id="back-monthly-create" type="button">Back</button>
+                    <button id="save-monthly-create" type="button">Send</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="monthly-pact-sign-modal" class="modal">
         <div class="modal-content exercise-modal-content">
-            <h2>Sign Month Pact</h2>
-            <p id="monthly-sign-copy"></p>
-            <label for="monthly-sign-goal">Your goal</label>
-            <textarea id="monthly-sign-goal" placeholder="Your personal monthly goal"></textarea>
-            <label for="monthly-signature-input">Your initials / signature</label>
-            <input id="monthly-signature-input" type="text" maxlength="60" placeholder="Your initials">
-            <p id="monthly-sign-error" class="exercise-form-error" hidden></p>
-            <div class="modal-buttons">
-                <button id="decline-monthly-pact" type="button">Decline</button>
-                <button id="save-monthly-sign" type="button">Sign &amp; Accept</button>
+            <div id="monthly-sign-goal-step">
+                <h2>Month Pact</h2>
+                <p id="monthly-sign-copy"></p>
+                <p class="monthly-pact-supporting">Choose your own goal. Either you both achieve them, or you both face the consequence.</p>
+                <label for="monthly-sign-goal">Your goal</label>
+                <textarea id="monthly-sign-goal" placeholder="Run a mile in 10 minutes."></textarea>
+                <p id="monthly-sign-error" class="exercise-form-error" hidden></p>
+                <div class="modal-buttons">
+                    <button id="decline-monthly-pact" type="button">Decline</button>
+                    <button id="next-monthly-sign" type="button">Next</button>
+                </div>
+            </div>
+            <div id="monthly-sign-pledge-step" hidden>
+                <h2>Your Pledge</h2>
+                <p id="monthly-sign-pledge" class="monthly-pledge"></p>
+                <p class="monthly-pledge-consequence">If I fail to achieve my goal, we both face the agreed consequence:</p>
+                <p id="monthly-sign-pledge-consequence" class="monthly-pledge-value"></p>
+                <label for="monthly-signature-input">Your initials</label>
+                <input id="monthly-signature-input" class="initials-input" type="text" maxlength="8" placeholder="MH">
+                <p id="monthly-sign-pledge-error" class="exercise-form-error" hidden></p>
+                <div class="modal-buttons">
+                    <button id="back-monthly-sign" type="button">Back</button>
+                    <button id="save-monthly-sign" type="button">Sign &amp; Accept</button>
+                </div>
             </div>
         </div>
     </div>

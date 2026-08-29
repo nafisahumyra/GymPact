@@ -768,6 +768,11 @@ body.dashboard-page {
 .challenge-modal-content .pact-cancel-warning { margin-top: 18px; color: #f8cb69; font-size: .86rem; font-weight: 750; text-align: center; }
 .modal#new-pact-choice-modal .modal-content,
 .modal#challenge-active-modal .modal-content { transition: transform .18s ease-out; touch-action: pan-y; }
+.monthly-pact-supporting { margin-top: -9px; color: var(--muted); font-size: .84rem; line-height: 1.45; }
+.monthly-pledge { color: var(--text) !important; font-size: 1rem; font-weight: 650; line-height: 1.6 !important; }
+.monthly-pledge-consequence { margin-top: 18px; color: var(--muted); line-height: 1.5; }
+.monthly-pledge-value { margin-top: 8px; padding: 12px; border-left: 2px solid var(--green); background: rgba(145,242,100,.06); color: #e8efe8 !important; line-height: 1.5; }
+.modal-content input.initials-input { width: min(132px, 100%); text-align: center; text-transform: uppercase; }
 .exercise-modal-content p { color: var(--muted); line-height: 1.55; }
 .exercise-modal-content label { display: block; margin: 4px 0 8px; color: var(--text); font-size: .92rem; font-weight: 650; }
 .exercise-form-error { margin-top: 10px !important; color: #ff8a8c !important; font-size: .84rem; }

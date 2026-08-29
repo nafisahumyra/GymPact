@@ -1039,21 +1039,52 @@ async function loadMonthlyPact({ preserveOnError = false } = {}) {
 
 const modal = id => document.getElementById(id);
 function setMonthlyError(id, message = "") { const element = modal(id); element.textContent = message; element.hidden = !message; }
-function openMonthlyCreate() { modal("monthly-pact-create-modal").style.display = "flex"; modal("monthly-create-copy").textContent = `This Pact is for ${monthlyCandidate?.candidateLabel || "the upcoming month"}.`; setMonthlyError("monthly-create-error"); }
-function openMonthlySign() { modal("monthly-pact-sign-modal").style.display = "flex"; modal("monthly-sign-copy").textContent = `${monthlyPact.monthLabel} Pact: ${monthlyPact.consequence}`; setMonthlyError("monthly-sign-error"); }
+function showMonthlyStep(detailsId, pledgeId, showPledge) { modal(detailsId).hidden = showPledge; modal(pledgeId).hidden = !showPledge; }
+function monthPactDeadline(pact) { return new Date(`${pact.monthEnd}T12:00:00`).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }); }
+function monthEndForStart(monthStart) { const date = new Date(`${monthStart}T12:00:00`); return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().slice(0, 10); }
+function openMonthlyCreate() {
+    modal("monthly-pact-create-modal").style.display = "flex";
+    modal("monthly-create-copy").textContent = `This Pact is for ${monthlyCandidate?.candidateLabel || "the upcoming month"}.`;
+    modal("monthly-goal").value = ""; modal("monthly-consequence").value = ""; modal("monthly-signature").value = "";
+    showMonthlyStep("monthly-create-details-step", "monthly-create-pledge-step", false); setMonthlyError("monthly-create-error"); setMonthlyError("monthly-create-pledge-error");
+}
+function openMonthlySign() {
+    modal("monthly-pact-sign-modal").style.display = "flex";
+    const sender = monthlyPact.commitments.find(item => item.userId === monthlyPact.createdBy);
+    modal("monthly-sign-copy").textContent = `${sender?.displayName || "Your partner"}’s goal: ${sender?.goal || "Not available"}. Shared consequence: ${monthlyPact.consequence}`;
+    modal("monthly-sign-goal").value = ""; modal("monthly-signature-input").value = "";
+    showMonthlyStep("monthly-sign-goal-step", "monthly-sign-pledge-step", false); setMonthlyError("monthly-sign-error"); setMonthlyError("monthly-sign-pledge-error");
+}
 function openMonthlyCheckin(date) { monthlyCheckinDate = date; modal("monthly-checkin-date").textContent = formatMonthDate(date); modal("monthly-checkin-text").value = ""; setMonthlyError("monthly-checkin-error"); modal("monthly-checkin-modal").style.display = "flex"; }
 function openMonthlyCompletion() { modal("monthly-completion-photo").value = ""; setMonthlyError("monthly-completion-error"); modal("monthly-completion-modal").style.display = "flex"; }
 
 modal("cancel-monthly-create").addEventListener("click", () => { modal("monthly-pact-create-modal").style.display = "none"; });
+modal("next-monthly-create").addEventListener("click", () => {
+    const goal = modal("monthly-goal").value.trim(), consequence = modal("monthly-consequence").value.trim();
+    if (!goal || !consequence) return setMonthlyError("monthly-create-error", "Add your goal and shared consequence.");
+    const deadline = monthPactDeadline({ monthEnd: monthEndForStart(monthlyCandidate.candidateMonth) });
+    modal("monthly-create-pledge").textContent = `I, ${currentUser}, commit to achieving ${goal} by ${deadline}.`;
+    modal("monthly-create-pledge-consequence").textContent = consequence;
+    showMonthlyStep("monthly-create-details-step", "monthly-create-pledge-step", true); setMonthlyError("monthly-create-pledge-error");
+});
+modal("back-monthly-create").addEventListener("click", () => { showMonthlyStep("monthly-create-details-step", "monthly-create-pledge-step", false); });
 modal("save-monthly-create").addEventListener("click", async () => {
     const button = modal("save-monthly-create"), goal = modal("monthly-goal").value.trim(), consequence = modal("monthly-consequence").value.trim(), signature = modal("monthly-signature").value.trim();
-    if (!goal || !consequence || !signature) return setMonthlyError("monthly-create-error", "Add your goal, consequence, and signature.");
+    if (!signature) return setMonthlyError("monthly-create-pledge-error", "Add your initials to send this Pact.");
     button.disabled = true; try { const { error } = await monthlyRequest("create", { goal, consequence, signature }); if (error) throw error; modal("monthly-pact-create-modal").style.display = "none"; await loadMonthlyPact(); } catch (error) { setMonthlyError("monthly-create-error", "We couldn’t create that Month Pact. Please try again."); } finally { button.disabled = false; }
 });
 modal("decline-monthly-pact").addEventListener("click", async () => { const button = modal("decline-monthly-pact"); button.disabled = true; try { const { error } = await monthlyRequest("decline", { pactId: monthlyPact.id }); if (error) throw error; modal("monthly-pact-sign-modal").style.display = "none"; await loadMonthlyPact(); } catch { setMonthlyError("monthly-sign-error", "We couldn’t decline that Pact. Please try again."); } finally { button.disabled = false; } });
+modal("next-monthly-sign").addEventListener("click", () => {
+    const goal = modal("monthly-sign-goal").value.trim();
+    if (!goal) return setMonthlyError("monthly-sign-error", "Add your individual goal.");
+    modal("monthly-sign-pledge").textContent = `I, ${currentUser}, commit to achieving ${goal} by ${monthPactDeadline(monthlyPact)}.`;
+    modal("monthly-sign-pledge-consequence").textContent = monthlyPact.consequence;
+    showMonthlyStep("monthly-sign-goal-step", "monthly-sign-pledge-step", true); setMonthlyError("monthly-sign-pledge-error");
+});
+modal("back-monthly-sign").addEventListener("click", () => { showMonthlyStep("monthly-sign-goal-step", "monthly-sign-pledge-step", false); });
 modal("save-monthly-sign").addEventListener("click", async () => {
     const button = modal("save-monthly-sign"), goal = modal("monthly-sign-goal").value.trim(), signature = modal("monthly-signature-input").value.trim();
-    if (!goal || !signature) return setMonthlyError("monthly-sign-error", "Add your goal and signature to sign.");
+    if (!signature) return setMonthlyError("monthly-sign-pledge-error", "Add your initials to sign and accept.");
     button.disabled = true; try { const { error } = await monthlyRequest("sign", { pactId: monthlyPact.id, goal, signature }); if (error) throw error; modal("monthly-pact-sign-modal").style.display = "none"; await loadMonthlyPact(); } catch { setMonthlyError("monthly-sign-error", "We couldn’t sign that Pact. Please try again."); } finally { button.disabled = false; }
 });
 modal("cancel-monthly-checkin").addEventListener("click", () => { modal("monthly-checkin-modal").style.display = "none"; });
