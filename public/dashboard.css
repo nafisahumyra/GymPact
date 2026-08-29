@@ -768,7 +768,7 @@ body.dashboard-page {
 .challenge-modal-content .pact-cancel-warning { margin-top: 18px; color: #f8cb69; font-size: .86rem; font-weight: 750; text-align: center; }
 .modal#new-pact-choice-modal .modal-content,
 .modal#challenge-active-modal .modal-content { transition: transform .18s ease-out; touch-action: pan-y; }
-.monthly-pact-month { margin-top: -16px; color: var(--muted) !important; font-size: .9rem; font-weight: 650; }
+.monthly-pact-month { margin-top: -16px; color: var(--green) !important; font-size: .9rem; font-weight: 650; text-align: center; }
 .monthly-pact-supporting { margin: 20px 0 24px; color: var(--muted); font-size: .84rem; line-height: 1.5; }
 .monthly-pledge { color: var(--text) !important; font-size: 1rem; font-weight: 650; line-height: 1.6 !important; }
 .monthly-pledge-consequence { margin-top: 18px; color: var(--muted); line-height: 1.5; }
