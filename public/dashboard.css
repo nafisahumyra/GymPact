@@ -262,6 +262,11 @@ body.dashboard-page {
     gap: 6px;
 }
 .month-pact-section { min-width: 0; }
+.monthly-test-mode { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -5px 0 12px; padding: 8px 10px; border: 1px dashed rgba(145,242,100,.34); border-radius: 12px; background: rgba(145,242,100,.05); }
+.monthly-test-mode > p { color: var(--green); font-size: .68rem; font-weight: 800; letter-spacing: .06em; line-height: 1.35; text-transform: uppercase; }
+.monthly-test-mode-actions { display: flex; flex: none; gap: 5px; }
+.monthly-test-mode-actions button { min-height: 29px; padding: 5px 7px; border-color: var(--line); background: #111415; color: var(--muted); font-size: .67rem; }
+.monthly-test-mode-actions button.is-active { border-color: var(--green); color: var(--green); }
 .month-pact-card {
     padding: 18px;
     border: 1px solid rgba(145, 242, 100, .28);
@@ -847,6 +852,7 @@ body.dashboard-page {
     .dashboard-tab { min-height: 62px; padding-inline: 3px; font-size: .71rem; }
     .dashboard-tab-icon { width: 27px; height: 27px; font-size: 1.28rem; }
     .month-pact-card { padding: 17px; }
+    .monthly-test-mode { align-items: flex-start; flex-direction: column; }
     .muscle-chip {
         flex-direction: column;
         justify-content: center;

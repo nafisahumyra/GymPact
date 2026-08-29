@@ -13,8 +13,8 @@ function localDateParts(now = new Date()) {
   const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
   return { year: Number(values.year), month: Number(values.month), day: Number(values.day) };
 }
-function monthStartForNewPact() {
-  const local = localDateParts();
+function monthStartForNewPact(now = new Date()) {
+  const local = localDateParts(now);
   const date = new Date(Date.UTC(local.year, local.month - 1, 1));
   if (local.day !== 1) date.setUTCMonth(date.getUTCMonth() + 1);
   return date.toISOString().slice(0, 10);
@@ -25,10 +25,21 @@ function monthEnd(monthStart: string) {
   date.setUTCDate(0);
   return date.toISOString().slice(0, 10);
 }
-function isMonthActive(monthStart: string) {
-  const local = localDateParts();
+function isMonthActive(monthStart: string, now = new Date()) {
+  const local = localDateParts(now);
   const today = `${local.year}-${String(local.month).padStart(2, "0")}-${String(local.day).padStart(2, "0")}`;
   return today >= monthStart && today <= monthEnd(monthStart);
+}
+
+async function monthlyTestDate(admin: ReturnType<typeof getAdminClient>) {
+  const { data, error } = await admin.from("monthly_pact_test_mode").select("simulated_date").eq("id", true).maybeSingle();
+  if (error) throw error;
+  return data?.simulated_date ?? null;
+}
+
+async function monthlyReferenceNow(admin: ReturnType<typeof getAdminClient>) {
+  const simulatedDate = await monthlyTestDate(admin);
+  return simulatedDate ? new Date(`${simulatedDate}T12:00:00-04:00`) : new Date();
 }
 function monthLabel(monthStart: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "long", year: "numeric" }).format(new Date(`${monthStart}T12:00:00Z`));
@@ -68,11 +79,28 @@ serve(async request => {
     await admin.rpc("finalize_due_monthly_pacts");
     const action = body.action;
 
+    if (action === "test-mode-get") {
+      return json({ simulatedDate: await monthlyTestDate(admin) }, request);
+    }
+
+    if (action === "test-mode-set") {
+      const simulatedDate = body.simulatedDate === null ? null : body.simulatedDate;
+      if (simulatedDate !== null && !["2026-09-01", "2026-09-15"].includes(simulatedDate)) {
+        return json({ error: "Unsupported test date." }, request, 400);
+      }
+      const { error } = await admin.from("monthly_pact_test_mode").upsert({ id: true, simulated_date: simulatedDate, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      return json({ simulatedDate }, request);
+    }
+
+    const referenceNow = await monthlyReferenceNow(admin);
+
     if (action === "get") {
       const { data: openPact, error } = await admin.from("monthly_pacts").select("*")
         .in("status", ["pending", "upcoming", "active"]).order("month_start").limit(1).maybeSingle();
       if (error) throw error;
-      return json({ pact: openPact ? await mapPact(admin, openPact) : null, candidateMonth: monthStartForNewPact(), candidateLabel: monthLabel(monthStartForNewPact()) }, request);
+      const candidateMonth = monthStartForNewPact(referenceNow);
+      return json({ pact: openPact ? await mapPact(admin, openPact) : null, candidateMonth, candidateLabel: monthLabel(candidateMonth), simulatedDate: await monthlyTestDate(admin) }, request);
     }
 
     if (!await validUser(admin, body.userId)) return json({ error: "Unknown athlete." }, request, 400);
@@ -85,7 +113,7 @@ serve(async request => {
       const { data: users, error: usersError } = await admin.from("users").select("id").order("id");
       if (usersError || users?.length !== 2) throw usersError || new Error("Athletes unavailable");
       const recipient = users.find(user => user.id !== body.userId);
-      const monthStart = monthStartForNewPact();
+      const monthStart = monthStartForNewPact(referenceNow);
       const { data: pact, error } = await admin.from("monthly_pacts").insert({ month_start: monthStart, created_by: body.userId, recipient_id: recipient.id, consequence, status: "pending" }).select().single();
       if (error) return json({ error: error.code === "23505" ? "A Pact already exists for this month." : "Unable to create Month Pact." }, request, error.code === "23505" ? 409 : 400);
       const { error: commitmentError } = await admin.from("monthly_pact_commitments").insert({ monthly_pact_id: pact.id, user_id: body.userId, goal, signature });
@@ -107,7 +135,7 @@ serve(async request => {
       if (pact.status !== "pending" || pact.recipient_id !== body.userId || !goal || !signature) return json({ error: "Goal and signature are required to sign." }, request, 400);
       const { error } = await admin.from("monthly_pact_commitments").insert({ monthly_pact_id: pact.id, user_id: body.userId, goal, signature });
       if (error) throw error;
-      const status = isMonthActive(pact.month_start) ? "active" : "upcoming";
+      const status = isMonthActive(pact.month_start, referenceNow) ? "active" : "upcoming";
       const { data: signed, error: updateError } = await admin.from("monthly_pacts").update({ status, signed_at: new Date().toISOString() }).eq("id", pact.id).select().single();
       if (updateError) throw updateError;
       return json({ pact: await mapPact(admin, signed) }, request);
@@ -115,7 +143,7 @@ serve(async request => {
     if (action === "checkin") {
       const date = typeof body.date === "string" ? body.date : "";
       const text = typeof body.body === "string" ? body.body.trim() : "";
-      const local = localDateParts();
+      const local = localDateParts(referenceNow);
       const today = `${local.year}-${String(local.month).padStart(2, "0")}-${String(local.day).padStart(2, "0")}`;
       if (pact.status !== "active" || !text || date < pact.month_start || date > monthEnd(pact.month_start) || date > today) return json({ error: "Check-ins are available only on active Pact days." }, request, 400);
       if (![pact.created_by, pact.recipient_id].includes(body.userId)) return json({ error: "Not a Pact participant." }, request, 403);
