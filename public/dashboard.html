@@ -126,15 +126,25 @@
 
             <div class="dashboard-bottom-nav-inner" role="tablist">
                 <button id="overview-tab" class="dashboard-tab is-active" type="button" role="tab" aria-selected="true">
-                    <span class="dashboard-tab-icon" aria-hidden="true">⌂</span>
-                    <span>Overview</span>
+                    <span class="dashboard-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 11.5 12 4l9 7.5"></path>
+                            <path d="M5 10v10h14V10M9 20v-6h6v6"></path>
+                        </svg>
+                    </span>
+                    <span>Home</span>
                 </button>
                 <button id="progress-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
                     <span class="dashboard-tab-icon" aria-hidden="true">↗</span>
                     <span>Progress</span>
                 </button>
                 <button id="pact-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
-                    <span class="dashboard-tab-icon" aria-hidden="true">∞</span>
+                    <span class="dashboard-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 3h9l4 4v14H6z"></path>
+                            <path d="M14 3v5h5M9 14l2 2 4-4"></path>
+                        </svg>
+                    </span>
                     <span>Pact</span>
                 </button>
                 <button id="month-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
