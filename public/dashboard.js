@@ -1154,8 +1154,31 @@ modal("cancel-monthly-completion").addEventListener("click", () => { modal("mont
 modal("save-monthly-completion").addEventListener("click", async () => {
     const button = modal("save-monthly-completion"), photo = modal("monthly-completion-photo").files[0], sessionToken = sessionStorage.getItem("gymPactSessionToken"), userId = sessionStorage.getItem("gymPactSelectedAthleteId");
     if (!photo) return setMonthlyError("monthly-completion-error", "Choose a proof photo.");
-    const form = new FormData(); form.append("sessionToken", sessionToken); form.append("pactId", monthlyPact.id); form.append("userId", userId); form.append("photo", photo);
-    button.disabled = true; try { const { error } = await GymPactSupabase.getClient().functions.invoke("complete-monthly-goal", { body: form }); if (error) throw error; modal("monthly-completion-modal").style.display = "none"; await loadMonthlyPact(); } catch { setMonthlyError("monthly-completion-error", "We couldn’t save your proof. Please try again."); } finally { button.disabled = false; }
+    button.disabled = true;
+    try {
+        const photoData = await prepareWorkoutPhoto(photo);
+
+        if (!photoData) throw new Error("We couldn’t prepare that photo. Please choose it again.");
+
+        const photoBlob = await fetch(photoData).then(response => response.blob());
+        const form = new FormData(); form.append("sessionToken", sessionToken); form.append("pactId", monthlyPact.id); form.append("userId", userId); form.append("photo", photoBlob, "monthly-pact-proof.jpg");
+        const { error } = await GymPactSupabase.getClient().functions.invoke("complete-monthly-goal", { body: form });
+
+        if (error) {
+            const details = await error.context?.json().catch(() => null);
+
+            throw new Error(details?.error || "We couldn’t save your proof. Please try again.");
+        }
+
+        modal("monthly-completion-modal").style.display = "none";
+        await loadMonthlyPact();
+
+    } catch (error) {
+
+        console.error("Unable to save Month Pact proof.", error);
+        setMonthlyError("monthly-completion-error", error.message || "We couldn’t save your proof. Please try again.");
+
+    } finally { button.disabled = false; }
 });
 
 
