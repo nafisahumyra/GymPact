@@ -192,6 +192,7 @@ body.dashboard-page {
     margin-inline: auto;
     padding: 10px clamp(12px, 4vw, 24px) max(10px, env(safe-area-inset-bottom));
 }
+.dashboard-bottom-nav-inner.has-dev-tab { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
 .dashboard-tab {
     display: grid;
