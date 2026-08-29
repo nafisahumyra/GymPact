@@ -88,7 +88,7 @@ addRequirementRow();
 createPactForm.addEventListener("submit", async event => {
     event.preventDefault();
     const requirements = getRequirements();
-    const timeframe = document.getElementById("pact-timeframe").value;
+    const timeframe = "week";
     const wagerType = document.getElementById("pact-wager-type").value;
     const wagerDescription = document.getElementById("pact-wager-description").value.trim();
     if (!requirements || !timeframe || !wagerType || !wagerDescription) {

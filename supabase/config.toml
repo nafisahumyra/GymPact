@@ -36,3 +36,9 @@ verify_jwt = false
 
 [functions.remove-exercise-goal]
 verify_jwt = false
+
+[functions.monthly-pacts]
+verify_jwt = false
+
+[functions.complete-monthly-goal]
+verify_jwt = false

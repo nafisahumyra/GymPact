@@ -187,7 +187,7 @@ body.dashboard-page {
 
 .dashboard-bottom-nav-inner {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     width: min(100%, 560px);
     margin-inline: auto;
     padding: 10px clamp(12px, 4vw, 24px) max(10px, env(safe-area-inset-bottom));
@@ -261,6 +261,36 @@ body.dashboard-page {
     justify-content: center;
     gap: 6px;
 }
+.month-pact-section { min-width: 0; }
+.month-pact-card {
+    padding: 18px;
+    border: 1px solid rgba(145, 242, 100, .28);
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(25, 29, 30, .94), rgba(13, 16, 17, .98));
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
+}
+.month-pact-card h3 { margin-bottom: 5px; color: var(--text); font-size: 1.15rem; }
+.month-pact-kicker { margin-bottom: 16px; color: var(--green); font-size: .72rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.month-pact-copy { color: var(--muted); line-height: 1.55; }
+.month-pact-detail { margin-top: 17px; padding-top: 15px; border-top: 1px solid var(--line-soft); }
+.month-pact-detail h4 { margin-bottom: 5px; color: var(--muted); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.month-pact-detail p { color: #e1e6e2; line-height: 1.55; }
+.month-pact-action { width: 100%; margin-top: 20px; }
+.month-pact-secondary { margin-top: 10px; }
+.month-pact-people { display: grid; gap: 10px; margin-top: 16px; }
+.month-pact-person { padding: 12px; border: 1px solid var(--line-soft); border-radius: 13px; background: rgba(0,0,0,.16); }
+.month-pact-person strong { display: block; color: var(--text); font-size: .88rem; }
+.month-pact-person span { display: block; margin-top: 4px; color: var(--muted); font-size: .84rem; line-height: 1.45; }
+.month-pact-complete { color: var(--green) !important; font-weight: 750; }
+.monthly-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-top: 19px; }
+.monthly-calendar-weekday { padding-bottom: 3px; color: var(--muted); font-size: .63rem; font-weight: 750; text-align: center; text-transform: uppercase; }
+.monthly-calendar-day { aspect-ratio: 1; min-height: 34px; padding: 3px; border: 1px solid var(--line-soft); border-radius: 9px; background: #101313; color: var(--text); font-size: .76rem; }
+.monthly-calendar-day.is-today { border-color: var(--green); box-shadow: 0 0 0 1px rgba(145,242,100,.12); }
+.monthly-calendar-day.has-checkin::after { content: ""; display: block; width: 5px; height: 5px; margin: 3px auto 0; border-radius: 50%; background: var(--green); }
+.monthly-calendar-day:disabled { opacity: .48; cursor: default; }
+.monthly-checkin-list { display: grid; gap: 8px; margin-top: 16px; }
+.monthly-checkin { padding: 10px 11px; border-left: 2px solid var(--green); background: rgba(145,242,100,.06); color: #dfe7df; font-size: .84rem; line-height: 1.45; }
+.monthly-checkin time { display: block; margin-bottom: 3px; color: var(--muted); font-size: .72rem; }
 .pact-progress-detail { display: grid; gap: 12px; }
 .pact-progress-athlete { padding: 17px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
 .pact-progress-athlete h4 { margin-bottom: 12px; color: var(--text); font-size: .95rem; }
@@ -739,6 +769,7 @@ body.dashboard-page {
 .exercise-modal-content label { display: block; margin: 4px 0 8px; color: var(--text); font-size: .92rem; font-weight: 650; }
 .exercise-form-error { margin-top: 10px !important; color: #ff8a8c !important; font-size: .84rem; }
 .pact-form { margin: 24px auto 0; }
+.pact-fixed-timeframe { padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; background: #111415; color: var(--muted); font-size: .92rem; }
 .pact-requirements { margin: 0; padding: 0; border: 0; }
 .pact-requirements legend { margin-bottom: 10px; color: var(--text); font-size: .92rem; font-weight: 650; }
 #pact-requirement-rows { display: grid; }
@@ -771,6 +802,9 @@ body.dashboard-page {
 .history-header { margin-bottom: 20px; }
 .history-header-actions { display: flex; gap: 8px; }
 .history-supporting-text { margin: 17px 0 22px; color: var(--muted); font-size: .9rem; }
+.history-tabs { display: flex; gap: 8px; margin: -6px 0 20px; }
+.history-tab { min-height: 36px; padding: 7px 14px; border-color: var(--line); background: var(--panel-elevated); color: var(--muted); font-size: .78rem; }
+.history-tab.is-active { border-color: rgba(145,242,100,.55); background: rgba(145,242,100,.12); color: var(--green); }
 .workout-card,
 .challenge-history-card { margin-bottom: 12px; padding: 18px; }
 .workout-card h3,
@@ -802,6 +836,9 @@ body.dashboard-page {
     .brand-lockup { gap: 7px; }
     .brand-lockup .wordmark-image { width: min(170px, calc(100vw - 190px)); }
     .header-workout-action { padding-inline: 10px; font-size: .72rem; }
+    .dashboard-tab { min-height: 62px; padding-inline: 3px; font-size: .71rem; }
+    .dashboard-tab-icon { width: 27px; height: 27px; font-size: 1.28rem; }
+    .month-pact-card { padding: 17px; }
     .muscle-chip {
         flex-direction: column;
         justify-content: center;

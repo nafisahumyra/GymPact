@@ -21,6 +21,10 @@ const historyPageTitle =
     document.getElementById("history-page-title");
 const requestedHistoryView = new URLSearchParams(window.location.search).get("view");
 const activeHistoryTab = requestedHistoryView === "pacts" ? "challenges" : "workouts";
+let activePactHistory = new URLSearchParams(window.location.search).get("category") === "monthly" ? "monthly" : "weekly";
+const pactHistoryTabs = document.getElementById("pact-history-tabs");
+const weeklyPactHistoryTab = document.getElementById("weekly-pact-history-tab");
+const monthlyPactHistoryTab = document.getElementById("monthly-pact-history-tab");
 let historyRefreshInFlight = null;
 
 historyPageTitle.textContent = activeHistoryTab === "challenges" ? "Pact History" : "Workout History";
@@ -246,6 +250,32 @@ function renderEmptyChallengeState() {
 
 }
 
+function renderEmptyMonthlyPactState() {
+    challengeHistoryContainer.innerHTML = `<div class="history-empty-state"><p>No completed Month Pacts yet.</p><p>Finish a monthly commitment to see it here.</p></div>`;
+}
+
+async function renderMonthlyPactHistory({ preserveOnError = false } = {}) {
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    if (!sessionToken) { renderEmptyMonthlyPactState(); return; }
+    const { data, error } = await GymPactSupabase.getClient().functions.invoke("monthly-pacts", { body: { action: "list", sessionToken } });
+    if (error || !Array.isArray(data?.pacts)) {
+        if (preserveOnError) throw error || new Error("Month Pact history was unavailable.");
+        renderEmptyMonthlyPactState(); return;
+    }
+    if (!data.pacts.length) { renderEmptyMonthlyPactState(); return; }
+    challengeHistoryContainer.innerHTML = "";
+    data.pacts.forEach(pact => {
+        const card = document.createElement("article"); card.className = "challenge-history-card";
+        const result = pact.finalResult === "succeeded" ? "Both completed" : "Both failed";
+        card.innerHTML = `<h3>🗓️ Month Pact</h3><p class="challenge-history-date">${pact.monthLabel}</p><h4>Goals</h4>${pact.commitments.map(item => `<p class="challenge-history-score">${item.displayName}: ${item.goal}${item.completedAt ? " ✓" : ""}</p>`).join("")}<p class="challenge-history-result">${result}</p><p>Shared consequence: ${pact.consequence}</p>`;
+        const checkins = pact.checkins || [];
+        if (checkins.length) {
+            const details = document.createElement("details"); details.innerHTML = `<summary>View check-ins</summary>${checkins.map(checkin => `<p>${checkin.displayName} · ${formatDateRange(checkin.date, checkin.date)}: ${checkin.body}</p>`).join("")}`; card.appendChild(details);
+        }
+        challengeHistoryContainer.appendChild(card);
+    });
+}
+
 
 async function renderChallengeHistory({ preserveOnError = false } = {}) {
 
@@ -348,6 +378,9 @@ function showHistoryTab(tab) {
     historySupportingText.textContent = showWorkouts
         ? "Showing workouts shared by Nafisa and Mahfuzur"
         : "Completed Pacts shared by Nafisa and Mahfuzur";
+    pactHistoryTabs.hidden = showWorkouts;
+    weeklyPactHistoryTab.classList.toggle("is-active", activePactHistory === "weekly");
+    monthlyPactHistoryTab.classList.toggle("is-active", activePactHistory === "monthly");
 
 }
 
@@ -377,6 +410,10 @@ async function refreshHistory() {
             if (activeHistoryTab === "workouts") {
 
                 await renderWorkoutHistory({ preserveOnError: true });
+
+            } else if (activePactHistory === "monthly") {
+
+                await renderMonthlyPactHistory({ preserveOnError: true });
 
             } else {
 
@@ -415,6 +452,9 @@ backToPactButton.addEventListener("click", () => {
     window.location.href = "dashboard.html?tab=pact";
 
 });
+
+weeklyPactHistoryTab.addEventListener("click", () => { activePactHistory = "weekly"; showHistoryTab("challenges"); refreshHistory(); });
+monthlyPactHistoryTab.addEventListener("click", () => { activePactHistory = "monthly"; showHistoryTab("challenges"); refreshHistory(); });
 
 document.addEventListener("visibilitychange", () => {
 

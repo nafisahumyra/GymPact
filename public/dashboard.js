@@ -27,6 +27,10 @@ const pactProgressSection = document.getElementById("pact-progress-section");
 const pactProgressDetail = document.getElementById("pact-progress-detail");
 let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
+const monthPactContent = document.getElementById("month-pact-content");
+let monthlyPact = null;
+let monthlyCandidate = null;
+let monthlyCheckinDate = null;
 const exerciseTrackersContainer = document.getElementById("exercise-trackers");
 const removeExerciseTrackerModal = document.getElementById("remove-exercise-tracker-modal");
 const removeExerciseTrackerCopy = document.getElementById("remove-exercise-tracker-copy");
@@ -739,6 +743,8 @@ function showDashboardTab(tab) {
     renderPactProgressDetail(currentChallenge);
     renderExerciseTrackers();
 
+    if (tab === "month") loadMonthlyPact();
+
 }
 
 
@@ -917,7 +923,8 @@ async function refreshDashboard() {
             await Promise.all([
                 loadCurrentChallenge({ preserveOnError: true }),
                 loadDashboardMetrics({ preserveOnError: true }),
-                loadExerciseTrackers({ preserveOnError: true })
+                loadExerciseTrackers({ preserveOnError: true }),
+                loadMonthlyPact({ preserveOnError: true })
             ]);
 
         } catch (error) {
@@ -954,6 +961,114 @@ async function refreshDashboard() {
 
 }
 
+function monthlyRequest(action, extra = {}) {
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const userId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    return GymPactSupabase.getClient().functions.invoke("monthly-pacts", {
+        body: { action, sessionToken, userId, ...extra }
+    });
+}
+
+function formatMonthDate(date) {
+    return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function currentMonthDate() {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" })
+        .formatToParts().reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
+}
+
+function renderMonthlyCalendar(pact, container) {
+    const calendar = document.createElement("div");
+    calendar.className = "monthly-calendar";
+    ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(day => {
+        const label = document.createElement("span"); label.className = "monthly-calendar-weekday"; label.textContent = day; calendar.appendChild(label);
+    });
+    const start = new Date(`${pact.monthStart}T12:00:00`);
+    const days = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+    const checkinDates = new Set((pact.checkins || []).map(checkin => checkin.date));
+    const parts = currentMonthDate();
+    const today = `${parts.year}-${parts.month}-${parts.day}`;
+    for (let index = 0; index < start.getDay(); index += 1) calendar.appendChild(document.createElement("span"));
+    for (let day = 1; day <= days; day += 1) {
+        const date = `${pact.monthStart.slice(0, 8)}${String(day).padStart(2, "0")}`;
+        const button = document.createElement("button"); button.type = "button"; button.className = "monthly-calendar-day"; button.textContent = day;
+        if (date === today) button.classList.add("is-today");
+        if (checkinDates.has(date)) button.classList.add("has-checkin");
+        if (pact.status !== "active" || date > today) button.disabled = true;
+        button.addEventListener("click", () => openMonthlyCheckin(date));
+        calendar.appendChild(button);
+    }
+    container.appendChild(calendar);
+}
+
+function renderMonthPact() {
+    if (!monthPactContent) return;
+    monthPactContent.innerHTML = "";
+    const card = document.createElement("article"); card.className = "month-pact-card";
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    if (!monthlyPact) {
+        const label = monthlyCandidate?.candidateLabel || "Next month";
+        card.innerHTML = `<p class="month-pact-kicker">Monthly Pact</p><h3>${label}</h3><p class="month-pact-copy">Make one shared commitment for the calendar month. Each athlete sets a personal goal, signs, checks in, and submits proof when it is complete.</p>`;
+        const create = document.createElement("button"); create.type = "button"; create.className = "month-pact-action"; create.textContent = "+ Create Month Pact"; create.addEventListener("click", openMonthlyCreate); card.appendChild(create);
+        const history = document.createElement("button"); history.type = "button"; history.className = "secondary-button month-pact-action month-pact-secondary"; history.textContent = "Month Pact History"; history.addEventListener("click", () => { window.location.href = "history.html?view=pacts&category=monthly"; }); card.appendChild(history);
+        monthPactContent.appendChild(card); return;
+    }
+    const creator = monthlyPact.createdBy === athleteId;
+    const own = monthlyPact.commitments.find(item => item.userId === athleteId);
+    card.innerHTML = `<p class="month-pact-kicker">Month Pact · ${monthlyPact.status}</p><h3>${monthlyPact.monthLabel}</h3><p class="month-pact-copy">${monthlyPact.status === "pending" ? (creator ? "Waiting for your partner to add their goal and sign." : "Review the pledge, add your goal, and sign to begin.") : monthlyPact.status === "upcoming" ? "Both athletes have signed. This Pact begins at midnight in New York." : "Check in throughout the month, then submit proof when your goal is achieved."}</p>`;
+    const people = document.createElement("div"); people.className = "month-pact-people";
+    monthlyPact.commitments.forEach(item => { const person = document.createElement("div"); person.className = "month-pact-person"; person.innerHTML = `<strong>${item.displayName}</strong><span>${item.goal}</span>${item.completedAt ? '<span class="month-pact-complete">✓ Goal achieved</span>' : ''}`; people.appendChild(person); }); card.appendChild(people);
+    const consequence = document.createElement("div"); consequence.className = "month-pact-detail"; consequence.innerHTML = `<h4>Shared consequence</h4><p>${monthlyPact.consequence}</p>`; card.appendChild(consequence);
+    if (monthlyPact.status === "pending" && !creator) { const sign = document.createElement("button"); sign.type = "button"; sign.className = "month-pact-action"; sign.textContent = "Review & sign"; sign.addEventListener("click", openMonthlySign); card.appendChild(sign); }
+    if (monthlyPact.status === "active") {
+        renderMonthlyCalendar(monthlyPact, card);
+        if (own && !own.completedAt) { const complete = document.createElement("button"); complete.type = "button"; complete.className = "month-pact-action"; complete.textContent = "✓ I Achieved My Goal"; complete.addEventListener("click", openMonthlyCompletion); card.appendChild(complete); }
+        const entries = (monthlyPact.checkins || []).slice(-5).reverse();
+        if (entries.length) { const list = document.createElement("div"); list.className = "monthly-checkin-list"; entries.forEach(entry => { const line = document.createElement("div"); line.className = "monthly-checkin"; line.innerHTML = `<time>${entry.displayName} · ${formatMonthDate(entry.date)}</time>${entry.body}`; list.appendChild(line); }); card.appendChild(list); }
+    }
+    const history = document.createElement("button"); history.type = "button"; history.className = "secondary-button month-pact-action month-pact-secondary"; history.textContent = "Month Pact History"; history.addEventListener("click", () => { window.location.href = "history.html?view=pacts&category=monthly"; }); card.appendChild(history);
+    monthPactContent.appendChild(card);
+}
+
+async function loadMonthlyPact({ preserveOnError = false } = {}) {
+    if (!monthPactContent) return;
+    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; renderMonthPact(); }
+    catch (error) { console.error("Unable to load Month Pact.", error); if (preserveOnError) throw error; monthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; }
+}
+
+const modal = id => document.getElementById(id);
+function setMonthlyError(id, message = "") { const element = modal(id); element.textContent = message; element.hidden = !message; }
+function openMonthlyCreate() { modal("monthly-pact-create-modal").style.display = "flex"; modal("monthly-create-copy").textContent = `This Pact is for ${monthlyCandidate?.candidateLabel || "the upcoming month"}.`; setMonthlyError("monthly-create-error"); }
+function openMonthlySign() { modal("monthly-pact-sign-modal").style.display = "flex"; modal("monthly-sign-copy").textContent = `${monthlyPact.monthLabel} Pact: ${monthlyPact.consequence}`; setMonthlyError("monthly-sign-error"); }
+function openMonthlyCheckin(date) { monthlyCheckinDate = date; modal("monthly-checkin-date").textContent = formatMonthDate(date); modal("monthly-checkin-text").value = ""; setMonthlyError("monthly-checkin-error"); modal("monthly-checkin-modal").style.display = "flex"; }
+function openMonthlyCompletion() { modal("monthly-completion-photo").value = ""; setMonthlyError("monthly-completion-error"); modal("monthly-completion-modal").style.display = "flex"; }
+
+modal("cancel-monthly-create").addEventListener("click", () => { modal("monthly-pact-create-modal").style.display = "none"; });
+modal("save-monthly-create").addEventListener("click", async () => {
+    const button = modal("save-monthly-create"), goal = modal("monthly-goal").value.trim(), consequence = modal("monthly-consequence").value.trim(), signature = modal("monthly-signature").value.trim();
+    if (!goal || !consequence || !signature) return setMonthlyError("monthly-create-error", "Add your goal, consequence, and signature.");
+    button.disabled = true; try { const { error } = await monthlyRequest("create", { goal, consequence, signature }); if (error) throw error; modal("monthly-pact-create-modal").style.display = "none"; await loadMonthlyPact(); } catch (error) { setMonthlyError("monthly-create-error", "We couldn’t create that Month Pact. Please try again."); } finally { button.disabled = false; }
+});
+modal("decline-monthly-pact").addEventListener("click", async () => { const button = modal("decline-monthly-pact"); button.disabled = true; try { const { error } = await monthlyRequest("decline", { pactId: monthlyPact.id }); if (error) throw error; modal("monthly-pact-sign-modal").style.display = "none"; await loadMonthlyPact(); } catch { setMonthlyError("monthly-sign-error", "We couldn’t decline that Pact. Please try again."); } finally { button.disabled = false; } });
+modal("save-monthly-sign").addEventListener("click", async () => {
+    const button = modal("save-monthly-sign"), goal = modal("monthly-sign-goal").value.trim(), signature = modal("monthly-signature-input").value.trim();
+    if (!goal || !signature) return setMonthlyError("monthly-sign-error", "Add your goal and signature to sign.");
+    button.disabled = true; try { const { error } = await monthlyRequest("sign", { pactId: monthlyPact.id, goal, signature }); if (error) throw error; modal("monthly-pact-sign-modal").style.display = "none"; await loadMonthlyPact(); } catch { setMonthlyError("monthly-sign-error", "We couldn’t sign that Pact. Please try again."); } finally { button.disabled = false; }
+});
+modal("cancel-monthly-checkin").addEventListener("click", () => { modal("monthly-checkin-modal").style.display = "none"; });
+modal("save-monthly-checkin").addEventListener("click", async () => {
+    const button = modal("save-monthly-checkin"), body = modal("monthly-checkin-text").value.trim(); if (!body) return setMonthlyError("monthly-checkin-error", "Write a short check-in first.");
+    button.disabled = true; try { const { error } = await monthlyRequest("checkin", { pactId: monthlyPact.id, date: monthlyCheckinDate, body }); if (error) throw error; modal("monthly-checkin-modal").style.display = "none"; await loadMonthlyPact(); } catch { setMonthlyError("monthly-checkin-error", "We couldn’t save that check-in. Please try again."); } finally { button.disabled = false; }
+});
+modal("cancel-monthly-completion").addEventListener("click", () => { modal("monthly-completion-modal").style.display = "none"; });
+modal("save-monthly-completion").addEventListener("click", async () => {
+    const button = modal("save-monthly-completion"), photo = modal("monthly-completion-photo").files[0], sessionToken = sessionStorage.getItem("gymPactSessionToken"), userId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    if (!photo) return setMonthlyError("monthly-completion-error", "Choose a proof photo.");
+    const form = new FormData(); form.append("sessionToken", sessionToken); form.append("pactId", monthlyPact.id); form.append("userId", userId); form.append("photo", photo);
+    button.disabled = true; try { const { error } = await GymPactSupabase.getClient().functions.invoke("complete-monthly-goal", { body: form }); if (error) throw error; modal("monthly-completion-modal").style.display = "none"; await loadMonthlyPact(); } catch { setMonthlyError("monthly-completion-error", "We couldn’t save your proof. Please try again."); } finally { button.disabled = false; }
+});
+
 
 renderCurrentChallenge(currentChallenge);
 dashboardTabs.forEach(button => {
@@ -967,7 +1082,7 @@ dashboardTabs.forEach(button => {
 });
 const requestedDashboardTab = new URLSearchParams(window.location.search).get("tab");
 
-showDashboardTab(["progress", "pact"].includes(requestedDashboardTab) ? requestedDashboardTab : "overview");
+showDashboardTab(["progress", "pact", "month"].includes(requestedDashboardTab) ? requestedDashboardTab : "overview");
 if (dashboardRefreshButton) {
 
     dashboardRefreshButton.addEventListener("click", refreshDashboard);
@@ -1008,9 +1123,10 @@ const confirmCancelChallengeButton =
 
 const keepChallengeButton =
     document.getElementById("keep-challenge");
+const newPactChoiceModal = document.getElementById("new-pact-choice-modal");
 
 
-newChallengeButton.addEventListener("click", async () => {
+async function startWeeklyPact() {
 
     if (!currentChallengeLoaded) {
 
@@ -1028,6 +1144,22 @@ newChallengeButton.addEventListener("click", async () => {
 
     challengeActiveModal.style.display = "flex";
 
+}
+
+newChallengeButton.addEventListener("click", () => {
+    newPactChoiceModal.style.display = "flex";
+});
+
+document.getElementById("choose-weekly-pact").addEventListener("click", async () => {
+    newPactChoiceModal.style.display = "none";
+    await startWeeklyPact();
+});
+
+document.getElementById("choose-monthly-pact").addEventListener("click", async () => {
+    newPactChoiceModal.style.display = "none";
+    showDashboardTab("month");
+    await loadMonthlyPact();
+    if (!monthlyPact) openMonthlyCreate();
 });
 
 
