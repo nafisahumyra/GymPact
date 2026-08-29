@@ -1011,7 +1011,6 @@ function renderMonthPact() {
         const label = monthlyCandidate?.candidateLabel || "Next month";
         card.innerHTML = `<p class="month-pact-kicker">Monthly Pact</p><h3>${label}</h3><p class="month-pact-copy">Make one shared commitment for the calendar month. Each athlete sets a personal goal, signs, checks in, and submits proof when it is complete.</p>`;
         const create = document.createElement("button"); create.type = "button"; create.className = "month-pact-action"; create.textContent = "+ Create Month Pact"; create.addEventListener("click", openMonthlyCreate); card.appendChild(create);
-        const history = document.createElement("button"); history.type = "button"; history.className = "secondary-button month-pact-action month-pact-secondary"; history.textContent = "Month Pact History"; history.addEventListener("click", () => { window.location.href = "history.html?view=pacts&category=monthly"; }); card.appendChild(history);
         monthPactContent.appendChild(card); return;
     }
     const creator = monthlyPact.createdBy === athleteId;
@@ -1027,7 +1026,6 @@ function renderMonthPact() {
         const entries = (monthlyPact.checkins || []).slice(-5).reverse();
         if (entries.length) { const list = document.createElement("div"); list.className = "monthly-checkin-list"; entries.forEach(entry => { const line = document.createElement("div"); line.className = "monthly-checkin"; line.innerHTML = `<time>${entry.displayName} · ${formatMonthDate(entry.date)}</time>${entry.body}`; list.appendChild(line); }); card.appendChild(list); }
     }
-    const history = document.createElement("button"); history.type = "button"; history.className = "secondary-button month-pact-action month-pact-secondary"; history.textContent = "Month Pact History"; history.addEventListener("click", () => { window.location.href = "history.html?view=pacts&category=monthly"; }); card.appendChild(history);
     monthPactContent.appendChild(card);
 }
 
