@@ -703,19 +703,18 @@ function renderPactProgressDetail(challenge) {
     }
 
     pactProgressSection.hidden = activeDashboardTab !== "progress";
-    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
-    const athleteProgress = challenge.progress?.find(participant => participant.userId === athleteId);
+    const participantProgress = challenge.progress || [];
 
-    if (!athleteProgress) return;
+    participantProgress.forEach(participant => {
+        const card = document.createElement("article");
+        const heading = document.createElement("h4");
 
-    const card = document.createElement("article");
-    const heading = document.createElement("h4");
-
-    card.classList.add("pact-progress-athlete");
-    heading.textContent = `${athleteProgress.displayName}'s progress`;
-    card.appendChild(heading);
-    athleteProgress.requirements.forEach(requirement => appendRequirementProgress(card, requirement));
-    pactProgressDetail.appendChild(card);
+        card.classList.add("pact-progress-athlete");
+        heading.textContent = `${participant.displayName}'s progress`;
+        card.appendChild(heading);
+        participant.requirements.forEach(requirement => appendRequirementProgress(card, requirement));
+        pactProgressDetail.appendChild(card);
+    });
 
 }
 

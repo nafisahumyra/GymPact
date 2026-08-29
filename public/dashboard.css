@@ -219,6 +219,11 @@ body.dashboard-page {
     line-height: 1;
 }
 
+.dashboard-tab-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
 .dashboard-tab:hover:not(:disabled) { background: #1a1f1f; color: var(--text); box-shadow: none; transform: none; }
 .dashboard-tab.is-active { background: rgba(145, 242, 100, .11); color: var(--green); }
 .dashboard-tab.is-active .dashboard-tab-icon { background: rgba(145, 242, 100, .16); }
