@@ -7,6 +7,13 @@ const athleteSelection = document.getElementById("athlete-selection");
 const UNLOCK_ANIMATION_DURATION = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
 ).matches ? 500 : 3000;
+const MONTH_TEST_REQUEST_KEY = "gymPactMonthTestRequested";
+
+if (new URLSearchParams(window.location.search).get("monthTest") === "1") {
+
+    sessionStorage.setItem(MONTH_TEST_REQUEST_KEY, "1");
+
+}
 
 
 function showAthleteSelection() {
@@ -157,7 +164,11 @@ userCards.forEach(card => {
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);
 
-            window.location.href = "dashboard.html";
+            const openMonthTest = sessionStorage.getItem(MONTH_TEST_REQUEST_KEY) === "1";
+
+            window.location.href = openMonthTest
+                ? "dashboard.html?tab=month&monthTest=1"
+                : "dashboard.html";
 
         } catch (error) {
 

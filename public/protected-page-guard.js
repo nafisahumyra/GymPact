@@ -22,7 +22,15 @@
         }
 
         redirecting = true;
-        window.location.replace("./index.html");
+        const landingUrl = new URL("./index.html", window.location.href);
+
+        if (new URLSearchParams(window.location.search).get("monthTest") === "1") {
+
+            landingUrl.searchParams.set("monthTest", "1");
+
+        }
+
+        window.location.replace(landingUrl.toString());
 
     }
 
