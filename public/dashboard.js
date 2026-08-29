@@ -31,8 +31,6 @@ const monthPactContent = document.getElementById("month-pact-content");
 let monthlyPact = null;
 let monthlyCandidate = null;
 let monthlyCheckinDate = null;
-let monthlyTestDate = null;
-const monthTestControlsEnabled = new URLSearchParams(window.location.search).get("monthTest") === "1";
 const exerciseTrackersContainer = document.getElementById("exercise-trackers");
 const removeExerciseTrackerModal = document.getElementById("remove-exercise-tracker-modal");
 const removeExerciseTrackerCopy = document.getElementById("remove-exercise-tracker-copy");
@@ -976,14 +974,6 @@ function formatMonthDate(date) {
 }
 
 function currentMonthDate() {
-    if (monthlyTestDate) {
-
-        const [year, month, day] = monthlyTestDate.split("-");
-
-        return { year, month, day };
-
-    }
-
     return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" })
         .formatToParts().reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
 }
@@ -1015,7 +1005,6 @@ function renderMonthlyCalendar(pact, container) {
 function renderMonthPact() {
     if (!monthPactContent) return;
     monthPactContent.innerHTML = "";
-    renderMonthlyTestModeControl();
     const card = document.createElement("article"); card.className = "month-pact-card";
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
     if (!monthlyPact) {
@@ -1040,39 +1029,9 @@ function renderMonthPact() {
     monthPactContent.appendChild(card);
 }
 
-function formatMonthlyTestDate(date) {
-    return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
-}
-
-function renderMonthlyTestModeControl() {
-    if (!monthlyTestDate && !monthTestControlsEnabled) return;
-    const control = document.createElement("div");
-    control.className = "monthly-test-mode";
-    const label = document.createElement("p");
-    label.textContent = monthlyTestDate ? `TEST MODE · ${formatMonthlyTestDate(monthlyTestDate)}` : "Developer Month Pact test controls";
-    control.appendChild(label);
-    if (monthTestControlsEnabled) {
-        const options = [[null, "Real date"], ["2026-09-01", "Sep 1"], ["2026-09-15", "Sep 15"]];
-        const actions = document.createElement("div"); actions.className = "monthly-test-mode-actions";
-        options.forEach(([date, text]) => {
-            const button = document.createElement("button"); button.type = "button"; button.textContent = text;
-            button.classList.toggle("is-active", date === monthlyTestDate);
-            button.addEventListener("click", async () => {
-                actions.querySelectorAll("button").forEach(item => { item.disabled = true; });
-                try { const { error } = await monthlyRequest("test-mode-set", { simulatedDate: date }); if (error) throw error; await refreshDashboard(); }
-                catch (error) { console.error("Unable to update Month Pact test mode.", error); }
-                finally { actions.querySelectorAll("button").forEach(item => { item.disabled = false; }); }
-            });
-            actions.appendChild(button);
-        });
-        control.appendChild(actions);
-    }
-    monthPactContent.appendChild(control);
-}
-
 async function loadMonthlyPact({ preserveOnError = false } = {}) {
     if (!monthPactContent) return;
-    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; monthlyTestDate = data?.simulatedDate || null; renderMonthPact(); }
+    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; renderMonthPact(); }
     catch (error) { console.error("Unable to load Month Pact.", error); if (preserveOnError) throw error; monthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; }
 }
 
