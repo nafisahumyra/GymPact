@@ -1044,7 +1044,7 @@ function monthPactDeadline(pact) { return new Date(`${pact.monthEnd}T12:00:00`).
 function monthEndForStart(monthStart) { const date = new Date(`${monthStart}T12:00:00`); return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().slice(0, 10); }
 function openMonthlyCreate() {
     modal("monthly-pact-create-modal").style.display = "flex";
-    modal("monthly-create-copy").textContent = `This Pact is for ${monthlyCandidate?.candidateLabel || "the upcoming month"}.`;
+    modal("monthly-create-copy").textContent = monthlyCandidate?.candidateLabel || "Upcoming month";
     modal("monthly-goal").value = ""; modal("monthly-consequence").value = ""; modal("monthly-signature").value = "";
     showMonthlyStep("monthly-create-details-step", "monthly-create-pledge-step", false); setMonthlyError("monthly-create-error"); setMonthlyError("monthly-create-pledge-error");
 }
