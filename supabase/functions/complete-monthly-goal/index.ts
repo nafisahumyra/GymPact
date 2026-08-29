@@ -26,7 +26,8 @@ serve(async request => {
       return new Response(JSON.stringify({ error: "This goal cannot be completed now." }), { status: 409, headers: headers(request) });
     }
     const { data: commitment } = await admin.from("monthly_pact_commitments").select("completed_at").eq("monthly_pact_id", pactId).eq("user_id", userId).maybeSingle();
-    if (!commitment || commitment.completed_at) return new Response(JSON.stringify({ error: "Goal already completed." }), { status: 409, headers: headers(request) });
+    if (!commitment) return new Response(JSON.stringify({ error: "Goal commitment not found." }), { status: 404, headers: headers(request) });
+    if (commitment.completed_at) return new Response(JSON.stringify({ completed: true, alreadyCompleted: true }), { headers: headers(request) });
     const path = `${pactId}/${userId}/${crypto.randomUUID()}.jpg`;
     const { error: uploadError } = await admin.storage.from("monthly-pact-proofs").upload(path, photo, { contentType: "image/jpeg", upsert: false });
     if (uploadError) throw uploadError;
