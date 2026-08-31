@@ -47,25 +47,54 @@ let exerciseTrackersLoaded = false;
 let pendingExerciseTrackerRemoval = null;
 
 
-function getWorkoutDay(workout) {
+const GYMPACT_TIME_ZONE = "America/New_York";
 
-    return new Date(workout.logged_at).toISOString().slice(0, 10);
+
+function getCalendarDayInGymPactTimeZone(value = new Date()) {
+
+    const date = value instanceof Date ? value : new Date(value);
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: GYMPACT_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+
+    return `${values.year}-${values.month}-${values.day}`;
 
 }
 
 
-function calculateCurrentStreak(workouts) {
+function addCalendarDays(date, days) {
+
+    const value = new Date(`${date}T00:00:00.000Z`);
+
+    value.setUTCDate(value.getUTCDate() + days);
+
+    return value.toISOString().slice(0, 10);
+
+}
+
+
+function getWorkoutDay(workout) {
+
+    return getCalendarDayInGymPactTimeZone(workout.logged_at);
+
+}
+
+
+function calculateCurrentStreak(workouts, now = new Date()) {
 
     const workoutDays = new Set(workouts.map(getWorkoutDay));
-    const cursor = new Date();
+    const today = getCalendarDayInGymPactTimeZone(now);
+    let cursor = workoutDays.has(today) ? today : addCalendarDays(today, -1);
     let streak = 0;
 
-    cursor.setUTCHours(0, 0, 0, 0);
-
-    while (workoutDays.has(cursor.toISOString().slice(0, 10))) {
+    while (workoutDays.has(cursor)) {
 
         streak += 1;
-        cursor.setUTCDate(cursor.getUTCDate() - 1);
+        cursor = addCalendarDays(cursor, -1);
 
     }
 
@@ -112,6 +141,7 @@ async function loadDashboardMetrics({ preserveOnError = false } = {}) {
     } catch (error) {
 
         console.error("Unable to load dashboard workout metrics.", error);
+        streakCount.textContent = "Unavailable";
 
         if (preserveOnError) {
 
