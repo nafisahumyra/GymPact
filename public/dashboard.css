@@ -846,6 +846,31 @@ body.dashboard-page {
 .history-empty-state { padding: 22px; }
 .history-empty-state p:first-child { font-size: 1.05rem; font-weight: 750; }
 .history-empty-state p:nth-child(2) { margin: 7px 0 17px; color: var(--muted); }
+.month-history-empty-state {
+    display: grid;
+    place-items: center;
+    min-height: 150px;
+    border: 1px dashed rgba(145, 242, 100, .28);
+    background: linear-gradient(145deg, rgba(25, 29, 30, .7), rgba(13, 16, 17, .9));
+    text-align: center;
+}
+.month-history-empty-state span {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(145, 242, 100, .35);
+    border-radius: 12px;
+    background: rgba(145, 242, 100, .07);
+    font-size: 1.25rem;
+}
+.month-history-empty-state p:first-of-type {
+    margin: 0;
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 750;
+}
 .challenge-history-card h4 { margin: 16px 0 7px; color: var(--muted); font-size: .75rem; letter-spacing: .07em; text-transform: uppercase; }
 .challenge-history-date { color: var(--muted) !important; }
 .challenge-history-score { font-weight: 700; }

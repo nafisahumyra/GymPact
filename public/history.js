@@ -251,7 +251,12 @@ function renderEmptyChallengeState() {
 }
 
 function renderEmptyMonthlyPactState() {
-    challengeHistoryContainer.innerHTML = `<div class="history-empty-state"><p>No completed Month Pacts yet.</p><p>Finish a monthly commitment to see it here.</p></div>`;
+    challengeHistoryContainer.innerHTML = `
+        <div class="history-empty-state month-history-empty-state">
+            <span aria-hidden="true">🗓️</span>
+            <p>No Month Pacts yet</p>
+        </div>
+    `;
 }
 
 function renderMonthlyPactHistoryError() {
