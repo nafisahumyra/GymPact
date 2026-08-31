@@ -254,13 +254,23 @@ function renderEmptyMonthlyPactState() {
     challengeHistoryContainer.innerHTML = `<div class="history-empty-state"><p>No completed Month Pacts yet.</p><p>Finish a monthly commitment to see it here.</p></div>`;
 }
 
+function renderMonthlyPactHistoryError() {
+    challengeHistoryContainer.innerHTML = `<div class="history-empty-state"><p>We couldn’t load Month Pact History.</p><p>Your completed Month Pacts will appear here when the connection is available.</p></div>`;
+}
+
 async function renderMonthlyPactHistory({ preserveOnError = false } = {}) {
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
     if (!sessionToken) { renderEmptyMonthlyPactState(); return; }
+
+    // Clear the previous category before loading so weekly cards can never be
+    // mistaken for Month Pact history while this request is in flight.
+    challengeHistoryContainer.innerHTML = "";
+
     const { data, error } = await GymPactSupabase.getClient().functions.invoke("monthly-pacts", { body: { action: "list", sessionToken } });
     if (error || !Array.isArray(data?.pacts)) {
-        if (preserveOnError) throw error || new Error("Month Pact history was unavailable.");
-        renderEmptyMonthlyPactState(); return;
+        console.error("Unable to load Month Pact history.", error);
+        renderMonthlyPactHistoryError();
+        return;
     }
     if (!data.pacts.length) { renderEmptyMonthlyPactState(); return; }
     challengeHistoryContainer.innerHTML = "";

@@ -1328,7 +1328,12 @@ workoutHistoryButton.addEventListener("click", () => {
 
 pactHistoryButton.addEventListener("click", () => {
 
-    window.location.href = "history.html?view=pacts";
+    // When there is a current Month Pact (including an upcoming Pact), make
+    // the shared History entry open the matching Month History category.
+    // Weekly history remains available from its tab on the History page.
+    window.location.href = monthlyPact
+        ? "history.html?view=pacts&category=monthly"
+        : "history.html?view=pacts";
 
 });
 
