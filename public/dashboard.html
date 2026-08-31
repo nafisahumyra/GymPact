@@ -420,7 +420,7 @@
 
         <div class="modal-content exercise-modal-content">
 
-            <h2>Track this exercise?</h2>
+            <h2 id="exercise-tracking-choice-title">Track this exercise?</h2>
 
             <p id="tracking-exercise-name"></p>
 
@@ -440,7 +440,7 @@
 
             <h2 id="exercise-target-title">Set rep target</h2>
 
-            <label for="exercise-target-reps">Target reps</label>
+            <label id="exercise-target-label" for="exercise-target-reps">Target reps</label>
             <input id="exercise-target-reps" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 50">
 
             <p id="exercise-target-error" class="exercise-form-error" role="alert" hidden></p>
@@ -459,9 +459,9 @@
 
         <div class="modal-content exercise-modal-content">
 
-            <h2>Log <span id="set-exercise-name"></span> set</h2>
+            <h2 id="exercise-set-title"><span id="exercise-set-title-prefix">Log </span><span id="set-exercise-name"></span><span id="exercise-set-title-suffix"> set</span></h2>
 
-            <label for="exercise-set-reps">Reps in this set</label>
+            <label id="exercise-set-label" for="exercise-set-reps">Reps in this set</label>
             <input id="exercise-set-reps" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 12">
 
             <p id="exercise-set-error" class="exercise-form-error" role="alert" hidden></p>

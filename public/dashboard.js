@@ -39,7 +39,8 @@ const confirmRemoveExerciseTrackerButton = document.getElementById("confirm-remo
 const TRACKED_EXERCISES = ["Pushups", "Pullups"];
 const EXERCISE_ICONS = {
     Pushups: "assets/gp-images/pushup.png",
-    Pullups: "assets/gp-images/Pullup.png"
+    Pullups: "assets/gp-images/Pullup.png",
+    Steps: "assets/gp-images/steps.png"
 };
 let exerciseTrackers = [];
 let exerciseTrackersLoaded = false;
@@ -166,6 +167,11 @@ function renderExerciseTrackers() {
 
     exerciseTrackers.forEach(tracker => {
 
+        const isStepsTracker = tracker.exerciseName === "Steps";
+        const target = isStepsTracker ? tracker.targetSteps : tracker.targetReps;
+        const total = isStepsTracker ? tracker.totalSteps : tracker.totalReps;
+        const progress = Math.min((total / target) * 100, 100);
+
         const card = document.createElement("article");
         const header = document.createElement("div");
         const title = document.createElement("div");
@@ -175,7 +181,6 @@ function renderExerciseTrackers() {
         const fill = document.createElement("div");
         const marker = document.createElement("span");
         const actions = document.createElement("div");
-        const progress = Math.min((tracker.totalReps / tracker.targetReps) * 100, 100);
 
         card.classList.add("exercise-tracker-card");
         if (tracker.status === "completed") {
@@ -187,7 +192,9 @@ function renderExerciseTrackers() {
         header.classList.add("exercise-tracker-header");
         title.classList.add("exercise-tracker-title");
         heading.textContent = tracker.exerciseName;
-        score.textContent = `${tracker.totalReps} / ${tracker.targetReps} reps · ${tracker.totalSets} ${tracker.totalSets === 1 ? "set" : "sets"}`;
+        score.textContent = isStepsTracker
+            ? `${total.toLocaleString()} / ${target.toLocaleString()} steps`
+            : `${tracker.totalReps} / ${tracker.targetReps} reps · ${tracker.totalSets} ${tracker.totalSets === 1 ? "set" : "sets"}`;
         title.append(heading, score);
         header.appendChild(title);
 
@@ -196,7 +203,7 @@ function renderExerciseTrackers() {
             const completed = document.createElement("span");
 
             completed.classList.add("exercise-tracker-complete");
-            completed.textContent = "Complete";
+            completed.textContent = isStepsTracker ? "✓ Requirement Complete" : "Complete";
             header.appendChild(completed);
 
         }
@@ -216,6 +223,27 @@ function renderExerciseTrackers() {
         header.appendChild(remove);
 
         bar.classList.add("exercise-progress-bar");
+        if (isStepsTracker) {
+
+            bar.classList.add("steps-progress-bar");
+
+            for (let index = 1; index <= 7; index += 1) {
+
+                const checkpoint = document.createElement("span");
+                const checkpointProgress = (index / 7) * 100;
+
+                checkpoint.classList.add("steps-progress-checkpoint");
+                if (progress >= checkpointProgress) {
+
+                    checkpoint.classList.add("is-passed");
+
+                }
+                checkpoint.style.left = `${checkpointProgress}%`;
+                bar.appendChild(checkpoint);
+
+            }
+
+        }
         bar.style.setProperty("--progress", `${progress}%`);
         fill.classList.add("exercise-progress-fill");
         marker.classList.add("exercise-progress-marker");
@@ -229,7 +257,7 @@ function renderExerciseTrackers() {
             const logSet = document.createElement("button");
 
             logSet.type = "button";
-            logSet.textContent = "+ Log Set";
+            logSet.textContent = isStepsTracker ? "+ Log Steps" : "+ Log Set";
             logSet.addEventListener("click", () => {
 
                 openExerciseSetModal(tracker.exerciseName);
@@ -237,7 +265,7 @@ function renderExerciseTrackers() {
             });
             actions.appendChild(logSet);
 
-        } else {
+        } else if (!isStepsTracker) {
 
             const logWorkout = document.createElement("button");
 
@@ -259,7 +287,7 @@ function renderExerciseTrackers() {
         changeTarget.textContent = "Change target";
         changeTarget.addEventListener("click", () => {
 
-            openExerciseTargetModal(tracker.exerciseName, tracker.targetReps, false);
+            openExerciseTargetModal(tracker.exerciseName, target, false);
 
         });
 
@@ -291,8 +319,9 @@ function closeRemoveExerciseTrackerModal() {
 function openRemoveExerciseTrackerModal(tracker) {
 
     pendingExerciseTrackerRemoval = tracker;
-    removeExerciseTrackerCopy.textContent =
-        `Remove your ${tracker.exerciseName} target and ${tracker.totalSets} logged ${tracker.totalSets === 1 ? "set" : "sets"}? You can start a new target later from Add Workout.`;
+    removeExerciseTrackerCopy.textContent = tracker.exerciseName === "Steps"
+        ? "Remove your Steps target and logged steps? You can start a new target later from Add Workout."
+        : `Remove your ${tracker.exerciseName} target and ${tracker.totalSets} logged ${tracker.totalSets === 1 ? "set" : "sets"}? You can start a new target later from Add Workout.`;
     removeExerciseTrackerModal.style.display = "flex";
 
 }
@@ -316,7 +345,7 @@ async function removeExerciseTracker() {
 
         const supabase = GymPactSupabase.getClient();
         const { data, error } = await supabase.functions.invoke(
-            "remove-exercise-goal",
+            tracker.exerciseName === "Steps" ? "remove-step-tracker" : "remove-exercise-goal",
             { body: { sessionToken, userId: athleteId, exerciseName: tracker.exerciseName } }
         );
 
@@ -373,7 +402,10 @@ async function loadExerciseTrackers({ preserveOnError = false } = {}) {
 
         }
 
-        exerciseTrackers = data.trackers;
+        exerciseTrackers = [
+            ...data.trackers,
+            ...(data.stepTracker ? [data.stepTracker] : [])
+        ];
         exerciseTrackersLoaded = true;
         renderExerciseTrackers();
 
@@ -1409,13 +1441,20 @@ const MAX_PHOTO_DATA_LENGTH = 500 * 1024;
 const exerciseTrackingChoiceModal = document.getElementById(
     "exercise-tracking-choice-modal"
 );
+const exerciseTrackingChoiceTitle = document.getElementById(
+    "exercise-tracking-choice-title"
+);
 const exerciseTargetModal = document.getElementById("exercise-target-modal");
 const logExerciseSetModal = document.getElementById("log-exercise-set-modal");
 const trackingExerciseName = document.getElementById("tracking-exercise-name");
 const exerciseTargetTitle = document.getElementById("exercise-target-title");
+const exerciseTargetLabel = document.getElementById("exercise-target-label");
 const exerciseTargetReps = document.getElementById("exercise-target-reps");
 const exerciseTargetError = document.getElementById("exercise-target-error");
+const exerciseSetTitlePrefix = document.getElementById("exercise-set-title-prefix");
 const exerciseSetName = document.getElementById("set-exercise-name");
+const exerciseSetTitleSuffix = document.getElementById("exercise-set-title-suffix");
+const exerciseSetLabel = document.getElementById("exercise-set-label");
 const exerciseSetReps = document.getElementById("exercise-set-reps");
 const exerciseSetError = document.getElementById("exercise-set-error");
 const skipExerciseTrackingButton = document.getElementById("skip-exercise-tracking");
@@ -1440,7 +1479,12 @@ function setExerciseFormError(element, message = "") {
 function openExerciseTrackingChoice(exerciseName) {
 
     pendingTrackedExercise = exerciseName;
-    trackingExerciseName.textContent = exerciseName;
+    const isStepsTracker = exerciseName === "Steps";
+
+    exerciseTrackingChoiceTitle.textContent = isStepsTracker
+        ? "Are you tracking your step count?"
+        : "Track this exercise?";
+    trackingExerciseName.textContent = isStepsTracker ? "" : exerciseName;
     exerciseTrackingChoiceModal.style.display = "flex";
 
 }
@@ -1456,9 +1500,13 @@ function openExerciseTargetModal(
     pendingTrackedExercise = exerciseName;
     targetModalResetsProgress = resetsProgress;
     returnToDashboardAfterTarget = returnToDashboard;
+    const isStepsTracker = exerciseName === "Steps";
+
     exerciseTargetTitle.textContent = target
-        ? `Change ${exerciseName} target`
-        : `Set ${exerciseName} target`;
+        ? `Change ${isStepsTracker ? "weekly step" : exerciseName} target`
+        : `Set ${isStepsTracker ? "weekly step" : exerciseName} target`;
+    exerciseTargetLabel.textContent = isStepsTracker ? "Weekly step target" : "Target reps";
+    exerciseTargetReps.placeholder = isStepsTracker ? "e.g. 50000" : "e.g. 50";
     exerciseTargetReps.value = target;
     setExerciseFormError(exerciseTargetError);
     exerciseTargetModal.style.display = "flex";
@@ -1471,7 +1519,14 @@ function openExerciseTargetModal(
 function openExerciseSetModal(exerciseName) {
 
     pendingTrackedExercise = exerciseName;
-    exerciseSetName.textContent = exerciseName;
+    const isStepsTracker = exerciseName === "Steps";
+
+    exerciseSetName.textContent = isStepsTracker ? "Steps" : exerciseName;
+    exerciseSetTitlePrefix.textContent = "Log ";
+    exerciseSetTitleSuffix.textContent = isStepsTracker ? "" : " set";
+    exerciseSetLabel.textContent = isStepsTracker ? "Steps to add" : "Reps in this set";
+    exerciseSetReps.placeholder = isStepsTracker ? "e.g. 8000" : "e.g. 12";
+    saveExerciseSetButton.textContent = isStepsTracker ? "Log steps" : "Log set";
     exerciseSetReps.value = "";
     setExerciseFormError(exerciseSetError);
     logExerciseSetModal.style.display = "flex";
@@ -1493,9 +1548,14 @@ async function saveExerciseGoal(exerciseName, targetReps, reset = false) {
     }
 
     const supabase = GymPactSupabase.getClient();
+    const isStepsTracker = exerciseName === "Steps";
     const { data, error } = await supabase.functions.invoke(
-        "save-exercise-goal",
-        { body: { sessionToken, userId: athleteId, exerciseName, targetReps, reset } }
+        isStepsTracker ? "save-step-goal" : "save-exercise-goal",
+        {
+            body: isStepsTracker
+                ? { sessionToken, userId: athleteId, targetSteps: targetReps, reset }
+                : { sessionToken, userId: athleteId, exerciseName, targetReps, reset }
+        }
     );
 
     if (error || !data?.tracker) {
@@ -1526,7 +1586,17 @@ async function resetExerciseTracker(tracker) {
 
     try {
 
-        await saveExerciseGoal(tracker.exerciseName, tracker.targetReps, true);
+        await saveExerciseGoal(
+            tracker.exerciseName,
+            tracker.exerciseName === "Steps" ? tracker.targetSteps : tracker.targetReps,
+            true
+        );
+
+        if (tracker.exerciseName === "Steps") {
+
+            await loadCurrentChallenge({ preserveOnError: true });
+
+        }
 
     } catch (error) {
 
@@ -1664,7 +1734,12 @@ saveExerciseSetButton.addEventListener("click", async () => {
 
     if (!Number.isInteger(reps) || reps <= 0) {
 
-        setExerciseFormError(exerciseSetError, "Enter a whole-number rep count greater than zero.");
+        setExerciseFormError(
+            exerciseSetError,
+            pendingTrackedExercise === "Steps"
+                ? "Enter a whole number of steps greater than zero."
+                : "Enter a whole-number rep count greater than zero."
+        );
 
         return;
 
@@ -1684,9 +1759,14 @@ saveExerciseSetButton.addEventListener("click", async () => {
     try {
 
         const supabase = GymPactSupabase.getClient();
+        const isStepsTracker = pendingTrackedExercise === "Steps";
         const { data, error } = await supabase.functions.invoke(
-            "log-exercise-set",
-            { body: { sessionToken, userId: athleteId, exerciseName: pendingTrackedExercise, reps } }
+            isStepsTracker ? "log-steps" : "log-exercise-set",
+            {
+                body: isStepsTracker
+                    ? { sessionToken, userId: athleteId, steps: reps }
+                    : { sessionToken, userId: athleteId, exerciseName: pendingTrackedExercise, reps }
+            }
         );
 
         if (error || !data?.tracker) {
@@ -1697,6 +1777,7 @@ saveExerciseSetButton.addEventListener("click", async () => {
 
         logExerciseSetModal.style.display = "none";
         await loadExerciseTrackers({ preserveOnError: true });
+        await loadCurrentChallenge({ preserveOnError: true });
 
         if (data.justCompleted) {
 
@@ -1843,17 +1924,47 @@ muscleChips.forEach(chip => {
 
         const exerciseName = chip.dataset.muscle;
 
-        if (!chip.classList.contains("selected") || !TRACKED_EXERCISES.includes(exerciseName)) {
+        if (!chip.classList.contains("selected")) {
 
             return;
 
         }
 
-        const tracker = getExerciseTracker(exerciseName);
+        const isTrackedExercise = TRACKED_EXERCISES.includes(exerciseName);
+        const isCardio = exerciseName === "Cardio";
+
+        if (!isTrackedExercise && !isCardio) {
+
+            return;
+
+        }
+
+        if (isCardio && !currentChallengeLoaded) {
+
+            await loadCurrentChallenge();
+
+        }
+
+        const canTrackSteps = isCardio && currentChallenge?.status === "active" &&
+            currentChallenge.requirements?.some(requirement => requirement.type === "steps");
+
+        if (!isTrackedExercise && !canTrackSteps) {
+
+            return;
+
+        }
+
+        const trackedExerciseName = canTrackSteps ? "Steps" : exerciseName;
+
+        const tracker = getExerciseTracker(trackedExerciseName);
 
         if (tracker) {
 
-            autoFillTrackedWorkout(exerciseName);
+            if (!canTrackSteps) {
+
+                autoFillTrackedWorkout(exerciseName);
+
+            }
 
             return;
 
@@ -1861,19 +1972,23 @@ muscleChips.forEach(chip => {
 
         // The decision must feel immediate. A background refresh may still be
         // in flight, but it must never make the Pushups/Pullups chip inert.
-        openExerciseTrackingChoice(exerciseName);
+        openExerciseTrackingChoice(trackedExerciseName);
 
         if (!exerciseTrackersLoaded) {
 
             loadExerciseTrackers()
                 .then(() => {
 
-                    const refreshedTracker = getExerciseTracker(exerciseName);
+                    const refreshedTracker = getExerciseTracker(trackedExerciseName);
 
                     if (refreshedTracker) {
 
                         exerciseTrackingChoiceModal.style.display = "none";
-                        autoFillTrackedWorkout(exerciseName);
+                        if (!canTrackSteps) {
+
+                            autoFillTrackedWorkout(exerciseName);
+
+                        }
 
                     }
 

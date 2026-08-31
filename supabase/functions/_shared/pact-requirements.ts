@@ -113,6 +113,18 @@ export async function getPactRequirementProgress(
     totals.set(workout.user_id, total);
   });
 
+  const { data: stepLogs, error: stepLogsError } = await admin
+    .from("weekly_step_logs")
+    .select("user_id, steps")
+    .eq("pact_id", pact.id)
+    .in("user_id", participants.map(participant => participant.userId));
+  if (stepLogsError) throw stepLogsError;
+  (stepLogs ?? []).forEach(log => {
+    const total = totals.get(log.user_id) ?? { workouts: 0, hiit: 0, steps: 0 };
+    total.steps += Number(log.steps);
+    totals.set(log.user_id, total);
+  });
+
   return participants.map(participant => {
     const totalsForAthlete = totals.get(participant.userId) ?? { workouts: 0, hiit: 0, steps: 0 };
     const progress = requirements.map(requirement => {

@@ -450,6 +450,24 @@ body.dashboard-page {
 }
 
 .exercise-progress-marker img { width: 100%; height: 100%; object-fit: contain; }
+.steps-progress-bar { overflow: visible; }
+.steps-progress-checkpoint {
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    width: 8px;
+    height: 8px;
+    border: 1px solid #65706e;
+    border-radius: 50%;
+    background: #0a0d0d;
+    transform: translate(-50%, -50%);
+}
+.steps-progress-checkpoint.is-passed {
+    border-color: var(--green);
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(145, 242, 100, .45);
+}
+.steps-progress-bar .exercise-progress-marker { z-index: 2; }
 
 .exercise-tracker-actions {
     display: flex;

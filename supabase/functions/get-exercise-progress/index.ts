@@ -1,10 +1,11 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { verifyGymPactSession } from "../_shared/gympact-session.ts";
+import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import {
   ensureAthlete,
   getCorsHeaders,
   getExerciseTrackers,
 } from "../_shared/exercise-tracking.ts";
+import { getActivePactForAthlete, getStepTracker } from "../_shared/step-tracking.ts";
 
 serve(async request => {
   const corsHeaders = getCorsHeaders(request);
@@ -20,7 +21,10 @@ serve(async request => {
       return Response.json({ error: "Invalid session or athlete." }, { status: 401, headers: corsHeaders });
     }
 
-    return Response.json({ trackers: await getExerciseTrackers(userId) }, { headers: corsHeaders });
+    const activePact = await getActivePactForAthlete(getAdminClient(), userId);
+    const stepTracker = activePact ? await getStepTracker(getAdminClient(), activePact.id, userId) : null;
+
+    return Response.json({ trackers: await getExerciseTrackers(userId), stepTracker }, { headers: corsHeaders });
   } catch {
     return Response.json({ error: "Unable to load exercise progress." }, { status: 500, headers: corsHeaders });
   }
