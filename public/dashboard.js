@@ -497,14 +497,23 @@ function celebratePactCompletion(challenge) {
 
     });
 
-    if (!athleteId || !athleteProgress || athleteProgress.completed < athleteProgress.target) {
+    if (!athleteId || !athleteProgress || athleteProgress.isComplete !== true) {
 
         return;
 
     }
 
+    showPactCompletionCelebration(challenge.id, athleteId);
+
+}
+
+
+function showPactCompletionCelebration(pactId, athleteId = sessionStorage.getItem("gymPactSelectedAthleteId")) {
+
+    if (!pactId || !athleteId) return;
+
     const celebrationKey =
-        `gymPactCelebration:${challenge.id}:${athleteId}`;
+        `gymPactCelebration:${pactId}:${athleteId}`;
 
     if (localStorage.getItem(celebrationKey)) {
 
@@ -1809,7 +1818,11 @@ saveExerciseSetButton.addEventListener("click", async () => {
         await loadExerciseTrackers({ preserveOnError: true });
         await loadCurrentChallenge({ preserveOnError: true });
 
-        if (data.justCompleted) {
+        if (data.pactParticipantComplete) {
+
+            showPactCompletionCelebration(data.pactId, athleteId);
+
+        } else if (data.justCompleted) {
 
             showPactCelebration(`🎉 ${pendingTrackedExercise} goal reached!`);
 
@@ -2264,7 +2277,7 @@ saveWorkoutButton.addEventListener("click", async () => {
         workoutForm.append("photo", photoBlob, "workout-proof.jpg");
 
         const supabase = GymPactSupabase.getClient();
-        const { error } = await supabase.functions.invoke(
+        const { data, error } = await supabase.functions.invoke(
             "create-workout",
             { body: workoutForm }
         );
@@ -2277,6 +2290,12 @@ saveWorkoutButton.addEventListener("click", async () => {
             loadDashboardMetrics(),
             loadCurrentChallenge()
         ]);
+
+        if (data?.pactParticipantComplete) {
+
+            showPactCompletionCelebration(data.pactId, selectedAthleteId);
+
+        }
 
     } catch (error) {
 

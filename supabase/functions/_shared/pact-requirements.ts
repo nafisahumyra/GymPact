@@ -134,3 +134,19 @@ export async function getPactRequirementProgress(
     return { ...participant, requirements: progress, isComplete: progress.every(item => item.completed >= item.targetAmount) };
   });
 }
+
+export async function getAthletePactCompletion(
+  admin: AdminClient,
+  pact: PactWindow & { id: string; active_at: string | null },
+  userId: string,
+) {
+  const requirements = await getPactRequirements(admin, pact.id);
+  if (requirements.length === 0) return false;
+  const [progress] = await getPactRequirementProgress(
+    admin,
+    pact,
+    [{ userId, displayName: "GymPact athlete" }],
+    requirements,
+  );
+  return progress?.isComplete === true;
+}

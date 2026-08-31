@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
+import { getAthletePactCompletion } from "../_shared/pact-requirements.ts";
+import { getActivePactForAthlete } from "../_shared/step-tracking.ts";
 
 const measurementUnits = new Set(["minutes", "reps", "sets", "miles", "steps"]);
 
@@ -119,6 +121,8 @@ serve(async (request) => {
       });
     }
 
+    const activePact = await getActivePactForAthlete(admin, userId);
+
     const workoutId = crypto.randomUUID();
     const photoPath = `${userId}/${workoutId}.jpg`;
     const { error: uploadError } = await admin.storage
@@ -153,11 +157,19 @@ serve(async (request) => {
       throw workoutError;
     }
 
+    const pactParticipantComplete = activePact
+      ? await getAthletePactCompletion(admin, activePact, userId)
+      : false;
+
     // A Pact only finishes early when both athletes have reached its target.
     // All other outcomes remain active until the end of the Pact period.
     await finalizeDueActivePacts(admin);
 
-    return new Response(JSON.stringify({ workout }), {
+    return new Response(JSON.stringify({
+      workout,
+      pactId: activePact?.id ?? null,
+      pactParticipantComplete,
+    }), {
       status: 201,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

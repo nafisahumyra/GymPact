@@ -3,6 +3,7 @@ import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session
 import { ensureAthlete, getCorsHeaders } from "../_shared/exercise-tracking.ts";
 import { getActivePactForAthlete, getStepTracker } from "../_shared/step-tracking.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
+import { getAthletePactCompletion } from "../_shared/pact-requirements.ts";
 
 serve(async request => {
   const corsHeaders = getCorsHeaders(request);
@@ -27,8 +28,14 @@ serve(async request => {
       const { error: completeError } = await admin.from("weekly_step_goals").update({ status: "completed", completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", tracker.id).eq("status", "active");
       if (completeError) throw completeError;
     }
+    const pactParticipantComplete = await getAthletePactCompletion(admin, pact, userId);
     await finalizeDueActivePacts(admin);
-    return Response.json({ tracker: await getStepTracker(admin, pact.id, userId), justCompleted }, { headers: corsHeaders });
+    return Response.json({
+      tracker: await getStepTracker(admin, pact.id, userId),
+      justCompleted,
+      pactId: pact.id,
+      pactParticipantComplete,
+    }, { headers: corsHeaders });
   } catch {
     return Response.json({ error: "Unable to log steps." }, { status: 500, headers: corsHeaders });
   }

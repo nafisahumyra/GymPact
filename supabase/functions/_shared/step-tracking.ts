@@ -16,7 +16,7 @@ export type StepTracker = {
 export async function getActivePactForAthlete(admin: AdminClient, userId: string) {
   const { data, error } = await admin
     .from("pacts")
-    .select("id, timeframe, pact_participants!inner(user_id)")
+    .select("id, timeframe, start_date, end_date, active_at, pact_participants!inner(user_id)")
     .eq("status", "active")
     .eq("pact_participants.user_id", userId)
     .order("active_at", { ascending: false })
