@@ -1127,7 +1127,6 @@ function renderMonthPact() {
         const entries = (monthlyPact.checkins || []).slice(-5).reverse();
         if (entries.length) { const list = document.createElement("div"); list.className = "monthly-checkin-list"; entries.forEach(entry => { const line = document.createElement("div"); line.className = "monthly-checkin"; line.innerHTML = `<time>${entry.displayName} · ${formatMonthDate(entry.date)}</time>${entry.body}`; list.appendChild(line); }); card.appendChild(list); }
     }
-    monthPactContent.appendChild(card);
     if (isFinalized) {
         const next = document.createElement("article"); next.className = "month-pact-card month-pact-next-card";
         next.innerHTML = `<p class="month-pact-kicker">Next Month Pact</p><h3>${monthlyCandidate?.candidateLabel || "Next month"}</h3><p class="month-pact-copy">No Month Pact yet.</p>`;
@@ -1137,6 +1136,7 @@ function renderMonthPact() {
         const create = document.createElement("button"); create.type = "button"; create.className = "month-pact-action"; create.textContent = `+ Create ${nextMonthName} Pact`; create.addEventListener("click", openMonthlyCreate);
         next.appendChild(create); monthPactContent.appendChild(next);
     }
+    monthPactContent.appendChild(card);
 }
 
 async function loadMonthlyPact({ preserveOnError = false } = {}) {
