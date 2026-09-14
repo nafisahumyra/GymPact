@@ -72,7 +72,17 @@ serve(async request => {
       const { data: openPact, error } = await admin.from("monthly_pacts").select("*")
         .in("status", ["pending", "upcoming", "active"]).order("month_start").limit(1).maybeSingle();
       if (error) throw error;
-      return json({ pact: openPact ? await mapPact(admin, openPact) : null, candidateMonth: monthStartForNewPact(), candidateLabel: monthLabel(monthStartForNewPact()) }, request);
+      // Keep the most recently finalized Pact on the Month tab as a record,
+      // including its calendar, while still offering the next month below it.
+      let pactToDisplay = openPact;
+      if (!pactToDisplay) {
+        const { data: finalizedPact, error: finalizedError } = await admin.from("monthly_pacts").select("*")
+          .in("status", ["completed", "failed"]).order("month_start", { ascending: false }).limit(1).maybeSingle();
+        if (finalizedError) throw finalizedError;
+        pactToDisplay = finalizedPact;
+      }
+      const candidateMonth = monthStartForNewPact();
+      return json({ pact: pactToDisplay ? await mapPact(admin, pactToDisplay) : null, candidateMonth, candidateLabel: monthLabel(candidateMonth) }, request);
     }
 
     if (!await validUser(admin, body.userId)) return json({ error: "Unknown athlete." }, request, 400);

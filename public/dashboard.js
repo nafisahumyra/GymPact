@@ -1043,6 +1043,13 @@ function formatMonthDate(date) {
     return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function formatMonthPactCompletion(timestamp) {
+    if (!timestamp) return "Completed";
+    return new Intl.DateTimeFormat(undefined, {
+        timeZone: "America/New_York", month: "long", day: "numeric", year: "numeric"
+    }).format(new Date(timestamp));
+}
+
 function currentMonthDate() {
     return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" })
         .formatToParts().reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
@@ -1085,18 +1092,51 @@ function renderMonthPact() {
     }
     const creator = monthlyPact.createdBy === athleteId;
     const own = monthlyPact.commitments.find(item => item.userId === athleteId);
-    card.innerHTML = `<p class="month-pact-kicker">Month Pact · ${monthlyPact.status}</p><h3>${monthlyPact.monthLabel}</h3><p class="month-pact-copy">${monthlyPact.status === "pending" ? (creator ? "Waiting for your partner to add their goal and sign." : "Review the pledge, add your goal, and sign to begin.") : monthlyPact.status === "upcoming" ? "Both athletes have signed the Pact." : "Check in throughout the month, then submit proof when your goal is achieved."}</p>`;
+    const isFinalized = ["completed", "failed"].includes(monthlyPact.status);
+    const statusLabel = monthlyPact.status === "completed" ? "✓ Pact Complete"
+        : monthlyPact.status === "failed" ? "Pact Failed"
+        : `Month Pact · ${monthlyPact.status}`;
+    const statusCopy = monthlyPact.status === "pending"
+        ? (creator ? "Waiting for your partner to add their goal and sign." : "Review the pledge, add your goal, and sign to begin.")
+        : monthlyPact.status === "upcoming" ? "Both athletes have signed the Pact."
+            : monthlyPact.status === "completed" ? "Both athletes achieved their individual goals."
+                : monthlyPact.status === "failed" ? "The month ended before both individual goals were achieved."
+                    : "Check in throughout the month, then submit proof when your goal is achieved.";
+    card.innerHTML = `<p class="month-pact-kicker ${isFinalized ? "month-pact-final-status" : ""}">${statusLabel}</p><h3>${monthlyPact.monthLabel}</h3><p class="month-pact-copy">${statusCopy}</p>`;
     const people = document.createElement("div"); people.className = "month-pact-people";
-    monthlyPact.commitments.forEach(item => { const person = document.createElement("div"); person.className = "month-pact-person"; person.innerHTML = `<strong>${item.displayName}</strong><span>${item.goal}</span>${item.completedAt ? '<span class="month-pact-complete">✓ Goal achieved</span>' : ''}`; people.appendChild(person); }); card.appendChild(people);
-    const consequence = document.createElement("div"); consequence.className = "month-pact-detail"; consequence.innerHTML = `<h4>Shared consequence</h4><p>${monthlyPact.consequence}</p>`; card.appendChild(consequence);
+    monthlyPact.commitments.forEach(item => {
+        const person = document.createElement("div"); person.className = "month-pact-person";
+        const label = isFinalized ? (item.userId === athleteId ? "Your goal" : `${item.displayName}'s goal`) : item.displayName;
+        const result = item.completedAt ? (isFinalized ? "✓ Achieved" : "✓ Goal achieved") : (monthlyPact.status === "failed" ? "Not achieved" : "");
+        person.innerHTML = `<strong>${label}</strong><span>${item.goal}</span>${result ? `<span class="${item.completedAt ? "month-pact-complete" : "month-pact-incomplete"}">${result}</span>` : ""}`;
+        people.appendChild(person);
+    });
+    card.appendChild(people);
+    const consequence = document.createElement("div"); consequence.className = "month-pact-detail";
+    consequence.innerHTML = `<h4>${isFinalized ? "The consequence" : "Shared consequence"}</h4><p>${monthlyPact.consequence}</p>${monthlyPact.status === "completed" ? '<span class="month-pact-complete">Avoided ✓</span>' : monthlyPact.status === "failed" ? '<span class="month-pact-incomplete">Applies</span>' : ""}`;
+    card.appendChild(consequence);
+    if (monthlyPact.status === "completed") {
+        const completionDate = document.createElement("p"); completionDate.className = "month-pact-completion-date";
+        completionDate.textContent = `Completed ${formatMonthPactCompletion(monthlyPact.finalizedAt)}`;
+        card.appendChild(completionDate);
+    }
     if (monthlyPact.status === "pending" && !creator) { const sign = document.createElement("button"); sign.type = "button"; sign.className = "month-pact-action"; sign.textContent = "Review & sign"; sign.addEventListener("click", openMonthlySign); card.appendChild(sign); }
-    if (monthlyPact.status === "active") {
+    if (["active", "completed", "failed"].includes(monthlyPact.status)) {
         renderMonthlyCalendar(monthlyPact, card);
-        if (own && !own.completedAt) { const complete = document.createElement("button"); complete.type = "button"; complete.className = "month-pact-action"; complete.textContent = "✓ I Achieved My Goal"; complete.addEventListener("click", openMonthlyCompletion); card.appendChild(complete); }
+        if (monthlyPact.status === "active" && own && !own.completedAt) { const complete = document.createElement("button"); complete.type = "button"; complete.className = "month-pact-action"; complete.textContent = "✓ I Achieved My Goal"; complete.addEventListener("click", openMonthlyCompletion); card.appendChild(complete); }
         const entries = (monthlyPact.checkins || []).slice(-5).reverse();
         if (entries.length) { const list = document.createElement("div"); list.className = "monthly-checkin-list"; entries.forEach(entry => { const line = document.createElement("div"); line.className = "monthly-checkin"; line.innerHTML = `<time>${entry.displayName} · ${formatMonthDate(entry.date)}</time>${entry.body}`; list.appendChild(line); }); card.appendChild(list); }
     }
     monthPactContent.appendChild(card);
+    if (isFinalized) {
+        const next = document.createElement("article"); next.className = "month-pact-card month-pact-next-card";
+        next.innerHTML = `<p class="month-pact-kicker">Next Month Pact</p><h3>${monthlyCandidate?.candidateLabel || "Next month"}</h3><p class="month-pact-copy">No Month Pact yet.</p>`;
+        const nextMonthName = monthlyCandidate?.candidateMonth
+            ? new Intl.DateTimeFormat(undefined, { timeZone: "America/New_York", month: "long" }).format(new Date(`${monthlyCandidate.candidateMonth}T12:00:00Z`))
+            : "Next";
+        const create = document.createElement("button"); create.type = "button"; create.className = "month-pact-action"; create.textContent = `+ Create ${nextMonthName} Pact`; create.addEventListener("click", openMonthlyCreate);
+        next.appendChild(create); monthPactContent.appendChild(next);
+    }
 }
 
 async function loadMonthlyPact({ preserveOnError = false } = {}) {

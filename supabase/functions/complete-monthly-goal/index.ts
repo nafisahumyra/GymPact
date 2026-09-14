@@ -33,7 +33,14 @@ serve(async request => {
     if (uploadError) throw uploadError;
     const { error: updateError } = await admin.from("monthly_pact_commitments").update({ completed_at: new Date().toISOString(), proof_path: path }).eq("monthly_pact_id", pactId).eq("user_id", userId);
     if (updateError) { await admin.storage.from("monthly-pact-proofs").remove([path]); throw updateError; }
-    return new Response(JSON.stringify({ completed: true }), { headers: headers(request) });
+    // Re-evaluate after recording the proof so the second achieved goal closes
+    // the Pact immediately, rather than waiting for the calendar month to end.
+    const { error: finalizeError } = await admin.rpc("finalize_due_monthly_pacts");
+    if (finalizeError) throw finalizeError;
+    const { data: finalizedPact, error: finalizedPactError } = await admin.from("monthly_pacts")
+      .select("status, final_result, finalized_at").eq("id", pactId).single();
+    if (finalizedPactError) throw finalizedPactError;
+    return new Response(JSON.stringify({ completed: true, pact: finalizedPact }), { headers: headers(request) });
   } catch {
     return new Response(JSON.stringify({ error: "Unable to save goal completion." }), { status: 500, headers: headers(request) });
   }
