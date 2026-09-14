@@ -1093,7 +1093,7 @@ function renderMonthPact() {
     const creator = monthlyPact.createdBy === athleteId;
     const own = monthlyPact.commitments.find(item => item.userId === athleteId);
     const isFinalized = ["completed", "failed"].includes(monthlyPact.status);
-    const statusLabel = monthlyPact.status === "completed" ? "✓ Pact Complete"
+    const statusLabel = monthlyPact.status === "completed" ? `✓ Completed ${formatMonthPactCompletion(monthlyPact.finalizedAt)}`
         : monthlyPact.status === "failed" ? "Pact Failed"
         : `Month Pact · ${monthlyPact.status}`;
     const statusCopy = monthlyPact.status === "pending"
@@ -1115,11 +1115,6 @@ function renderMonthPact() {
     const consequence = document.createElement("div"); consequence.className = "month-pact-detail";
     consequence.innerHTML = `<h4>${isFinalized ? "The consequence" : "Shared consequence"}</h4><p>${monthlyPact.consequence}</p>${monthlyPact.status === "completed" ? '<span class="month-pact-complete">Avoided ✓</span>' : monthlyPact.status === "failed" ? '<span class="month-pact-incomplete">Applies</span>' : ""}`;
     card.appendChild(consequence);
-    if (monthlyPact.status === "completed") {
-        const completionDate = document.createElement("p"); completionDate.className = "month-pact-completion-date";
-        completionDate.textContent = `Completed ${formatMonthPactCompletion(monthlyPact.finalizedAt)}`;
-        card.appendChild(completionDate);
-    }
     if (monthlyPact.status === "pending" && !creator) { const sign = document.createElement("button"); sign.type = "button"; sign.className = "month-pact-action"; sign.textContent = "Review & sign"; sign.addEventListener("click", openMonthlySign); card.appendChild(sign); }
     if (["active", "completed", "failed"].includes(monthlyPact.status)) {
         renderMonthlyCalendar(monthlyPact, card);
