@@ -1,4 +1,5 @@
 import { getAdminClient } from "./gympact-session.ts";
+import { classifyWorkoutForPact } from "./pact-workout-classification.ts";
 
 type AdminClient = ReturnType<typeof getAdminClient>;
 
@@ -44,17 +45,6 @@ export function getPactWindow(pact: PactWindow) {
     start: activeAt && activeAt > start ? activeAt.toISOString() : start.toISOString(),
     endExclusive,
   };
-}
-
-function parseMuscles(muscles: unknown) {
-  if (Array.isArray(muscles)) return muscles.filter(value => typeof value === "string");
-  if (typeof muscles !== "string") return [];
-  try {
-    const parsed = JSON.parse(muscles);
-    return Array.isArray(parsed) ? parsed.filter(value => typeof value === "string") : [muscles];
-  } catch {
-    return muscles.split(",");
-  }
 }
 
 function stepTotal(measurements: unknown) {
@@ -107,8 +97,9 @@ export async function getPactRequirementProgress(
   participants.forEach(participant => totals.set(participant.userId, { workouts: 0, hiit: 0, steps: 0 }));
   (workouts ?? []).forEach(workout => {
     const total = totals.get(workout.user_id) ?? { workouts: 0, hiit: 0, steps: 0 };
-    total.workouts += 1;
-    if (parseMuscles(workout.muscles).some(muscle => muscle.trim().toLowerCase() === "hiit")) total.hiit += 1;
+    const classified = classifyWorkoutForPact(workout.muscles, requirements);
+    total.workouts += classified.workouts;
+    total.hiit += classified.hiit;
     total.steps += stepTotal(workout.measurements);
     totals.set(workout.user_id, total);
   });
