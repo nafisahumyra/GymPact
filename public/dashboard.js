@@ -179,6 +179,19 @@ function createExerciseIcon(exerciseName) {
 
 }
 
+function closeExerciseTrackerMenus() {
+
+    document.querySelectorAll(".exercise-tracker-menu").forEach(menu => {
+
+        menu.hidden = true;
+        menu.closest(".exercise-tracker-overflow")
+            ?.querySelector(".exercise-tracker-overflow-button")
+            ?.setAttribute("aria-expanded", "false");
+
+    });
+
+}
+
 
 function renderExerciseTrackers() {
 
@@ -214,6 +227,9 @@ function renderExerciseTrackers() {
         const fill = document.createElement("div");
         const marker = document.createElement("span");
         const actions = document.createElement("div");
+        const overflow = document.createElement("div");
+        const overflowButton = document.createElement("button");
+        const overflowMenu = document.createElement("div");
 
         card.classList.add("exercise-tracker-card");
         if (tracker.status === "completed") {
@@ -241,19 +257,60 @@ function renderExerciseTrackers() {
 
         }
 
+        overflow.classList.add("exercise-tracker-overflow");
+        overflowButton.type = "button";
+        overflowButton.classList.add("exercise-tracker-overflow-button");
+        overflowButton.textContent = "•••";
+        overflowButton.setAttribute("aria-label", `${tracker.exerciseName} tracker options`);
+        overflowButton.setAttribute("aria-expanded", "false");
+        overflowButton.addEventListener("click", () => {
+
+            const isOpen = !overflowMenu.hidden;
+
+            closeExerciseTrackerMenus();
+            overflowMenu.hidden = isOpen;
+            overflowButton.setAttribute("aria-expanded", String(!isOpen));
+
+        });
+
+        overflowMenu.classList.add("exercise-tracker-menu");
+        overflowMenu.hidden = true;
+
+        const changeTarget = document.createElement("button");
+        const reset = document.createElement("button");
         const remove = document.createElement("button");
 
+        changeTarget.type = "button";
+        changeTarget.textContent = "Change target";
+        changeTarget.addEventListener("click", () => {
+
+            closeExerciseTrackerMenus();
+            openExerciseTargetModal(tracker.exerciseName, target, false);
+
+        });
+
+        reset.type = "button";
+        reset.textContent = "Reset";
+        reset.addEventListener("click", () => {
+
+            closeExerciseTrackerMenus();
+            resetExerciseTracker(tracker);
+
+        });
+
         remove.type = "button";
-        remove.classList.add("remove-exercise-tracker-button");
-        remove.textContent = "−";
-        remove.title = `Remove ${tracker.exerciseName} tracker`;
-        remove.setAttribute("aria-label", `Remove ${tracker.exerciseName} tracker`);
+        remove.classList.add("is-destructive");
+        remove.textContent = "Remove tracker";
         remove.addEventListener("click", () => {
 
+            closeExerciseTrackerMenus();
             openRemoveExerciseTrackerModal(tracker);
 
         });
-        header.appendChild(remove);
+
+        overflowMenu.append(changeTarget, reset, remove);
+        overflow.append(overflowButton, overflowMenu);
+        header.appendChild(overflow);
 
         bar.classList.add("exercise-progress-bar");
         if (isStepsTracker) {
@@ -313,32 +370,29 @@ function renderExerciseTrackers() {
 
         }
 
-        const changeTarget = document.createElement("button");
-        const reset = document.createElement("button");
-
-        changeTarget.type = "button";
-        changeTarget.textContent = "Change target";
-        changeTarget.addEventListener("click", () => {
-
-            openExerciseTargetModal(tracker.exerciseName, target, false);
-
-        });
-
-        reset.type = "button";
-        reset.textContent = "Reset";
-        reset.addEventListener("click", () => {
-
-            resetExerciseTracker(tracker);
-
-        });
-
-        actions.append(changeTarget, reset);
-        card.append(header, bar, actions);
+        card.append(header, bar);
+        if (actions.childElementCount) card.appendChild(actions);
         exerciseTrackersContainer.appendChild(card);
 
     });
 
 }
+
+document.addEventListener("click", event => {
+
+    if (!event.target.closest(".exercise-tracker-overflow")) {
+
+        closeExerciseTrackerMenus();
+
+    }
+
+});
+
+document.addEventListener("keydown", event => {
+
+    if (event.key === "Escape") closeExerciseTrackerMenus();
+
+});
 
 
 function closeRemoveExerciseTrackerModal() {

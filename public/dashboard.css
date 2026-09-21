@@ -388,6 +388,7 @@ body.dashboard-page {
 }
 
 .exercise-tracker-card {
+    position: relative;
     padding: 17px;
     border: 1px solid rgba(145, 242, 100, .28);
     border-radius: 20px;
@@ -424,21 +425,48 @@ body.dashboard-page {
 .exercise-tracker-title p { margin-top: 3px; color: var(--muted); font-size: .83rem; }
 .exercise-tracker-card.is-completed { border-color: rgba(145, 242, 100, .55); }
 .exercise-tracker-complete { margin-left: auto; color: var(--green); font-size: .75rem; font-weight: 800; }
-.remove-exercise-tracker-button {
-    flex: 0 0 30px;
-    width: 30px;
+.exercise-tracker-overflow { position: relative; margin-left: auto; }
+.exercise-tracker-complete + .exercise-tracker-overflow { margin-left: 8px; }
+.exercise-tracker-overflow-button {
+    width: 34px;
     min-height: 30px;
-    margin-left: auto;
-    padding: 0;
+    padding: 0 5px 4px;
     border-color: var(--line);
     border-radius: 9px;
     background: #101313;
     color: var(--muted);
-    font-size: 1.35rem;
-    font-weight: 450;
+    font-size: .9rem;
+    font-weight: 800;
+    letter-spacing: .08em;
     line-height: 1;
 }
-.remove-exercise-tracker-button:hover:not(:disabled) { border-color: var(--green); }
+.exercise-tracker-overflow-button:hover:not(:disabled) { border-color: var(--green); color: var(--green); }
+.exercise-tracker-menu {
+    position: absolute;
+    z-index: 8;
+    top: calc(100% + 7px);
+    right: 0;
+    display: grid;
+    min-width: 152px;
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #151919;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .42);
+}
+.exercise-tracker-menu button {
+    min-height: 34px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-size: .78rem;
+    text-align: left;
+}
+.exercise-tracker-menu button:hover:not(:disabled) { background: rgba(145, 242, 100, .12); color: var(--green); }
+.exercise-tracker-menu .is-destructive { color: #ff9a9a; }
+.exercise-tracker-menu .is-destructive:hover:not(:disabled) { background: rgba(255, 116, 116, .11); color: #ff9a9a; }
 
 .exercise-progress-bar {
     position: relative;
