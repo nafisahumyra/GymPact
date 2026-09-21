@@ -454,6 +454,7 @@ body.dashboard-page {
     background: #151919;
     box-shadow: 0 14px 30px rgba(0, 0, 0, .42);
 }
+.exercise-tracker-menu[hidden] { display: none; }
 .exercise-tracker-menu button {
     min-height: 34px;
     padding: 7px 9px;
