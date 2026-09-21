@@ -801,7 +801,6 @@ function appendRequirementProgress(container, requirement) {
         const icons = document.createElement("div");
 
         icons.classList.add("hiit-icons");
-        icons.style.setProperty("--hiit-goal-count", requirement.targetAmount);
         for (let index = 0; index < requirement.targetAmount; index += 1) {
 
             const icon = document.createElement("span");
