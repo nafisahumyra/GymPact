@@ -552,6 +552,8 @@ body.dashboard-page {
     text-transform: uppercase;
 }
 .challenge-progress > p { margin-top: 4px; font-size: .92rem; }
+.pact-requirements-preview { margin-top: 16px; }
+.pact-requirement-target { padding-bottom: 0; }
 
 .challenge-dates {
     display: grid;
@@ -887,6 +889,10 @@ body.dashboard-page {
 .challenge-history-date { color: var(--muted) !important; }
 .challenge-history-score { font-weight: 700; }
 .challenge-history-result { margin-top: 16px !important; color: var(--green) !important; font-weight: 800; }
+.pact-history-person { margin-top: 10px; padding: 12px; border: 1px solid var(--line-soft); border-radius: 13px; background: rgba(0, 0, 0, .16); }
+.pact-history-person h5 { margin: 0 0 8px; color: var(--text); font-size: .9rem; }
+.pact-history-person .pact-requirement { padding: 8px 0; }
+.pact-history-person .pact-requirement:last-child { padding-bottom: 0; }
 
 @media (min-width: 680px) {
     .dashboard-header-content { padding-top: 20px; }

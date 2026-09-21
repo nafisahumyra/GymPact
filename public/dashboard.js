@@ -763,6 +763,23 @@ function appendRequirementProgress(container, requirement) {
 
 }
 
+function appendRequirementTarget(container, requirement, timeframe) {
+
+    const row = document.createElement("div");
+    const label = document.createElement("div");
+    const text = document.createElement("span");
+    const target = document.createElement("span");
+
+    row.classList.add("pact-requirement", "pact-requirement-target");
+    label.classList.add("pact-requirement-label");
+    text.textContent = getRequirementLabel(requirement.type);
+    target.textContent = `${requirement.targetAmount.toLocaleString()} / ${timeframe}`;
+    label.append(text, target);
+    row.appendChild(label);
+    container.appendChild(row);
+
+}
+
 
 function renderPactProgressDetail(challenge) {
 
@@ -884,6 +901,22 @@ function renderCurrentChallenge(challenge) {
 
         currentChallengeContainer.appendChild(progress);
         celebratePactCompletion(challenge);
+
+    }
+
+    if (challenge.status === "pending" && Array.isArray(challenge.requirements)) {
+
+        const requirements = document.createElement("div");
+        const requirementsTitle = document.createElement("h4");
+
+        requirements.classList.add("challenge-progress", "pact-requirements-preview");
+        requirementsTitle.classList.add("challenge-progress-title");
+        requirementsTitle.textContent = "Pact requirements";
+        requirements.appendChild(requirementsTitle);
+        challenge.requirements.forEach(requirement => {
+            appendRequirementTarget(requirements, requirement, challenge.timeframe);
+        });
+        currentChallengeContainer.appendChild(requirements);
 
     }
 

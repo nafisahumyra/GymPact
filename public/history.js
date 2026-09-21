@@ -235,6 +235,29 @@ function formatDateRange(startDate, endDate) {
 
 }
 
+function getRequirementLabel(type) {
+
+    return { workouts: "🏋️ Workouts", hiit: "⚡ HIIT", steps: "👟 Steps" }[type] || type;
+
+}
+
+function createRequirementScore(requirement) {
+
+    const row = document.createElement("div");
+    const label = document.createElement("div");
+    const text = document.createElement("span");
+    const score = document.createElement("span");
+
+    row.classList.add("pact-requirement", "pact-history-requirement");
+    label.classList.add("pact-requirement-label");
+    text.textContent = getRequirementLabel(requirement.type);
+    score.textContent = `${requirement.completed.toLocaleString()} / ${requirement.targetAmount.toLocaleString()}`;
+    label.append(text, score);
+    row.appendChild(label);
+    return row;
+
+}
+
 
 function getChallengeResultText(challenge) {
 
@@ -357,9 +380,9 @@ async function renderChallengeHistory({ preserveOnError = false } = {}) {
         const card = document.createElement("article");
         const heading = document.createElement("h3");
         const dateRange = document.createElement("p");
-        const goal = document.createElement("p");
         const scoreHeading = document.createElement("h4");
         const result = document.createElement("p");
+        const wagerHeading = document.createElement("h4");
         const wager = document.createElement("p");
 
         card.classList.add("challenge-history-card");
@@ -369,30 +392,30 @@ async function renderChallengeHistory({ preserveOnError = false } = {}) {
             challenge.startDate,
             challenge.endDate
         );
-        goal.textContent = `Goals: ${(challenge.requirements || []).map(requirement =>
-            `${requirement.targetAmount.toLocaleString()} ${requirement.type === "hiit" ? "HIIT" : requirement.type}`
-        ).join(" · ")} per ${challenge.timeframe}`;
         scoreHeading.textContent = "Final score";
         result.classList.add("challenge-history-result");
         result.textContent = getChallengeResultText(challenge);
-        wager.textContent =
-            `Wager: ${challenge.wagerType === "reward" ? "Reward" : "Punishment"}: ${challenge.wagerDescription}`;
+        wagerHeading.textContent = "Wager";
+        wager.textContent = challenge.wagerDescription;
 
-        card.append(heading, dateRange, goal, scoreHeading);
+        card.append(heading, dateRange, scoreHeading);
 
         challenge.participants.forEach(participant => {
 
-            const score = document.createElement("p");
+            const score = document.createElement("section");
+            const participantName = document.createElement("h5");
 
-            score.classList.add("challenge-history-score");
-            score.textContent = `${participant.displayName}: ${(participant.requirements || []).map(requirement =>
-                `${requirement.type === "hiit" ? "HIIT" : requirement.type}: ${requirement.completed.toLocaleString()} / ${requirement.targetAmount.toLocaleString()}`
-            ).join(" · ")}`;
+            score.classList.add("pact-history-person");
+            participantName.textContent = participant.displayName;
+            score.appendChild(participantName);
+            (participant.requirements || []).forEach(requirement => {
+                score.appendChild(createRequirementScore(requirement));
+            });
             card.appendChild(score);
 
         });
 
-        card.append(result, wager);
+        card.append(result, wagerHeading, wager);
         challengeHistoryContainer.appendChild(card);
 
     });
