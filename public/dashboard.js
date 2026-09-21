@@ -1223,8 +1223,8 @@ function renderMonthPact() {
         const create = document.createElement("button"); create.type = "button"; create.className = "month-pact-action"; create.textContent = `+ Create ${nextMonthName} Pact`; create.addEventListener("click", openMonthlyCreate);
         nextCard.appendChild(create);
     }
-    monthPactContent.appendChild(card);
     if (nextCard) monthPactContent.appendChild(nextCard);
+    monthPactContent.appendChild(card);
 }
 
 async function loadMonthlyPact({ preserveOnError = false } = {}) {

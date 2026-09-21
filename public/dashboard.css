@@ -288,7 +288,27 @@ body.dashboard-page {
 .month-pact-complete { color: var(--green) !important; font-weight: 750; }
 .month-pact-incomplete { color: #ff9a9a !important; font-weight: 750; }
 .month-pact-final-status { color: var(--green); }
-.month-pact-next-card { margin: 0 0 16px; border-color: var(--line); }
+.month-pact-next-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    align-items: center;
+    margin: 0 0 24px;
+    padding: 14px 16px;
+    border-color: var(--line);
+}
+.month-pact-next-card .month-pact-kicker { grid-column: 1; margin: 0 0 3px; }
+.month-pact-next-card h3 { grid-column: 1; margin: 0; font-size: 1rem; }
+.month-pact-next-card .month-pact-action {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: auto;
+    min-height: 36px;
+    margin: 0;
+    padding: 7px 11px;
+    font-size: .78rem;
+    white-space: nowrap;
+}
 .monthly-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-top: 19px; }
 .monthly-calendar-weekday { padding-bottom: 3px; color: var(--muted); font-size: .63rem; font-weight: 750; text-align: center; text-transform: uppercase; }
 .monthly-calendar-day { aspect-ratio: 1; min-height: 34px; padding: 3px; border: 1px solid var(--line-soft); border-radius: 9px; background: #101313; color: var(--text); font-size: .76rem; }
