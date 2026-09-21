@@ -622,7 +622,7 @@ body.dashboard-page {
     gap: 12px;
 }
 .pact-card-meta .challenge-status-pill { position: static; margin: 0; }
-.pact-card-period { margin: 0; font-size: .76rem; line-height: 1.2; text-align: right; }
+.pact-card-period { margin: 0; color: var(--green); font-size: .76rem; font-weight: 750; line-height: 1.2; text-align: right; }
 .challenge-dates .challenge-detail { min-width: 0; }
 
 .challenge-status-pill {
