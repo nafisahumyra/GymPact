@@ -104,7 +104,7 @@ serve(async (request) => {
 
     if (pactError) {
       if (pactError.code === "23505") {
-        return jsonResponse({ error: "An open challenge already exists.", code: "open-pact" }, 409, corsHeaders);
+        return jsonResponse({ error: "An open Pact already exists.", code: "open-pact" }, 409, corsHeaders);
       }
 
       throw pactError;

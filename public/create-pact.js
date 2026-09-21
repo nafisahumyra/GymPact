@@ -108,12 +108,12 @@ createPactForm.addEventListener("submit", async event => {
         });
         if (error) {
             const details = await error.context?.json().catch(() => null);
-            throw new Error(details?.code === "open-pact" ? "You already have an active challenge." : "We couldn't create that challenge. Please try again.");
+            throw new Error(details?.code === "open-pact" ? "You already have an active Pact." : "We couldn't create that Pact. Please try again.");
         }
         window.location.href = "dashboard.html";
     } catch (error) {
         console.error("Unable to create pact.", error);
-        alert(error.message || "We couldn't create that challenge. Please try again.");
+        alert(error.message || "We couldn't create that Pact. Please try again.");
     } finally { submitButton.disabled = false; }
 });
 

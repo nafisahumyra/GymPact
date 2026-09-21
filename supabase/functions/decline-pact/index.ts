@@ -74,7 +74,7 @@ serve(async (request) => {
     }
 
     if (pendingPact.created_by === athleteId) {
-      return new Response(JSON.stringify({ error: "Pact creators should use Cancel Challenge instead." }), {
+      return new Response(JSON.stringify({ error: "Pact creators should use Cancel Pact instead." }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

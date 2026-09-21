@@ -74,7 +74,7 @@ serve(async (request) => {
     }
 
     if (pendingPact.created_by === athleteId) {
-      return new Response(JSON.stringify({ error: "Pact creators cannot accept their own challenge." }), {
+      return new Response(JSON.stringify({ error: "Pact creators cannot accept their own Pact." }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

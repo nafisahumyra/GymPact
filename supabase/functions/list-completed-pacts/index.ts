@@ -91,7 +91,7 @@ serve(async (request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch {
-    return new Response(JSON.stringify({ error: "Unable to load challenge history." }), {
+    return new Response(JSON.stringify({ error: "Unable to load Pact history." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

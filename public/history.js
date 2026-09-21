@@ -1,11 +1,3 @@
-const historySupportingText =
-    document.getElementById("history-user");
-
-
-historySupportingText.textContent =
-    "Showing workouts shared by Nafisa and Mahfuzur";
-
-
 const historyContainer =
     document.getElementById("workout-history");
 
@@ -25,10 +17,24 @@ let activePactHistory = new URLSearchParams(window.location.search).get("categor
 const pactHistoryTabs = document.getElementById("pact-history-tabs");
 const weeklyPactHistoryTab = document.getElementById("weekly-pact-history-tab");
 const monthlyPactHistoryTab = document.getElementById("monthly-pact-history-tab");
+const historyPhotoDialog = document.getElementById("history-photo-dialog");
+const historyPhotoFull = document.getElementById("history-photo-full");
+const closeHistoryPhotoButton = document.getElementById("close-history-photo");
 let historyRefreshInFlight = null;
 
 historyPageTitle.textContent = activeHistoryTab === "challenges" ? "Pact History" : "Workout History";
 document.title = `GymPact ${historyPageTitle.textContent}`;
+
+function openHistoryPhoto(photo) {
+    historyPhotoFull.src = photo.src;
+    historyPhotoFull.alt = photo.alt;
+    historyPhotoDialog.showModal();
+}
+
+closeHistoryPhotoButton.addEventListener("click", () => historyPhotoDialog.close());
+historyPhotoDialog.addEventListener("click", event => {
+    if (event.target === historyPhotoDialog) historyPhotoDialog.close();
+});
 
 
 function renderEmptyState() {
@@ -198,6 +204,16 @@ async function renderWorkoutHistory({ preserveOnError = false } = {}) {
             photo.classList.add("workout-history-photo");
             photo.src = workout.photo_url;
             photo.alt = `Workout proof for ${activityName}`;
+            photo.tabIndex = 0;
+            photo.setAttribute("role", "button");
+            photo.setAttribute("aria-label", `Open proof photo for ${activityName}`);
+            photo.addEventListener("click", () => openHistoryPhoto(photo));
+            photo.addEventListener("keydown", event => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openHistoryPhoto(photo);
+                }
+            });
 
             card.appendChild(photo);
 
@@ -312,11 +328,11 @@ async function renderChallengeHistory({ preserveOnError = false } = {}) {
 
     if (error || !Array.isArray(data?.pacts)) {
 
-        console.error("Unable to load challenge history.", error);
+        console.error("Unable to load Pact history.", error);
 
         if (preserveOnError) {
 
-            throw error || new Error("Challenge history was unavailable.");
+            throw error || new Error("Pact history was unavailable.");
 
         }
 
@@ -390,9 +406,6 @@ function showHistoryTab(tab) {
 
     historyContainer.hidden = !showWorkouts;
     challengeHistoryContainer.hidden = showWorkouts;
-    historySupportingText.textContent = showWorkouts
-        ? "Showing workouts shared by Nafisa and Mahfuzur"
-        : "Completed Pacts shared by Nafisa and Mahfuzur";
     pactHistoryTabs.hidden = showWorkouts;
     weeklyPactHistoryTab.classList.toggle("is-active", activePactHistory === "weekly");
     monthlyPactHistoryTab.classList.toggle("is-active", activePactHistory === "monthly");

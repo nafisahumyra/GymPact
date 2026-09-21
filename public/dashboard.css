@@ -293,11 +293,14 @@ body.dashboard-page {
 .monthly-calendar-weekday { padding-bottom: 3px; color: var(--muted); font-size: .63rem; font-weight: 750; text-align: center; text-transform: uppercase; }
 .monthly-calendar-day { aspect-ratio: 1; min-height: 34px; padding: 3px; border: 1px solid var(--line-soft); border-radius: 9px; background: #101313; color: var(--text); font-size: .76rem; }
 .monthly-calendar-day.is-today { border-color: var(--green); box-shadow: 0 0 0 1px rgba(145,242,100,.12); }
+.monthly-calendar-day.is-selected { border-color: var(--green); background: rgba(145,242,100,.14); box-shadow: 0 0 0 1px rgba(145,242,100,.16); }
 .monthly-calendar-day.has-checkin::after { content: ""; display: block; width: 5px; height: 5px; margin: 3px auto 0; border-radius: 50%; background: var(--green); }
 .monthly-calendar-day:disabled { opacity: .48; cursor: default; }
 .monthly-checkin-list { display: grid; gap: 8px; margin-top: 16px; }
 .monthly-checkin { padding: 10px 11px; border-left: 2px solid var(--green); background: rgba(145,242,100,.06); color: #dfe7df; font-size: .84rem; line-height: 1.45; }
 .monthly-checkin time { display: block; margin-bottom: 3px; color: var(--muted); font-size: .72rem; }
+.monthly-checkin-empty { margin: 0; padding: 11px; border: 1px dashed var(--line); border-radius: 11px; color: var(--muted); font-size: .82rem; text-align: center; }
+.monthly-checkin-add { width: fit-content; min-height: 34px; padding: 6px 11px; border-color: rgba(145,242,100,.45); background: transparent; color: var(--green); font-size: .78rem; }
 .pact-progress-detail { display: grid; gap: 12px; }
 .pact-progress-athlete { padding: 17px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
 .pact-progress-athlete h4 { margin-bottom: 12px; color: var(--text); font-size: .95rem; }
@@ -833,10 +836,11 @@ body.dashboard-page {
 @keyframes celebration-message { 0%, 100% { opacity: 0; } 12%, 80% { opacity: 1; } }
 
 .history-page { width: min(100%, 820px); }
-.history-header { margin-bottom: 20px; }
-.history-header-actions { display: flex; gap: 8px; }
-.history-supporting-text { margin: 17px 0 22px; color: var(--muted); font-size: .9rem; }
-.history-tabs { display: flex; gap: 8px; margin: -6px 0 20px; }
+.history-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.history-back-button { min-height: 34px; padding: 5px 0; border: 0; border-radius: 0; background: transparent; color: var(--muted); font-size: .88rem; font-weight: 750; }
+.history-back-button:hover { color: var(--green); background: transparent; }
+.history-page-title { margin: 0; color: var(--text); font-size: 1.15rem; }
+.history-tabs { display: flex; gap: 8px; margin: 0 0 20px; }
 .history-tab { min-height: 36px; padding: 7px 14px; border-color: var(--line); background: var(--panel-elevated); color: var(--muted); font-size: .78rem; }
 .history-tab.is-active { border-color: rgba(145,242,100,.55); background: rgba(145,242,100,.12); color: var(--green); }
 .workout-card,
@@ -845,7 +849,12 @@ body.dashboard-page {
 .challenge-history-card h3 { margin-bottom: 8px; color: var(--text); font-size: 1rem; }
 .workout-card p,
 .challenge-history-card p { margin-top: 6px; color: #d5dcd6; line-height: 1.5; }
-.workout-history-photo { display: block; width: 100%; max-height: 280px; margin-top: 14px; border: 1px solid var(--line); border-radius: 14px; object-fit: contain; }
+.workout-history-photo { display: block; width: 132px; height: 96px; margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; cursor: zoom-in; object-fit: cover; }
+.workout-history-photo:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.history-photo-dialog { width: min(92vw, 900px); max-width: none; max-height: 90vh; padding: 12px; border: 1px solid var(--line); border-radius: 18px; background: #101313; box-shadow: 0 22px 60px rgba(0,0,0,.65); }
+.history-photo-dialog::backdrop { background: rgba(0,0,0,.78); }
+.history-photo-dialog img { display: block; width: 100%; max-height: calc(90vh - 58px); margin-top: 8px; border-radius: 12px; object-fit: contain; }
+.history-photo-close { display: block; min-height: 34px; margin-left: auto; padding: 5px 10px; border-color: var(--line); background: var(--panel-elevated); color: var(--text); font-size: .78rem; }
 .history-empty-state { padding: 22px; }
 .history-empty-state p:first-child { font-size: 1.05rem; font-weight: 750; }
 .history-empty-state p:nth-child(2) { margin: 7px 0 17px; color: var(--muted); }
