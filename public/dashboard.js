@@ -766,6 +766,18 @@ function getRequirementLabel(type) {
 
 }
 
+function sortRequirementsForDisplay(requirements) {
+
+    const order = { hiit: 0, steps: 1, workouts: 2 };
+
+    return [...requirements].sort((first, second) => {
+
+        return (order[first.type] ?? 99) - (order[second.type] ?? 99);
+
+    });
+
+}
+
 
 function appendRequirementProgress(container, requirement) {
 
@@ -789,6 +801,7 @@ function appendRequirementProgress(container, requirement) {
         const icons = document.createElement("div");
 
         icons.classList.add("hiit-icons");
+        icons.style.setProperty("--hiit-goal-count", requirement.targetAmount);
         for (let index = 0; index < requirement.targetAmount; index += 1) {
 
             const icon = document.createElement("span");
@@ -857,7 +870,7 @@ function renderPactProgressDetail(challenge) {
         card.classList.add("pact-progress-athlete");
         heading.textContent = `${participant.displayName}'s progress`;
         card.appendChild(heading);
-        participant.requirements.forEach(requirement => appendRequirementProgress(card, requirement));
+        sortRequirementsForDisplay(participant.requirements).forEach(requirement => appendRequirementProgress(card, requirement));
         pactProgressDetail.appendChild(card);
     });
 
@@ -934,7 +947,7 @@ function renderCurrentChallenge(challenge) {
 
         if (athleteProgress?.requirements?.length) {
 
-            athleteProgress.requirements.forEach(requirement => {
+            sortRequirementsForDisplay(athleteProgress.requirements).forEach(requirement => {
 
                 appendRequirementProgress(progress, requirement);
 
@@ -967,7 +980,7 @@ function renderCurrentChallenge(challenge) {
         requirementsTitle.classList.add("challenge-progress-title");
         requirementsTitle.textContent = "Pact requirements";
         requirements.appendChild(requirementsTitle);
-        challenge.requirements.forEach(requirement => {
+        sortRequirementsForDisplay(challenge.requirements).forEach(requirement => {
             appendRequirementTarget(requirements, requirement, challenge.timeframe);
         });
         currentChallengeContainer.appendChild(requirements);

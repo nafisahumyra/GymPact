@@ -241,6 +241,18 @@ function getRequirementLabel(type) {
 
 }
 
+function sortRequirementsForDisplay(requirements) {
+
+    const order = { hiit: 0, steps: 1, workouts: 2 };
+
+    return [...requirements].sort((first, second) => {
+
+        return (order[first.type] ?? 99) - (order[second.type] ?? 99);
+
+    });
+
+}
+
 function createRequirementScore(requirement) {
 
     const row = document.createElement("div");
@@ -408,7 +420,7 @@ async function renderChallengeHistory({ preserveOnError = false } = {}) {
             score.classList.add("pact-history-person");
             participantName.textContent = participant.displayName;
             score.appendChild(participantName);
-            (participant.requirements || []).forEach(requirement => {
+            sortRequirementsForDisplay(participant.requirements || []).forEach(requirement => {
                 score.appendChild(createRequirementScore(requirement));
             });
             card.appendChild(score);
