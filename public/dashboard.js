@@ -927,9 +927,14 @@ function renderCurrentChallenge(challenge) {
     }
 
 
-    currentChallengeContainer.appendChild(
-        createChallengeStatusPill(challenge.status)
-    );
+    const pactMeta = document.createElement("div");
+    const timePeriod = document.createElement("p");
+
+    pactMeta.classList.add("pact-card-meta");
+    timePeriod.classList.add("challenge-period", "pact-card-period");
+    timePeriod.textContent = `${formatChallengeDate(challenge.startDate)} → ${formatChallengeDate(challenge.endDate)}`;
+    pactMeta.append(createChallengeStatusPill(challenge.status), timePeriod);
+    currentChallengeContainer.appendChild(pactMeta);
 
     if (challenge.status === "active" && Array.isArray(challenge.progress)) {
 
@@ -991,12 +996,6 @@ function renderCurrentChallenge(challenge) {
         "Wager",
         `${challenge.wagerType === "reward" ? "Reward" : "Punishment"}: ${challenge.wagerDescription}`
     );
-
-    const timePeriod = document.createElement("p");
-
-    timePeriod.classList.add("challenge-period");
-    timePeriod.textContent = `${formatChallengeDate(challenge.startDate)} → ${formatChallengeDate(challenge.endDate)}`;
-    currentChallengeContainer.appendChild(timePeriod);
 
     if (challenge.status !== "active") {
 
