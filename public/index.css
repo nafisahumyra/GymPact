@@ -33,6 +33,8 @@ body {
     margin-bottom: 18px;
     color: var(--green);
     font-size: 2.3rem;
+    isolation: isolate;
+    background: transparent;
     transform-origin: center;
 }
 
@@ -40,6 +42,7 @@ body {
 .lock-shackle-image {
     position: absolute;
     display: block;
+    background: transparent;
     object-fit: contain;
 }
 
@@ -66,12 +69,6 @@ body {
     opacity: 0;
     transform-origin: 2px 32px;
 }
-
-/* The lock layers include near-black raster pixels. Screen blending keeps
-   their green line art while allowing the card background to show through,
-   including during the closed-to-open handoff. */
-.lock-image,
-.lock-shackle-image { mix-blend-mode: screen; }
 
 .unlock-status {
     min-height: 22px;
