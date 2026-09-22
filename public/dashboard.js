@@ -779,7 +779,7 @@ function sortRequirementsForDisplay(requirements) {
 }
 
 
-function appendRequirementProgress(container, requirement) {
+function appendRequirementProgress(container, requirement, displayMode = "default") {
 
     const row = document.createElement("div");
     const label = document.createElement("div");
@@ -796,7 +796,23 @@ function appendRequirementProgress(container, requirement) {
     label.append(text, score);
     row.appendChild(label);
 
-    if (requirement.type === "hiit") {
+    if (displayMode === "pact" && requirement.type !== "steps") {
+
+        const checkpoints = document.createElement("div");
+
+        checkpoints.classList.add("pact-requirement-checkpoints");
+        checkpoints.style.setProperty("--checkpoint-count", requirement.targetAmount);
+        for (let index = 0; index < requirement.targetAmount; index += 1) {
+
+            const checkpoint = document.createElement("span");
+
+            if (index < requirement.completed) checkpoint.classList.add("is-complete");
+            checkpoints.appendChild(checkpoint);
+
+        }
+        row.appendChild(checkpoints);
+
+    } else if (requirement.type === "hiit") {
 
         const icons = document.createElement("div");
 
@@ -867,9 +883,9 @@ function renderPactProgressDetail(challenge) {
         const heading = document.createElement("h4");
 
         card.classList.add("pact-progress-athlete");
-        heading.textContent = `${participant.displayName}'s progress`;
+        heading.textContent = participant.displayName;
         card.appendChild(heading);
-        sortRequirementsForDisplay(participant.requirements).forEach(requirement => appendRequirementProgress(card, requirement));
+        participant.requirements.forEach(requirement => appendRequirementProgress(card, requirement, "pact"));
         pactProgressDetail.appendChild(card);
     });
 
