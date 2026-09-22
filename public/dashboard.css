@@ -338,7 +338,7 @@ body.dashboard-page {
 .pact-requirement-checkpoints span { height: 8px; border: 1px solid #4a5553; border-radius: 999px; background: #080a0a; }
 .pact-requirement-checkpoints span.is-complete { border-color: var(--green); background: var(--green); box-shadow: 0 0 8px rgba(145,242,100,.35); }
 .hiit-icons { display: flex; justify-content: center; gap: clamp(24px, 10vw, 56px); width: 100%; }
-.hiit-icon { position: relative; display: grid; place-items: center; width: 30px; height: 30px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: #070909; }
+.hiit-icon { position: relative; display: grid; place-items: center; width: 34px; height: 34px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: #070909; }
 .hiit-icon img { width: 100%; height: 100%; object-fit: contain; opacity: .5; }
 .hiit-icon.is-complete { border-color: var(--green); box-shadow: 0 0 10px rgba(145,242,100,.2); }
 .hiit-icon.is-complete img { opacity: 1; }
