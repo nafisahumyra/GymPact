@@ -328,6 +328,9 @@ body.dashboard-page {
 .pact-progress-athlete .pact-requirement { gap: 6px; padding: 8px 0; }
 .pact-requirement:first-of-type { border-top: 0; }
 .pact-requirement-label { display: flex; justify-content: space-between; gap: 12px; color: #e1e6e2; font-size: .9rem; }
+.pact-progress-athlete .pact-requirement-label { align-items: center; }
+.pact-requirement-identity { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.pact-requirement-icon { width: 28px; height: 28px; flex: 0 0 28px; object-fit: contain; }
 .pact-requirement-meter { height: 7px; overflow: hidden; border-radius: 999px; background: #080a0a; }
 .pact-requirement-meter span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
 .pact-requirement-checkpoints { display: grid; grid-template-columns: repeat(var(--checkpoint-count), minmax(0, 1fr)); gap: 7px; }
@@ -527,6 +530,8 @@ body.dashboard-page {
     box-shadow: 0 0 8px rgba(145, 242, 100, .45);
 }
 .steps-progress-bar .exercise-progress-marker { z-index: 2; }
+.steps-progress-bar .exercise-progress-marker { width: 48px; height: 48px; padding: 2px; overflow: hidden; }
+.steps-progress-bar .exercise-progress-marker img { width: 150%; height: 150%; max-width: none; max-height: none; }
 
 .exercise-tracker-actions {
     display: flex;

@@ -766,6 +766,22 @@ function getRequirementLabel(type) {
 
 }
 
+function getRequirementText(type) {
+
+    return { workouts: "Workouts", hiit: "HIIT", steps: "Steps" }[type] || type;
+
+}
+
+function getRequirementIconPath(type) {
+
+    return {
+        workouts: "assets/gp-images/Workout.png",
+        hiit: "assets/gp-images/HIIT.png",
+        steps: "assets/gp-images/steps.png"
+    }[type] || "";
+
+}
+
 function sortRequirementsForDisplay(requirements) {
 
     const order = { hiit: 0, steps: 1, workouts: 2 };
@@ -791,9 +807,27 @@ function appendRequirementProgress(container, requirement, displayMode = "defaul
 
     row.classList.add("pact-requirement");
     label.classList.add("pact-requirement-label");
-    text.textContent = getRequirementLabel(requirement.type);
     score.textContent = `${requirement.completed.toLocaleString()} / ${requirement.targetAmount.toLocaleString()}`;
-    label.append(text, score);
+
+    if (displayMode === "pact") {
+
+        const identity = document.createElement("span");
+        const icon = document.createElement("img");
+
+        identity.classList.add("pact-requirement-identity");
+        icon.classList.add("pact-requirement-icon");
+        icon.src = getRequirementIconPath(requirement.type);
+        icon.alt = "";
+        text.textContent = getRequirementText(requirement.type);
+        identity.append(icon, text);
+        label.append(identity, score);
+
+    } else {
+
+        text.textContent = getRequirementLabel(requirement.type);
+        label.append(text, score);
+
+    }
     row.appendChild(label);
 
     if (displayMode === "pact" && requirement.type !== "steps") {
