@@ -67,6 +67,11 @@ body {
     transform-origin: 2px 32px;
 }
 
+/* The animated layers include near-black raster pixels. Screen blending keeps
+   their green line art while allowing the card background to show through. */
+.lock-image--open,
+.lock-shackle-image { mix-blend-mode: screen; }
+
 .unlock-status {
     min-height: 22px;
     margin: -8px 0 12px;
