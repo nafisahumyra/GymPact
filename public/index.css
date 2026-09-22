@@ -67,9 +67,10 @@ body {
     transform-origin: 2px 32px;
 }
 
-/* The animated layers include near-black raster pixels. Screen blending keeps
-   their green line art while allowing the card background to show through. */
-.lock-image--open,
+/* The lock layers include near-black raster pixels. Screen blending keeps
+   their green line art while allowing the card background to show through,
+   including during the closed-to-open handoff. */
+.lock-image,
 .lock-shackle-image { mix-blend-mode: screen; }
 
 .unlock-status {
