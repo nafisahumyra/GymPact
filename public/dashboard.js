@@ -209,7 +209,7 @@ function renderExerciseTrackers() {
 
     }
 
-    exerciseTrackingSection.hidden = activeDashboardTab !== "progress";
+    exerciseTrackingSection.hidden = activeDashboardTab !== exerciseTrackingSection.dataset.dashboardTabContent;
 
     exerciseTrackers.forEach(tracker => {
 
