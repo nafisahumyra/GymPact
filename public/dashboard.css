@@ -321,19 +321,20 @@ body.dashboard-page {
 .monthly-checkin time { display: block; margin-bottom: 3px; color: var(--muted); font-size: .72rem; }
 .monthly-checkin-empty { margin: 0; padding: 11px; border: 1px dashed var(--line); border-radius: 11px; color: var(--muted); font-size: .82rem; text-align: center; }
 .monthly-checkin-add { width: fit-content; min-height: 34px; padding: 6px 11px; border-color: rgba(145,242,100,.45); background: transparent; color: var(--green); font-size: .78rem; }
-.pact-progress-detail { display: grid; gap: 12px; }
-.pact-progress-athlete { padding: 15px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
-.pact-progress-athlete h4 { margin-bottom: 8px; color: var(--text); font-size: .95rem; }
+.pact-progress-detail { display: grid; gap: 9px; }
+.pact-progress-athlete { padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 16px; background: rgba(0, 0, 0, .16); }
+.pact-progress-athlete h4 { margin-bottom: 5px; color: var(--text); font-size: .95rem; }
 .pact-requirement { display: grid; gap: 7px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.07); }
-.pact-progress-athlete .pact-requirement { gap: 6px; padding: 8px 0; }
+.pact-progress-athlete .pact-requirement { gap: 5px; padding: 6px 0; }
 .pact-requirement:first-of-type { border-top: 0; }
 .pact-requirement-label { display: flex; justify-content: space-between; gap: 12px; color: #e1e6e2; font-size: .9rem; }
 .pact-progress-athlete .pact-requirement-label { align-items: center; }
+.pact-progress-athlete .pact-requirement-label > span:last-child { flex: 0 0 auto; color: #f2f5f2; font-variant-numeric: tabular-nums; font-weight: 750; }
 .pact-requirement-identity { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.pact-requirement-icon-frame { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px; }
+.pact-requirement-icon-frame { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; }
 .pact-requirement-icon { width: 100%; height: 100%; object-fit: contain; }
 .pact-requirement-meter { height: 7px; overflow: hidden; border-radius: 999px; background: #080a0a; }
-.pact-requirement-meter span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+.pact-requirement-meter span { display: block; height: 100%; border-radius: inherit; background: var(--green); box-shadow: 0 0 6px rgba(145,242,100,.18); }
 .pact-requirement-checkpoints { display: grid; grid-template-columns: repeat(var(--checkpoint-count), minmax(0, 1fr)); gap: 7px; }
 .pact-requirement-checkpoints span { height: 8px; border: 1px solid #4a5553; border-radius: 999px; background: #080a0a; }
 .pact-requirement-checkpoints span.is-complete { border-color: var(--green); background: var(--green); box-shadow: 0 0 8px rgba(145,242,100,.35); }
@@ -343,6 +344,12 @@ body.dashboard-page {
 .hiit-icon.is-complete { border-color: var(--green); box-shadow: 0 0 10px rgba(145,242,100,.2); }
 .hiit-icon.is-complete img { opacity: 1; }
 .hiit-icon.is-complete::after { content: "✓"; position: absolute; right: -5px; bottom: -5px; display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; background: var(--green); color: #071006; font-size: .66rem; font-weight: 900; }
+.pact-requirement-markers { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+.pact-requirement-marker { position: relative; display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; padding: 4px; border: 1px solid #343d3a; border-radius: 9px; background: #090c0b; }
+.pact-requirement-marker img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(1); opacity: .28; }
+.pact-requirement-marker.is-complete { border-color: rgba(145,242,100,.72); background: rgba(145,242,100,.06); }
+.pact-requirement-marker.is-complete img { filter: none; opacity: 1; }
+.pact-requirement-marker.is-complete::after { content: "✓"; position: absolute; right: -5px; bottom: -5px; display: grid; place-items: center; width: 13px; height: 13px; border-radius: 50%; background: var(--green); color: #071006; font-size: .62rem; font-weight: 900; }
 
 .dashboard-section > h3 {
     margin-bottom: 11px;

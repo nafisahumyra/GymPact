@@ -833,23 +833,28 @@ function appendRequirementProgress(container, requirement, displayMode = "defaul
     }
     row.appendChild(label);
 
-    if (displayMode === "pact" && requirement.type !== "steps") {
+    if (displayMode === "pact" && (requirement.type === "hiit" || requirement.type === "workouts")) {
 
-        const checkpoints = document.createElement("div");
+        const markers = document.createElement("div");
 
-        checkpoints.classList.add("pact-requirement-checkpoints");
-        checkpoints.style.setProperty("--checkpoint-count", requirement.targetAmount);
+        markers.classList.add("pact-requirement-markers", `type-${requirement.type}`);
+        markers.setAttribute("aria-label", `${requirement.completed} of ${requirement.targetAmount} ${getRequirementText(requirement.type).toLowerCase()} completed`);
         for (let index = 0; index < requirement.targetAmount; index += 1) {
 
-            const checkpoint = document.createElement("span");
+            const marker = document.createElement("span");
+            const image = document.createElement("img");
 
-            if (index < requirement.completed) checkpoint.classList.add("is-complete");
-            checkpoints.appendChild(checkpoint);
+            marker.classList.add("pact-requirement-marker");
+            if (index < requirement.completed) marker.classList.add("is-complete");
+            image.src = requirement.type === "hiit" ? "assets/gp-images/HIIT.png" : "assets/gp-images/Workout.png";
+            image.alt = "";
+            marker.appendChild(image);
+            markers.appendChild(marker);
 
         }
-        row.appendChild(checkpoints);
+        row.appendChild(markers);
 
-    } else if (requirement.type === "hiit") {
+    } else if (displayMode !== "pact" && requirement.type === "hiit") {
 
         const icons = document.createElement("div");
 
