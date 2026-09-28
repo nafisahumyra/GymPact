@@ -1707,6 +1707,16 @@ closeModalButton.addEventListener("click", () => {
 
 });
 
+workoutModal.addEventListener("click", event => {
+
+    if (event.target === workoutModal) {
+
+        workoutModal.style.display = "none";
+
+    }
+
+});
+
 const muscleChips =
     document.querySelectorAll(".muscle-chip");
 
