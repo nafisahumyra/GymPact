@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 import { getPactRequirements } from "../_shared/pact-requirements.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -36,10 +37,11 @@ serve(async (request) => {
   }
 
   try {
-    const { sessionToken } = await request.json();
+    const { sessionToken, dataEnvironment } = await request.json();
+    const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
 
-    if (!session) {
+    if (!session || !environment) {
       return new Response(JSON.stringify({ error: "Invalid session." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -52,6 +54,7 @@ serve(async (request) => {
       .from("pacts")
       .select("id, goal_type, target_amount, timeframe, wager_type, wager_description, start_date, end_date, final_result, final_workout_counts, final_requirement_progress, winner_id, completed_at, pact_participants(user_id, users(display_name))")
       .eq("status", "completed")
+      .eq("data_environment", environment)
       .order("completed_at", { ascending: false });
 
     if (error) {

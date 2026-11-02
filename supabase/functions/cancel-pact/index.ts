@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -35,10 +36,11 @@ serve(async (request) => {
   }
 
   try {
-    const { sessionToken, pactId } = await request.json();
+    const { sessionToken, pactId, dataEnvironment } = await request.json();
+    const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
 
-    if (!session) {
+    if (!session || !environment) {
       return new Response(JSON.stringify({ error: "Invalid session." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -57,6 +59,7 @@ serve(async (request) => {
       .from("pacts")
       .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
       .eq("id", pactId)
+      .eq("data_environment", environment)
       .in("status", ["pending", "active"])
       .select("id, status, cancelled_at")
       .maybeSingle();
