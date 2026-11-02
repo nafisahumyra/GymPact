@@ -3,20 +3,22 @@ import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session
 import { ensureAthlete, getCorsHeaders } from "../_shared/exercise-tracking.ts";
 import { getActivePactForAthlete, getStepTracker } from "../_shared/step-tracking.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 serve(async request => {
   const corsHeaders = getCorsHeaders(request);
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   try {
-    const { sessionToken, userId, targetSteps, reset = false } = await request.json();
+    const { sessionToken, userId, targetSteps, reset = false, dataEnvironment } = await request.json();
+    const environment = getDataEnvironment(dataEnvironment);
     const target = Number(targetSteps);
-    if (!await verifyGymPactSession(sessionToken) || !await ensureAthlete(userId) || !Number.isInteger(target) || target <= 0) {
+    if (!environment || !await verifyGymPactSession(sessionToken) || !await ensureAthlete(userId) || !Number.isInteger(target) || target <= 0) {
       return Response.json({ error: "Invalid step target." }, { status: 400, headers: corsHeaders });
     }
     const admin = getAdminClient();
     await finalizeDueActivePacts(admin);
-    const pact = await getActivePactForAthlete(admin, userId);
+    const pact = await getActivePactForAthlete(admin, userId, environment);
     if (!pact) return Response.json({ error: "Steps tracking requires an active weekly Pact." }, { status: 409, headers: corsHeaders });
     const existing = await getStepTracker(admin, pact.id, userId);
     if (existing && reset) {

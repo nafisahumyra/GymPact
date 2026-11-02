@@ -3,6 +3,7 @@ import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 import { getAthletePactCompletion } from "../_shared/pact-requirements.ts";
 import { getActivePactForAthlete } from "../_shared/step-tracking.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 const measurementUnits = new Set(["minutes", "reps", "sets", "miles", "steps"]);
 
@@ -47,8 +48,9 @@ serve(async (request) => {
   try {
     const formData = await request.formData();
     const session = await verifyGymPactSession(formData.get("sessionToken"));
+    const environment = getDataEnvironment(formData.get("dataEnvironment"));
 
-    if (!session) {
+    if (!session || !environment) {
       return new Response(JSON.stringify({ error: "Invalid session." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -121,10 +123,10 @@ serve(async (request) => {
       });
     }
 
-    const activePact = await getActivePactForAthlete(admin, userId);
+    const activePact = await getActivePactForAthlete(admin, userId, environment);
 
     const workoutId = crypto.randomUUID();
-    const photoPath = `${userId}/${workoutId}.jpg`;
+    const photoPath = `${environment === "dev" ? "dev/" : ""}${userId}/${workoutId}.jpg`;
     const { error: uploadError } = await admin.storage
       .from("workout-proofs")
       .upload(photoPath, photo, {
@@ -147,6 +149,7 @@ serve(async (request) => {
         duration_minutes: null,
         notes: typeof notes === "string" && notes ? notes : null,
         photo_path: photoPath,
+        data_environment: environment,
         logged_at: new Date().toISOString(),
       })
       .select("id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at")

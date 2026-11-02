@@ -10,7 +10,7 @@ export type PactRequirement = {
 };
 
 type Participant = { userId: string; displayName: string };
-type PactWindow = { start_date: string; end_date: string; active_at: string | null };
+type PactWindow = { start_date: string; end_date: string; active_at: string | null; data_environment?: string };
 
 const PACT_TIME_ZONE = "America/New_York";
 
@@ -89,6 +89,7 @@ export async function getPactRequirementProgress(
     .from("workouts")
     .select("user_id, muscles, measurements")
     .in("user_id", participants.map(participant => participant.userId))
+    .eq("data_environment", pact.data_environment ?? "production")
     .gte("logged_at", start)
     .lt("logged_at", endExclusive.toISOString());
   if (error) throw error;

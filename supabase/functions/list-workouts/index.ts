@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -35,10 +36,11 @@ serve(async (request) => {
   }
 
   try {
-    const { sessionToken } = await request.json();
+    const { sessionToken, dataEnvironment } = await request.json();
+    const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
 
-    if (!session) {
+    if (!session || !environment) {
       return new Response(JSON.stringify({ error: "Invalid session." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -49,6 +51,7 @@ serve(async (request) => {
     const { data, error } = await admin
       .from("workouts")
       .select("id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at, users(display_name)")
+      .eq("data_environment", environment)
       .order("logged_at", { ascending: false });
 
     if (error) {

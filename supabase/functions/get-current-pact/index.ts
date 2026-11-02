@@ -5,6 +5,7 @@ import {
   getPactRequirementProgress,
   getPactRequirements,
 } from "../_shared/pact-requirements.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -103,10 +104,11 @@ serve(async (request) => {
   }
 
   try {
-    const { sessionToken } = await request.json();
+    const { sessionToken, dataEnvironment } = await request.json();
+    const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
 
-    if (!session) {
+    if (!session || !environment) {
       return new Response(JSON.stringify({ error: "Invalid session." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -117,8 +119,9 @@ serve(async (request) => {
     await finalizeDueActivePacts(admin);
     const { data: pact, error } = await admin
       .from("pacts")
-      .select("id, created_by, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, active_at, start_date, end_date, cancelled_at, pact_participants(user_id, users(display_name))")
+      .select("id, created_by, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, active_at, start_date, end_date, cancelled_at, data_environment, pact_participants(user_id, users(display_name))")
       .in("status", ["pending", "active"])
+      .eq("data_environment", environment)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();

@@ -5,6 +5,7 @@ import {
   getCorsHeaders,
   isTrackedExercise,
 } from "../_shared/exercise-tracking.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 serve(async request => {
   const corsHeaders = getCorsHeaders(request);
@@ -13,7 +14,8 @@ serve(async request => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
   try {
-    const { sessionToken, userId, exerciseName, targetReps, unit = "reps", reset = false } = await request.json();
+    const { sessionToken, userId, exerciseName, targetReps, unit = "reps", reset = false, dataEnvironment } = await request.json();
+    const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
     const target = Number(targetReps);
 
@@ -21,7 +23,7 @@ serve(async request => {
       return Response.json({ error: "Invalid session." }, { status: 401, headers: corsHeaders });
     }
 
-    if (!await ensureAthlete(userId) || !isTrackedExercise(exerciseName) || typeof unit !== "string" || !unit.trim() || unit.trim().length > 20 ||
+    if (!environment || !await ensureAthlete(userId) || !isTrackedExercise(exerciseName) || typeof unit !== "string" || !unit.trim() || unit.trim().length > 20 ||
       !Number.isInteger(target) || target <= 0) {
       return Response.json({ error: "Invalid exercise goal." }, { status: 400, headers: corsHeaders });
     }
@@ -32,6 +34,7 @@ serve(async request => {
       .select("id")
       .eq("user_id", userId)
       .eq("exercise_name", exerciseName)
+      .eq("data_environment", environment)
       .maybeSingle();
 
     if (existingError) throw existingError;
@@ -89,7 +92,7 @@ serve(async request => {
     } else {
       const { data: insertedGoal, error } = await admin
         .from("exercise_goals")
-        .insert({ user_id: userId, exercise_name: exerciseName.trim(), target_reps: target, unit: unit.trim() })
+        .insert({ user_id: userId, exercise_name: exerciseName.trim(), target_reps: target, unit: unit.trim(), data_environment: environment })
         .select("id, user_id, exercise_name, target_reps, unit, status, completed_at")
         .single();
 

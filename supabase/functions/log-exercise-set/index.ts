@@ -6,6 +6,7 @@ import {
   getExerciseTrackers,
   isTrackedExercise,
 } from "../_shared/exercise-tracking.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 serve(async request => {
   const corsHeaders = getCorsHeaders(request);
@@ -14,7 +15,8 @@ serve(async request => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
   try {
-    const { sessionToken, userId, exerciseName, reps } = await request.json();
+    const { sessionToken, userId, exerciseName, reps, dataEnvironment } = await request.json();
+    const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
     const setReps = Number(reps);
 
@@ -22,7 +24,7 @@ serve(async request => {
       return Response.json({ error: "Invalid session." }, { status: 401, headers: corsHeaders });
     }
 
-    if (!await ensureAthlete(userId) || !isTrackedExercise(exerciseName) ||
+    if (!environment || !await ensureAthlete(userId) || !isTrackedExercise(exerciseName) ||
       !Number.isInteger(setReps) || setReps <= 0) {
       return Response.json({ error: "Invalid exercise set." }, { status: 400, headers: corsHeaders });
     }
@@ -33,6 +35,7 @@ serve(async request => {
       .select("id, target_reps, status")
       .eq("user_id", userId)
       .eq("exercise_name", exerciseName)
+      .eq("data_environment", environment)
       .maybeSingle();
 
     if (goalError) throw goalError;
@@ -42,11 +45,11 @@ serve(async request => {
 
     const { error: logError } = await admin
       .from("exercise_set_logs")
-      .insert({ goal_id: goal.id, user_id: userId, exercise_name: exerciseName, reps: setReps });
+      .insert({ goal_id: goal.id, user_id: userId, exercise_name: exerciseName, reps: setReps, data_environment: environment });
 
     if (logError) throw logError;
 
-    const trackers = await getExerciseTrackers(userId);
+    const trackers = await getExerciseTrackers(userId, environment);
     const tracker = trackers.find(item => item.id === goal.id);
     const justCompleted = Boolean(tracker && tracker.totalReps >= tracker.targetReps);
 
@@ -62,7 +65,7 @@ serve(async request => {
 
     return Response.json({
       justCompleted,
-      tracker: (await getExerciseTrackers(userId)).find(item => item.id === goal.id),
+      tracker: (await getExerciseTrackers(userId, environment)).find(item => item.id === goal.id),
     }, { headers: corsHeaders });
   } catch {
     return Response.json({ error: "Unable to log exercise set." }, { status: 500, headers: corsHeaders });

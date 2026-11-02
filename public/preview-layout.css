@@ -1,7 +1,7 @@
 body.preview-page { min-height: 100vh; padding: 0 0 calc(112px + env(safe-area-inset-bottom)); background: var(--bg); }
 .preview-header { position: sticky; top: 0; z-index: 3; border-bottom: 1px solid var(--line-soft); background: #050707; }
 .preview-header-inner, .preview-main { width: min(100%, 920px); margin: auto; padding-inline: clamp(16px,4vw,34px); }
-.preview-header-inner { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-block: max(15px, env(safe-area-inset-top)) 14px; }
+.preview-header-inner { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-block: max(15px, env(safe-area-inset-top)) 14px; }.preview-header-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }.preview-environment { color:var(--green); font-size:.65rem; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }.preview-reset { border:0; padding:0; background:transparent; color:#ff9aa0; font-size:.72rem; font-weight:800; cursor:pointer; }
 .preview-header h1 { font-size:1.4rem; letter-spacing:-.04em; }
 .preview-kicker { color:var(--green); font-size:.7rem; font-weight:850; letter-spacing:.16em; text-transform:uppercase; }
 .preview-return, .preview-link { color:var(--muted); font-size:.78rem; font-weight:800; text-decoration:none; }

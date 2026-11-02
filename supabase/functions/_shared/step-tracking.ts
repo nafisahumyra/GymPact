@@ -1,4 +1,5 @@
 import { getAdminClient } from "./gympact-session.ts";
+import type { DataEnvironment } from "./data-environment.ts";
 
 type AdminClient = ReturnType<typeof getAdminClient>;
 
@@ -13,11 +14,12 @@ export type StepTracker = {
   completedAt: string | null;
 };
 
-export async function getActivePactForAthlete(admin: AdminClient, userId: string) {
+export async function getActivePactForAthlete(admin: AdminClient, userId: string, environment: DataEnvironment = "production") {
   const { data, error } = await admin
     .from("pacts")
     .select("id, timeframe, start_date, end_date, active_at, pact_participants!inner(user_id)")
     .eq("status", "active")
+    .eq("data_environment", environment)
     .eq("pact_participants.user_id", userId)
     .order("active_at", { ascending: false })
     .limit(1)

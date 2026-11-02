@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 const origins = new Set(["http://localhost:3000", "http://127.0.0.1:3000", "https://nafisahumyra.github.io"]);
 const headers = (request: Request) => {
@@ -64,20 +65,22 @@ serve(async request => {
   try {
     const body = await request.json();
     if (!await verifyGymPactSession(body.sessionToken)) return json({ error: "Invalid session." }, request, 401);
+    const environment = getDataEnvironment(body.dataEnvironment);
+    if (!environment) return json({ error: "Invalid data environment." }, request, 400);
     const admin = getAdminClient();
     await admin.rpc("finalize_due_monthly_pacts");
     const action = body.action;
 
     if (action === "get") {
       const { data: openPact, error } = await admin.from("monthly_pacts").select("*")
-        .in("status", ["pending", "upcoming", "active"]).order("month_start").limit(1).maybeSingle();
+        .eq("data_environment", environment).in("status", ["pending", "upcoming", "active"]).order("month_start").limit(1).maybeSingle();
       if (error) throw error;
       // Keep the most recently finalized Pact on the Month tab as a record,
       // including its calendar, while still offering the next month below it.
       let pactToDisplay = openPact;
       if (!pactToDisplay) {
         const { data: finalizedPact, error: finalizedError } = await admin.from("monthly_pacts").select("*")
-          .in("status", ["completed", "failed"]).order("month_start", { ascending: false }).limit(1).maybeSingle();
+          .eq("data_environment", environment).in("status", ["completed", "failed"]).order("month_start", { ascending: false }).limit(1).maybeSingle();
         if (finalizedError) throw finalizedError;
         pactToDisplay = finalizedPact;
       }
@@ -96,14 +99,14 @@ serve(async request => {
       if (usersError || users?.length !== 2) throw usersError || new Error("Athletes unavailable");
       const recipient = users.find(user => user.id !== body.userId);
       const monthStart = monthStartForNewPact();
-      const { data: pact, error } = await admin.from("monthly_pacts").insert({ month_start: monthStart, created_by: body.userId, recipient_id: recipient.id, consequence, status: "pending" }).select().single();
+      const { data: pact, error } = await admin.from("monthly_pacts").insert({ month_start: monthStart, created_by: body.userId, recipient_id: recipient.id, consequence, status: "pending", data_environment: environment }).select().single();
       if (error) return json({ error: error.code === "23505" ? "A Pact already exists for this month." : "Unable to create Month Pact." }, request, error.code === "23505" ? 409 : 400);
       const { error: commitmentError } = await admin.from("monthly_pact_commitments").insert({ monthly_pact_id: pact.id, user_id: body.userId, goal, signature });
       if (commitmentError) throw commitmentError;
       return json({ pact: await mapPact(admin, pact) }, request, 201);
     }
 
-    const { data: pact, error: pactError } = await admin.from("monthly_pacts").select("*").eq("id", body.pactId).maybeSingle();
+    const { data: pact, error: pactError } = await admin.from("monthly_pacts").select("*").eq("id", body.pactId).eq("data_environment", environment).maybeSingle();
     if (pactError || !pact) return json({ error: "Month Pact not found." }, request, 404);
 
     if (action === "decline") {
@@ -134,7 +137,7 @@ serve(async request => {
       return json({ checkinSaved: true }, request, 201);
     }
     if (action === "list") {
-      const { data, error } = await admin.from("monthly_pacts").select("*").in("status", ["completed", "failed"]).order("month_start", { ascending: false });
+      const { data, error } = await admin.from("monthly_pacts").select("*").eq("data_environment", environment).in("status", ["completed", "failed"]).order("month_start", { ascending: false });
       if (error) throw error;
       return json({ pacts: await Promise.all((data ?? []).map(item => mapPact(admin, item))) }, request);
     }

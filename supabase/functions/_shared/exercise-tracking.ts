@@ -1,4 +1,5 @@
 import { getAdminClient } from "./gympact-session.ts";
+import type { DataEnvironment } from "./data-environment.ts";
 
 export const TRACKED_EXERCISES = ["Pushups", "Pullups"] as const;
 
@@ -56,12 +57,13 @@ export async function ensureAthlete(userId: unknown) {
   return error ? null : data;
 }
 
-export async function getExerciseTrackers(userId: string): Promise<ExerciseTracker[]> {
+export async function getExerciseTrackers(userId: string, environment: DataEnvironment = "production"): Promise<ExerciseTracker[]> {
   const admin = getAdminClient();
   const { data: goals, error: goalsError } = await admin
     .from("exercise_goals")
     .select("id, user_id, exercise_name, target_reps, unit, status, completed_at")
     .eq("user_id", userId)
+    .eq("data_environment", environment)
     .order("exercise_name", { ascending: true });
 
   if (goalsError) {

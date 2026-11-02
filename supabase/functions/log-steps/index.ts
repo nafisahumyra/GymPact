@@ -4,20 +4,22 @@ import { ensureAthlete, getCorsHeaders } from "../_shared/exercise-tracking.ts";
 import { getActivePactForAthlete, getStepTracker } from "../_shared/step-tracking.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 import { getAthletePactCompletion } from "../_shared/pact-requirements.ts";
+import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 serve(async request => {
   const corsHeaders = getCorsHeaders(request);
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   try {
-    const { sessionToken, userId, steps } = await request.json();
+    const { sessionToken, userId, steps, dataEnvironment } = await request.json();
+    const environment = getDataEnvironment(dataEnvironment);
     const increment = Number(steps);
-    if (!await verifyGymPactSession(sessionToken) || !await ensureAthlete(userId) || !Number.isInteger(increment) || increment <= 0) {
+    if (!environment || !await verifyGymPactSession(sessionToken) || !await ensureAthlete(userId) || !Number.isInteger(increment) || increment <= 0) {
       return Response.json({ error: "Enter a whole number of steps greater than zero." }, { status: 400, headers: corsHeaders });
     }
     const admin = getAdminClient();
     await finalizeDueActivePacts(admin);
-    const pact = await getActivePactForAthlete(admin, userId);
+    const pact = await getActivePactForAthlete(admin, userId, environment);
     const tracker = pact ? await getStepTracker(admin, pact.id, userId) : null;
     if (!tracker || tracker.status !== "active") return Response.json({ error: "Your Steps tracker is not active." }, { status: 409, headers: corsHeaders });
     const { error } = await admin.from("weekly_step_logs").insert({ goal_id: tracker.id, pact_id: pact.id, user_id: userId, steps: increment });

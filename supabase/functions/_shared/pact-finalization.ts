@@ -14,10 +14,11 @@ type ActivePact = {
   start_date: string;
   end_date: string;
   active_at: string | null;
+  data_environment?: string;
   pact_participants?: Array<{ user_id?: string; users?: { display_name?: string } | null }>;
 };
 
-const activePactSelect = "id, status, target_amount, start_date, end_date, active_at, pact_participants(user_id, users(display_name))";
+const activePactSelect = "id, status, target_amount, start_date, end_date, active_at, data_environment, pact_participants(user_id, users(display_name))";
 
 function getParticipants(pact: ActivePact): Participant[] {
   return (pact.pact_participants ?? []).map(participant => ({
