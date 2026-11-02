@@ -2,135 +2,63 @@ const token = sessionStorage.getItem("gymPactSessionToken");
 const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
 const athleteName = localStorage.getItem("currentUser") || "Athlete";
 const state = { pact: null, month: null, workouts: [], trackers: [] };
-
 const $ = selector => document.querySelector(selector);
 const html = (strings, ...values) => strings.reduce((result, string, index) => result + string + (values[index] ?? ""), "");
 const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
 const requirementName = type => ({ workouts: "Workouts", hiit: "HIIT", steps: "Steps" })[type] || type;
 const formatDate = value => new Date(`${value}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 const formatLoggedAt = value => new Date(value).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const actionDialog = $("#preview-action-dialog");
 
-function gymPactDay(value) {
-    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(value));
-    const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
-    return `${map.year}-${map.month}-${map.day}`;
-}
-
-function weekStart(day) {
-    const date = new Date(`${day}T00:00:00Z`);
-    date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
-    return date.toISOString().slice(0, 10);
-}
-
-function weeklyWorkoutStreak(workouts, target) {
-    if (!target) return 0;
-    const counts = new Map();
-    workouts.forEach(workout => { const key = weekStart(gymPactDay(workout.logged_at)); counts.set(key, (counts.get(key) || 0) + 1); });
-    let cursor = weekStart(gymPactDay(new Date()));
-    let streak = 0;
-    for (let index = 0; index < 104; index += 1) {
-        if ((counts.get(cursor) || 0) >= target) streak += 1;
-        else if (index > 0) break;
-        const date = new Date(`${cursor}T00:00:00Z`); date.setUTCDate(date.getUTCDate() - 7); cursor = date.toISOString().slice(0, 10);
-    }
-    return streak;
-}
-
-function measurements(workout) {
-    if (Array.isArray(workout.measurements)) return workout.measurements.filter(item => Number(item?.amount) > 0).map(item => `${item.amount} ${item.unit}`);
-    return Number(workout.duration_minutes) > 0 ? [`${workout.duration_minutes} minutes`] : [];
-}
-
-function renderRequirements(requirements = []) {
-    return requirements.map(requirement => {
-        const total = Number(requirement.targetAmount || requirement.target_amount || 0);
-        const complete = Number(requirement.completed || 0);
-        const percent = total ? Math.min(100, (complete / total) * 100) : 0;
-        return html`<div class="preview-requirement"><span>${escapeHtml(requirementName(requirement.type))}</span><strong>${complete.toLocaleString()} / ${total.toLocaleString()}</strong><progress max="100" value="${percent}"></progress></div>`;
-    }).join("");
-}
+function gymPactDay(value) { const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(value)); const map = Object.fromEntries(parts.map(part => [part.type, part.value])); return `${map.year}-${map.month}-${map.day}`; }
+function weekStart(day) { const date = new Date(`${day}T00:00:00Z`); date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7)); return date.toISOString().slice(0, 10); }
+function weeklyWorkoutStreak(workouts, target) { if (!target) return 0; const counts = new Map(); workouts.forEach(workout => { const key = weekStart(gymPactDay(workout.logged_at)); counts.set(key, (counts.get(key) || 0) + 1); }); let cursor = weekStart(gymPactDay(new Date())); let streak = 0; for (let index = 0; index < 104; index += 1) { if ((counts.get(cursor) || 0) >= target) streak += 1; else if (index > 0) break; const date = new Date(`${cursor}T00:00:00Z`); date.setUTCDate(date.getUTCDate() - 7); cursor = date.toISOString().slice(0, 10); } return streak; }
+function measurements(workout) { if (Array.isArray(workout.measurements)) return workout.measurements.filter(item => Number(item?.amount) > 0).map(item => `${item.amount} ${item.unit}`); return Number(workout.duration_minutes) > 0 ? [`${workout.duration_minutes} minutes`] : []; }
+function renderRequirements(requirements = []) { return requirements.map(requirement => { const total = Number(requirement.targetAmount || requirement.target_amount || 0); const complete = Number(requirement.completed || 0); const percent = total ? Math.min(100, (complete / total) * 100) : 0; return html`<div class="preview-requirement"><span>${escapeHtml(requirementName(requirement.type))}</span><strong>${complete.toLocaleString()} / ${total.toLocaleString()}</strong><progress max="100" value="${percent}"></progress></div>`; }).join(""); }
 
 function renderHome() {
-    $("#preview-greeting").textContent = `Hi, ${athleteName}`;
-    const pact = state.pact;
-    const own = pact?.progress?.find(person => person.userId === athleteId);
-    $("#preview-week-summary").innerHTML = pact?.status === "active" && own
-        ? html`<article class="preview-card"><h4>${formatDate(pact.startDate)} – ${formatDate(pact.endDate)}</h4>${renderRequirements(own.requirements)}<a href="preview-layout.html?tab=pacts">Open weekly Pact →</a></article>`
-        : html`<article class="preview-empty"><h4>No active weekly Pact</h4><a href="create-pact.html">+ Create weekly Pact</a></article>`;
-    const month = state.month;
-    $("#preview-month-summary").innerHTML = month
-        ? html`<article class="preview-card"><h4>${escapeHtml(month.monthLabel)}</h4><p>${escapeHtml(month.status === "completed" ? "Pact complete" : month.status === "active" ? "In progress" : "Upcoming")}</p><a href="preview-layout.html?tab=pacts&view=monthly">Open monthly Pact →</a></article>`
-        : html`<article class="preview-empty"><h4>No Month Pact</h4><a href="dashboard.html?tab=month">+ Create Month Pact</a></article>`;
-    const reminder = pact?.status === "active" ? `Weekly Pact ends ${formatDate(pact.endDate)}.` : month?.status === "active" ? `Month Pact ends ${formatDate(month.monthEnd)}.` : "";
-    $("#preview-reminders").innerHTML = reminder ? `<div class="preview-reminder">${escapeHtml(reminder)}</div>` : "";
+  $("#preview-greeting").textContent = `Hi, ${athleteName}`;
+  const pact = state.pact; const own = pact?.progress?.find(person => person.userId === athleteId);
+  $("#preview-week-summary").innerHTML = pact?.status === "active" && own ? html`<article class="preview-card"><h4>${formatDate(pact.startDate)} – ${formatDate(pact.endDate)}</h4>${renderRequirements(own.requirements)}<button class="preview-inline-action" data-preview-tab="pacts" type="button">Open weekly Pact →</button></article>` : '<article class="preview-empty"><h4>No active weekly Pact</h4></article>';
+  const month = state.month;
+  $("#preview-month-summary").innerHTML = month ? html`<article class="preview-card"><h4>${escapeHtml(month.monthLabel)}</h4><p>${escapeHtml(month.status === "completed" ? "Pact complete" : month.status === "active" ? "In progress" : "Upcoming")}</p><button class="preview-inline-action" data-preview-tab="pacts" type="button">Open monthly Pact →</button></article>` : '<article class="preview-empty"><h4>No Month Pact</h4></article>';
+  const reminder = pact?.status === "active" ? `Weekly Pact ends ${formatDate(pact.endDate)}.` : month?.status === "active" ? `Month Pact ends ${formatDate(month.monthEnd)}.` : "";
+  $("#preview-reminders").innerHTML = reminder ? `<div class="preview-reminder">${escapeHtml(reminder)}</div>` : "";
 }
-
 function renderActivity() {
-    const container = $("#preview-activity");
-    if (!state.workouts.length) { container.innerHTML = '<article class="preview-empty"><h4>No activity yet</h4><a href="dashboard.html?action=workout">+ Log workout</a></article>'; return; }
-    container.innerHTML = "";
-    state.workouts.forEach(workout => {
-        const card = document.createElement("article");
-        const muscles = (() => { try { return JSON.parse(workout.muscles).join(" · "); } catch { return workout.muscles || "Workout"; } })();
-        const detail = [workout.activity_name || muscles, ...measurements(workout)].join(" · ");
-        card.className = "preview-activity-card";
-        card.innerHTML = html`<div><strong>${escapeHtml(workout.athlete_name || "Athlete")}</strong><h3>${escapeHtml(detail)}</h3><p class="preview-activity-meta">${escapeHtml(formatLoggedAt(workout.logged_at))}</p>${workout.notes ? `<p class="preview-activity-meta">${escapeHtml(workout.notes)}</p>` : ""}</div>`;
-        if (workout.photo_url) { const image = new Image(); image.className = "preview-photo"; image.src = workout.photo_url; image.alt = "Workout proof"; image.addEventListener("click", () => openPhoto(image.src)); card.appendChild(image); }
-        container.appendChild(card);
-    });
+  const container = $("#preview-activity");
+  if (!state.workouts.length) { container.innerHTML = '<article class="preview-empty"><h4>No activity yet</h4><button class="preview-inline-action" data-open-workout type="button">+ Log workout</button></article>'; return; }
+  container.innerHTML = "";
+  state.workouts.forEach(workout => { const card = document.createElement("article"); const muscles = (() => { try { return JSON.parse(workout.muscles).join(" · "); } catch { return workout.muscles || "Workout"; } })(); const detail = [workout.activity_name || muscles, ...measurements(workout)].join(" · "); card.className = "preview-activity-card"; card.innerHTML = html`<div><strong>${escapeHtml(workout.athlete_name || "Athlete")}</strong><h3>${escapeHtml(detail)}</h3><p class="preview-activity-meta">${escapeHtml(formatLoggedAt(workout.logged_at))}</p>${workout.notes ? `<p class="preview-activity-meta">${escapeHtml(workout.notes)}</p>` : ""}</div>`; if (workout.photo_url) { const image = new Image(); image.className = "preview-photo"; image.src = workout.photo_url; image.alt = "Workout proof"; image.addEventListener("click", () => openPhoto(image.src)); card.appendChild(image); } container.appendChild(card); });
 }
-
+function trackerUnit(tracker) { return tracker.exerciseName === "Steps" ? "steps" : (tracker.unit || "reps"); }
+function trackerAction(tracker) { return `Log ${tracker.exerciseName}`; }
 function renderProgress() {
-    const pactContainer = $("#preview-pact-progress");
-    pactContainer.innerHTML = state.pact?.status === "active" ? state.pact.progress.map(person => html`<article class="preview-progress-person"><h4>${escapeHtml(person.displayName)}</h4>${renderRequirements(person.requirements)}</article>`).join("") : '<article class="preview-empty"><h4>No active Pact</h4><a href="create-pact.html">+ Create weekly Pact</a></article>';
-    const trackerContainer = $("#preview-trackers");
-    trackerContainer.innerHTML = state.trackers.length ? state.trackers.map(tracker => {
-        const steps = tracker.exerciseName === "Steps";
-        const total = steps ? tracker.totalSteps : tracker.totalReps;
-        const target = steps ? tracker.targetSteps : tracker.targetReps;
-        return html`<article class="preview-tracker"><div class="preview-tracker-head"><div><h4>${escapeHtml(tracker.exerciseName)}</h4><p>${Number(total || 0).toLocaleString()} / ${Number(target || 0).toLocaleString()} ${steps ? "steps" : "reps"}</p></div><a href="dashboard.html?tab=pact">${steps ? "Log steps" : "Log set"}</a></div><progress max="100" value="${target ? Math.min(100, total / target * 100) : 0}"></progress></article>`;
-    }).join("") : '<article class="preview-empty"><h4>No tracker</h4><a href="dashboard.html?tab=pact">+ Add tracker</a></article>';
-    const ownWorkouts = state.workouts.filter(workout => workout.user_id === athleteId);
-    const weeklyGoal = state.pact?.requirements?.find(item => item.type === "workouts")?.targetAmount;
-    const streak = weeklyWorkoutStreak(ownWorkouts, weeklyGoal);
-    $("#preview-lifetime").innerHTML = html`<div class="preview-stat"><span>Lifetime workouts</span><strong>${ownWorkouts.length}</strong></div><div class="preview-stat"><span>Successful weeks</span><strong>${weeklyGoal ? `${streak} ${streak === 1 ? "week" : "weeks"}` : "—"}</strong></div>`;
+  const pactContainer = $("#preview-pact-progress");
+  pactContainer.innerHTML = state.pact?.status === "active" ? state.pact.progress.map(person => html`<article class="preview-progress-person"><h4>${escapeHtml(person.displayName)}</h4>${renderRequirements(person.requirements)}</article>`).join("") : '<article class="preview-empty"><h4>No active Pact</h4></article>';
+  const trackerContainer = $("#preview-trackers");
+  trackerContainer.innerHTML = state.trackers.length ? state.trackers.map((tracker, index) => { const steps = tracker.exerciseName === "Steps"; const total = steps ? tracker.totalSteps : tracker.totalReps; const target = steps ? tracker.targetSteps : tracker.targetReps; return html`<article class="preview-tracker"><div class="preview-tracker-head"><div><h4>${escapeHtml(tracker.exerciseName)}</h4><p>${Number(total || 0).toLocaleString()} / ${Number(target || 0).toLocaleString()} ${escapeHtml(trackerUnit(tracker))}</p></div><button class="preview-inline-action" type="button" data-log-tracker="${index}">${escapeHtml(trackerAction(tracker))}</button></div><progress max="100" value="${target ? Math.min(100, total / target * 100) : 0}"></progress></article>`; }).join("") : '<article class="preview-empty"><h4>No tracker</h4></article>';
+  trackerContainer.insertAdjacentHTML("beforeend", '<button class="preview-secondary-action" type="button" data-add-tracker>+ Add tracker</button>');
+  const ownWorkouts = state.workouts.filter(workout => workout.user_id === athleteId); const weeklyGoal = state.pact?.requirements?.find(item => item.type === "workouts")?.targetAmount; const streak = weeklyWorkoutStreak(ownWorkouts, weeklyGoal);
+  $("#preview-lifetime").innerHTML = html`<div class="preview-stat"><span>Lifetime workouts</span><strong>${ownWorkouts.length}</strong></div><div class="preview-stat"><span>Successful weeks</span><strong>${weeklyGoal ? `${streak} ${streak === 1 ? "week" : "weeks"}` : "—"}</strong></div>`;
 }
+function renderPacts() { const pact = state.pact; $("#preview-weekly-pact").innerHTML = pact ? html`<article class="preview-card"><h3>${pact.status === "active" ? "Active weekly Pact" : "Weekly Pact"}</h3><p>${formatDate(pact.startDate)} – ${formatDate(pact.endDate)}</p>${pact.progress ? pact.progress.map(person => `<h4>${escapeHtml(person.displayName)}</h4>${renderRequirements(person.requirements)}`).join("") : renderRequirements(pact.requirements)}<p><strong>Consequence</strong><br>${escapeHtml(pact.wagerDescription || "—")}</p></article>` : '<article class="preview-empty"><h4>No weekly Pact</h4></article>'; const month = state.month; $("#preview-monthly-pact").innerHTML = month ? html`<article class="preview-card"><h3>${escapeHtml(month.monthLabel)}</h3><p>${escapeHtml(month.status)}</p>${(month.commitments || []).map(commitment => `<div class="preview-requirement"><span>${escapeHtml(commitment.displayName || "Athlete")}</span><strong>${commitment.completedAt ? "✓ Achieved" : "In progress"}</strong><span>${escapeHtml(commitment.goal)}</span></div>`).join("")}<p><strong>Shared consequence</strong><br>${escapeHtml(month.consequence)}</p></article>` : '<article class="preview-empty"><h4>No Month Pact</h4></article>'; }
 
-function renderPacts() {
-    const pact = state.pact;
-    $("#preview-weekly-pact").innerHTML = pact ? html`<article class="preview-card"><h3>${pact.status === "active" ? "Active weekly Pact" : "Weekly Pact"}</h3><p>${formatDate(pact.startDate)} – ${formatDate(pact.endDate)}</p>${pact.progress ? pact.progress.map(person => `<h4>${escapeHtml(person.displayName)}</h4>${renderRequirements(person.requirements)}`).join("") : renderRequirements(pact.requirements)}<p><strong>Consequence</strong><br>${escapeHtml(pact.wagerDescription || "—")}</p></article>` : '<article class="preview-empty"><h4>No weekly Pact</h4><a href="create-pact.html">+ Create weekly Pact</a></article>';
-    const month = state.month;
-    $("#preview-monthly-pact").innerHTML = month ? html`<article class="preview-card"><h3>${escapeHtml(month.monthLabel)}</h3><p>${escapeHtml(month.status)}</p>${(month.commitments || []).map(commitment => `<div class="preview-requirement"><span>${escapeHtml(commitment.displayName || "Athlete")}</span><strong>${commitment.completedAt ? "✓ Achieved" : "In progress"}</strong><span>${escapeHtml(commitment.goal)}</span></div>`).join("")}<p><strong>Shared consequence</strong><br>${escapeHtml(month.consequence)}</p><a href="dashboard.html?tab=month">Open calendar & check-ins →</a></article>` : '<article class="preview-empty"><h4>No Month Pact</h4><a href="dashboard.html?tab=month">+ Create Month Pact</a></article>';
+function closeActionDialog() { if (actionDialog.open) actionDialog.close(); }
+function openDialog(content) { actionDialog.innerHTML = content; actionDialog.showModal(); actionDialog.querySelectorAll("[data-close-dialog]").forEach(button => button.addEventListener("click", closeActionDialog)); }
+function openTrackerChooser() { openDialog(`<form method="dialog" class="preview-modal"><div class="preview-modal-head"><h3>Add tracker</h3><button type="button" data-close-dialog>Cancel</button></div><p>Choose what you want to track.</p><div class="preview-choice-list"><button type="button" data-tracker-kind="Steps">Steps</button><button type="button" data-tracker-kind="Pushups">Pushups</button><button type="button" data-tracker-kind="Pullups">Pullups</button><button type="button" data-tracker-kind="Custom">Create my own</button></div></form>`); actionDialog.querySelectorAll("[data-tracker-kind]").forEach(button => button.addEventListener("click", () => openTrackerSetup(button.dataset.trackerKind))); }
+function openTrackerSetup(kind) {
+  const custom = kind === "Custom"; const steps = kind === "Steps";
+  openDialog(`<form class="preview-modal" id="preview-tracker-form"><div class="preview-modal-head"><h3>${custom ? "Create tracker" : `Track ${kind}`}</h3><button type="button" data-close-dialog>Cancel</button></div>${custom ? '<label>Name<input required name="name" maxlength="48" placeholder="e.g. Plank"></label><label>Unit<input required name="unit" maxlength="20" placeholder="e.g. seconds"></label>' : ""}<label>Target ${steps ? "steps" : custom ? "amount" : "reps"}<input required name="target" inputmode="numeric" min="1" step="1" type="number"></label><p class="preview-form-error" aria-live="polite"></p><div class="preview-modal-actions"><button type="button" data-close-dialog>Cancel</button><button class="preview-primary" type="submit">Save tracker</button></div></form>`);
+  $("#preview-tracker-form").addEventListener("submit", async event => { event.preventDefault(); const form = new FormData(event.currentTarget); const target = Number(form.get("target")); const error = event.currentTarget.querySelector(".preview-form-error"); if (!Number.isInteger(target) || target <= 0) { error.textContent = "Enter a whole-number target."; return; } const exerciseName = custom ? String(form.get("name") || "").trim() : kind; const unit = custom ? String(form.get("unit") || "").trim() : "reps"; if (!exerciseName || !unit) { error.textContent = "Complete each field."; return; } const fn = steps ? "save-step-goal" : "save-exercise-goal"; const body = steps ? { sessionToken: token, userId: athleteId, targetSteps: target, reset: false } : { sessionToken: token, userId: athleteId, exerciseName, targetReps: target, unit, reset: false }; const result = await GymPactSupabase.getClient().functions.invoke(fn, { body }); if (result.error || result.data?.error) { error.textContent = result.data?.error || "Couldn’t save that tracker."; return; } closeActionDialog(); await loadPreview(); showTab("progress"); });
 }
-
+function openTrackerLog(index) { const tracker = state.trackers[index]; if (!tracker) return; const steps = tracker.exerciseName === "Steps"; const unit = trackerUnit(tracker); openDialog(`<form class="preview-modal" id="preview-tracker-log-form"><div class="preview-modal-head"><h3>${escapeHtml(trackerAction(tracker))}</h3><button type="button" data-close-dialog>Cancel</button></div><label>${escapeHtml(unit)}<input required name="amount" inputmode="numeric" min="1" step="1" type="number" autofocus></label><p class="preview-form-error" aria-live="polite"></p><div class="preview-modal-actions"><button type="button" data-close-dialog>Cancel</button><button class="preview-primary" type="submit">Save</button></div></form>`); $("#preview-tracker-log-form").addEventListener("submit", async event => { event.preventDefault(); const amount = Number(new FormData(event.currentTarget).get("amount")); const error = event.currentTarget.querySelector(".preview-form-error"); if (!Number.isInteger(amount) || amount <= 0) { error.textContent = `Enter a whole number of ${unit}.`; return; } const result = await GymPactSupabase.getClient().functions.invoke(steps ? "log-steps" : "log-exercise-set", { body: steps ? { sessionToken: token, userId: athleteId, steps: amount } : { sessionToken: token, userId: athleteId, exerciseName: tracker.exerciseName, reps: amount } }); if (result.error || result.data?.error) { error.textContent = result.data?.error || "Couldn’t save progress."; return; } closeActionDialog(); await loadPreview(); showTab("progress"); }); }
+function openWorkout() { openDialog(`<form class="preview-modal" id="preview-workout-form"><div class="preview-modal-head"><h3>Log workout</h3><button type="button" data-close-dialog>Cancel</button></div><label>Workout<select name="muscle"><option>Workout</option><option>HIIT</option><option>Pushups</option><option>Pullups</option><option>Steps</option></select></label><div class="preview-form-grid"><label>Amount<input required name="amount" inputmode="decimal" min="1" type="number"></label><label>Unit<select name="unit"><option>minutes</option><option>reps</option><option>miles</option></select></label></div><label>Notes <span class="preview-optional">optional</span><textarea name="notes" rows="2"></textarea></label><label>Proof photo<input required name="photo" accept="image/*" type="file"></label><p class="preview-form-error" aria-live="polite"></p><div class="preview-modal-actions"><button type="button" data-close-dialog>Cancel</button><button class="preview-primary" type="submit">Save workout</button></div></form>`); $("#preview-workout-form").addEventListener("submit", async event => { event.preventDefault(); const form = new FormData(event.currentTarget); const amount = Number(form.get("amount")); const photo = form.get("photo"); const error = event.currentTarget.querySelector(".preview-form-error"); if (!(photo instanceof File) || !photo.size || amount <= 0) { error.textContent = "Add an amount and proof photo."; return; } const workoutForm = new FormData(); const muscle = String(form.get("muscle")); workoutForm.append("sessionToken", token); workoutForm.append("userId", athleteId); workoutForm.append("muscles", JSON.stringify([muscle])); workoutForm.append("activityName", muscle); workoutForm.append("measurements", JSON.stringify([{ amount, unit: String(form.get("unit")) }])); workoutForm.append("notes", String(form.get("notes") || "")); workoutForm.append("photo", photo, photo.name || "workout-proof.jpg"); const result = await GymPactSupabase.getClient().functions.invoke("create-workout", { body: workoutForm }); if (result.error || result.data?.error) { error.textContent = result.data?.error || "Couldn’t save workout."; return; } closeActionDialog(); await loadPreview(); showTab("activity"); }); }
 function openPhoto(src) { const dialog = $("#preview-photo-dialog"); dialog.querySelector("img").src = src; dialog.showModal(); }
-$("#preview-photo-dialog button").addEventListener("click", () => $("#preview-photo-dialog").close());
-$("#preview-photo-dialog").addEventListener("click", event => { if (event.target === $("#preview-photo-dialog")) event.currentTarget.close(); });
-
-function showTab(tab) {
-    document.querySelectorAll("[data-preview-screen]").forEach(screen => { const active = screen.dataset.previewScreen === tab; screen.hidden = !active; screen.classList.toggle("is-active", active); });
-    document.querySelectorAll("[data-preview-tab]").forEach(button => button.classList.toggle("is-active", button.dataset.previewTab === tab));
-    $("#preview-main").scrollTo?.({ top: 0, behavior: "instant" });
-}
-
-document.querySelectorAll("[data-preview-tab]").forEach(button => button.addEventListener("click", () => showTab(button.dataset.previewTab)));
+$("#preview-photo-dialog button").addEventListener("click", () => $("#preview-photo-dialog").close()); $("#preview-photo-dialog").addEventListener("click", event => { if (event.target === $("#preview-photo-dialog")) event.currentTarget.close(); }); actionDialog.addEventListener("click", event => { if (event.target === actionDialog) closeActionDialog(); });
+function showTab(tab) { document.querySelectorAll("[data-preview-screen]").forEach(screen => { const active = screen.dataset.previewScreen === tab; screen.hidden = !active; screen.classList.toggle("is-active", active); }); document.querySelectorAll(".preview-nav [data-preview-tab]").forEach(button => button.classList.toggle("is-active", button.dataset.previewTab === tab)); $("#preview-main").scrollTo?.({ top: 0, behavior: "instant" }); }
+document.addEventListener("click", event => { const tab = event.target.closest("[data-preview-tab]"); if (tab) showTab(tab.dataset.previewTab); if (event.target.closest("[data-open-workout]")) openWorkout(); if (event.target.closest("[data-add-tracker]")) openTrackerChooser(); const log = event.target.closest("[data-log-tracker]"); if (log) openTrackerLog(Number(log.dataset.logTracker)); });
 document.querySelectorAll("[data-pact-view]").forEach(button => button.addEventListener("click", () => { document.querySelectorAll("[data-pact-view]").forEach(item => item.classList.toggle("is-active", item === button)); $("#preview-weekly-pact").hidden = button.dataset.pactView !== "weekly"; $("#preview-monthly-pact").hidden = button.dataset.pactView !== "monthly"; }));
-
-async function loadPreview() {
-    const supabase = GymPactSupabase.getClient();
-    const [pactResult, workoutResult, trackerResult, monthResult] = await Promise.all([
-        supabase.functions.invoke("get-current-pact", { body: { sessionToken: token } }),
-        supabase.functions.invoke("list-workouts", { body: { sessionToken: token } }),
-        supabase.functions.invoke("get-exercise-progress", { body: { sessionToken: token, userId: athleteId } }),
-        supabase.functions.invoke("monthly-pacts", { body: { action: "get", sessionToken: token } })
-    ]);
-    state.pact = pactResult.data?.pact || null;
-    state.workouts = Array.isArray(workoutResult.data?.workouts) ? workoutResult.data.workouts : [];
-    state.trackers = [...(trackerResult.data?.trackers || []), ...(trackerResult.data?.stepTracker ? [trackerResult.data.stepTracker] : [])];
-    state.month = monthResult.data?.pact || null;
-    renderHome(); renderActivity(); renderProgress(); renderPacts();
-}
-
+async function loadPreview() { const supabase = GymPactSupabase.getClient(); const [pactResult, workoutResult, trackerResult, monthResult] = await Promise.all([supabase.functions.invoke("get-current-pact", { body: { sessionToken: token } }), supabase.functions.invoke("list-workouts", { body: { sessionToken: token } }), supabase.functions.invoke("get-exercise-progress", { body: { sessionToken: token, userId: athleteId } }), supabase.functions.invoke("monthly-pacts", { body: { action: "get", sessionToken: token } })]); state.pact = pactResult.data?.pact || null; state.workouts = Array.isArray(workoutResult.data?.workouts) ? workoutResult.data.workouts : []; state.trackers = [...(trackerResult.data?.trackers || []), ...(trackerResult.data?.stepTracker ? [trackerResult.data.stepTracker] : [])]; state.month = monthResult.data?.pact || null; renderHome(); renderActivity(); renderProgress(); renderPacts(); }
 loadPreview().catch(error => { console.error("Unable to load preview layout", error); document.querySelectorAll(".preview-screen").forEach(screen => { if (!screen.hidden) screen.insertAdjacentHTML("beforeend", '<p class="preview-reminder">Couldn’t load current data. Your original layout remains available.</p>'); }); });
-const params = new URLSearchParams(location.search); showTab(["activity", "progress", "pacts"].includes(params.get("tab")) ? params.get("tab") : "home");
-if (params.get("view") === "monthly") document.querySelector('[data-pact-view="monthly"]').click();
+const params = new URLSearchParams(location.search); showTab(["activity", "progress", "pacts"].includes(params.get("tab")) ? params.get("tab") : "home"); if (params.get("view") === "monthly") document.querySelector('[data-pact-view="monthly"]').click();

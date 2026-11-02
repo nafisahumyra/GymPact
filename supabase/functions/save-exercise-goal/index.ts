@@ -13,7 +13,7 @@ serve(async request => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
   try {
-    const { sessionToken, userId, exerciseName, targetReps, reset = false } = await request.json();
+    const { sessionToken, userId, exerciseName, targetReps, unit = "reps", reset = false } = await request.json();
     const session = await verifyGymPactSession(sessionToken);
     const target = Number(targetReps);
 
@@ -21,7 +21,7 @@ serve(async request => {
       return Response.json({ error: "Invalid session." }, { status: 401, headers: corsHeaders });
     }
 
-    if (!await ensureAthlete(userId) || !isTrackedExercise(exerciseName) ||
+    if (!await ensureAthlete(userId) || !isTrackedExercise(exerciseName) || typeof unit !== "string" || !unit.trim() || unit.trim().length > 20 ||
       !Number.isInteger(target) || target <= 0) {
       return Response.json({ error: "Invalid exercise goal." }, { status: 400, headers: corsHeaders });
     }
@@ -68,6 +68,7 @@ serve(async request => {
         .from("exercise_goals")
         .update({
           target_reps: target,
+          unit: unit.trim(),
           status: completed ? "completed" : "active",
           completed_at: completed ? new Date().toISOString() : null,
           updated_at: new Date().toISOString(),
@@ -81,14 +82,15 @@ serve(async request => {
         user_id: userId,
         exercise_name: exerciseName,
         target_reps: target,
+        unit: unit.trim(),
         status: completed ? "completed" : "active",
         completed_at: completed ? new Date().toISOString() : null,
       };
     } else {
       const { data: insertedGoal, error } = await admin
         .from("exercise_goals")
-        .insert({ user_id: userId, exercise_name: exerciseName, target_reps: target })
-        .select("id, user_id, exercise_name, target_reps, status, completed_at")
+        .insert({ user_id: userId, exercise_name: exerciseName.trim(), target_reps: target, unit: unit.trim() })
+        .select("id, user_id, exercise_name, target_reps, unit, status, completed_at")
         .single();
 
       if (error) throw error;
@@ -102,6 +104,7 @@ serve(async request => {
         userId: savedGoal.user_id,
         exerciseName: savedGoal.exercise_name,
         targetReps: savedGoal.target_reps,
+        unit: savedGoal.unit || "reps",
         status: savedGoal.status,
         completedAt: savedGoal.completed_at,
         totalReps,

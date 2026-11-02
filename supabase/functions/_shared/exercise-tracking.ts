@@ -2,13 +2,14 @@ import { getAdminClient } from "./gympact-session.ts";
 
 export const TRACKED_EXERCISES = ["Pushups", "Pullups"] as const;
 
-export type TrackedExercise = typeof TRACKED_EXERCISES[number];
+export type TrackedExercise = string;
 
 export type ExerciseTracker = {
   id: string;
   userId: string;
   exerciseName: TrackedExercise;
   targetReps: number;
+  unit: string;
   status: "active" | "completed";
   completedAt: string | null;
   totalReps: number;
@@ -37,7 +38,7 @@ export function getCorsHeaders(request: Request) {
 }
 
 export function isTrackedExercise(value: unknown): value is TrackedExercise {
-  return typeof value === "string" && TRACKED_EXERCISES.includes(value as TrackedExercise);
+  return typeof value === "string" && value.trim().length > 0 && value.trim().length <= 48;
 }
 
 export async function ensureAthlete(userId: unknown) {
@@ -59,7 +60,7 @@ export async function getExerciseTrackers(userId: string): Promise<ExerciseTrack
   const admin = getAdminClient();
   const { data: goals, error: goalsError } = await admin
     .from("exercise_goals")
-    .select("id, user_id, exercise_name, target_reps, status, completed_at")
+    .select("id, user_id, exercise_name, target_reps, unit, status, completed_at")
     .eq("user_id", userId)
     .order("exercise_name", { ascending: true });
 
@@ -96,6 +97,7 @@ export async function getExerciseTrackers(userId: string): Promise<ExerciseTrack
       userId: goal.user_id,
       exerciseName: goal.exercise_name as TrackedExercise,
       targetReps: goal.target_reps,
+      unit: goal.unit || "reps",
       status: goal.status as "active" | "completed",
       completedAt: goal.completed_at,
       totalReps: total.reps,

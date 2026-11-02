@@ -17,15 +17,14 @@
     </header>
     <main class="preview-main" id="preview-main">
         <section class="preview-screen is-active" data-preview-screen="home">
-            <div class="preview-title"><div><p class="preview-kicker">Today</p><h2 id="preview-greeting">Home</h2></div><a class="preview-primary" href="dashboard.html?action=workout">+ Log workout</a></div>
-            <div class="preview-quick-actions"><a href="dashboard.html?action=workout">Log workout</a><a href="dashboard.html?tab=pact">Log exercise</a></div>
+            <div class="preview-title"><div><p class="preview-kicker">Today</p><h2 id="preview-greeting">Home</h2></div><button class="preview-primary" type="button" data-open-workout>+ Log workout</button></div>
             <section class="preview-section"><div class="preview-section-heading"><h3>This week</h3><button class="preview-link" data-preview-tab="pacts" type="button">View Pact</button></div><div id="preview-week-summary"></div></section>
             <section class="preview-section"><div class="preview-section-heading"><h3>This month</h3><button class="preview-link" data-preview-tab="pacts" type="button">View Pact</button></div><div id="preview-month-summary"></div></section>
             <div id="preview-reminders"></div>
         </section>
 
         <section class="preview-screen" data-preview-screen="activity" hidden>
-            <div class="preview-title"><div><p class="preview-kicker">Shared timeline</p><h2>Activity</h2></div><a class="preview-primary" href="dashboard.html?action=workout">+ Log workout</a></div>
+            <div class="preview-title"><div><p class="preview-kicker">Shared timeline</p><h2>Activity</h2></div><button class="preview-primary" type="button" data-open-workout>+ Log workout</button></div>
             <div id="preview-activity" class="preview-timeline"></div>
         </section>
 
@@ -37,7 +36,7 @@
         </section>
 
         <section class="preview-screen" data-preview-screen="pacts" hidden>
-            <div class="preview-title"><div><p class="preview-kicker">Commitments</p><h2>Pacts</h2></div><a class="preview-return" href="history.html?view=pacts">History</a></div>
+            <div class="preview-title"><div><p class="preview-kicker">Commitments</p><h2>Pacts</h2></div></div>
             <div class="preview-switch" role="tablist"><button type="button" class="is-active" data-pact-view="weekly">Weekly</button><button type="button" data-pact-view="monthly">Monthly</button></div>
             <div id="preview-weekly-pact"></div>
             <div id="preview-monthly-pact" hidden></div>
@@ -50,6 +49,7 @@
         <button type="button" data-preview-tab="pacts"><span>✓</span>Pact Dev</button>
     </nav>
     <dialog id="preview-photo-dialog" class="preview-photo-dialog"><button type="button">Close</button><img alt="Workout proof"></dialog>
+    <dialog id="preview-action-dialog" class="preview-action-dialog"></dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="supabase-client.js"></script>
