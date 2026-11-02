@@ -132,6 +132,19 @@ body.dashboard-page {
     line-height: 1;
     white-space: nowrap;
 }
+
+.layout-preview-link {
+    display: inline-block;
+    margin-top: 5px;
+    flex: none;
+    color: var(--muted);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+.layout-preview-link:hover { color: var(--green); }
 .header-workout-plus { color: var(--green); font-size: 1rem; font-weight: 850; }
 .header-workout-action:hover:not(:disabled) {
     border-color: rgba(145, 242, 100, .7);

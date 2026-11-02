@@ -1700,6 +1700,12 @@ if (openModalButton) {
 
 }
 
+if (new URLSearchParams(window.location.search).get("action") === "workout") {
+
+    workoutModal.style.display = "flex";
+
+}
+
 
 closeModalButton.addEventListener("click", () => {
 
