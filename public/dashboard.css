@@ -193,7 +193,7 @@ body.dashboard-page {
     position: absolute;
     z-index: 7;
     right: 0;
-    bottom: max(12px, env(safe-area-inset-bottom));
+    bottom: max(20px, env(safe-area-inset-bottom));
     left: 0;
     pointer-events: none;
 }
@@ -201,10 +201,10 @@ body.dashboard-page {
 .dashboard-bottom-nav-controls {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 18px;
     width: min(100%, 650px);
     margin-inline: auto;
-    padding: 0 max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right));
+    padding: 0 max(24px, env(safe-area-inset-left)) 0 max(20px, env(safe-area-inset-right));
     pointer-events: auto;
 }
 
@@ -271,9 +271,10 @@ body.dashboard-page {
     line-height: 1;
     aspect-ratio: 1;
 }
-.quick-action-toggle > span { transition: transform .2s ease; }
+.quick-action-toggle-icon { display: grid; width: 38px; height: 38px; transition: transform .2s ease; }
+.quick-action-toggle-icon svg { width: 100%; height: 100%; }
 .quick-action-toggle[aria-expanded="true"] { background: #1b2020; color: var(--green); }
-.quick-action-toggle[aria-expanded="true"] > span { transform: rotate(45deg); }
+.quick-action-toggle[aria-expanded="true"] .quick-action-toggle-icon { transform: rotate(45deg); }
 .quick-action-backdrop {
     position: fixed;
     z-index: 5;
@@ -326,7 +327,7 @@ body.dashboard-page {
 .quick-exercise-options button { border-color: var(--line); background: var(--panel-elevated); color: var(--text); text-align: left; }
 .quick-exercise-options button:hover:not(:disabled) { border-color: var(--green); color: var(--green); }
 @media (prefers-reduced-motion: reduce) {
-    .quick-action-toggle > span { transition: none; }
+    .quick-action-toggle-icon { transition: none; }
 }
 .pact-navigation-card {
     display: grid;
@@ -1085,12 +1086,13 @@ body.dashboard-page {
     .brand-lockup { gap: 7px; }
     .brand-lockup .wordmark-image { width: min(170px, calc(100vw - 190px)); }
     .header-workout-action { padding-inline: 10px; font-size: .72rem; }
-    .dashboard-bottom-nav-controls { gap: 8px; padding-inline: max(12px, env(safe-area-inset-left)); }
+    .dashboard-bottom-nav-controls { gap: 14px; padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
     .dashboard-bottom-nav-inner { border-radius: 21px; padding: 4px; }
     .dashboard-tab { min-height: 58px; padding-inline: 2px; font-size: .64rem; }
     .dashboard-tab-icon { width: 27px; height: 27px; font-size: 1.28rem; }
     .dashboard-tab-icon svg { width: 20px; height: 20px; }
     .quick-action-toggle { flex-basis: 58px; width: 58px; height: 58px; min-height: 0; font-size: 1.8rem; }
+    .quick-action-toggle-icon { width: 35px; height: 35px; }
     .quick-action-menu { right: max(12px, env(safe-area-inset-right)); bottom: 70px; gap: 12px; }
     .quick-action-item { font-size: .86rem; }
     .quick-action-item-icon { flex-basis: 50px; width: 50px; height: 50px; }
