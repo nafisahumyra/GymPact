@@ -5,7 +5,7 @@ import {
   getCorsHeaders,
   getExerciseTrackers,
 } from "../_shared/exercise-tracking.ts";
-import { getActivePactForAthlete, getStepTracker } from "../_shared/step-tracking.ts";
+import { ensureStepTrackerForPact, getActivePactForAthlete } from "../_shared/step-tracking.ts";
 import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 serve(async request => {
@@ -24,7 +24,9 @@ serve(async request => {
     }
 
     const activePact = await getActivePactForAthlete(getAdminClient(), userId, environment);
-    const stepTracker = activePact ? await getStepTracker(getAdminClient(), activePact.id, userId) : null;
+    const stepTracker = activePact
+      ? await ensureStepTrackerForPact(getAdminClient(), activePact.id, userId)
+      : null;
 
     return Response.json({ trackers: await getExerciseTrackers(userId, environment), stepTracker }, { headers: corsHeaders });
   } catch {

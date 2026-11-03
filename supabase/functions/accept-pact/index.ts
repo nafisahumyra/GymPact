@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { getDataEnvironment } from "../_shared/data-environment.ts";
+import { ensureStepTrackerForPact } from "../_shared/step-tracking.ts";
 
 const allowedOrigins = new Set([
   "http://localhost:3000",
@@ -102,6 +103,13 @@ serve(async (request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // A Pact-level Steps target automatically supplies each participant with
+    // its matching individual Steps tracker. Existing goals are never
+    // overwritten, which keeps this idempotent if the request is retried.
+    await Promise.all((pendingPact.pact_participants ?? []).map(({ user_id }) =>
+      ensureStepTrackerForPact(admin, pact.id, user_id),
+    ));
 
     return new Response(JSON.stringify({ pact }), {
       status: 200,

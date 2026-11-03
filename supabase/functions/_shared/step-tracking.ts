@@ -51,3 +51,32 @@ export async function getStepTracker(admin: AdminClient, pactId: string, userId:
     status: goal.status as "active" | "completed", completedAt: goal.completed_at,
   };
 }
+
+// A Steps requirement is also the source of truth for its companion tracker.
+// This is intentionally idempotent so active Pacts created before automatic
+// tracker creation are repaired the next time their progress is loaded.
+export async function ensureStepTrackerForPact(
+  admin: AdminClient,
+  pactId: string,
+  userId: string,
+): Promise<StepTracker | null> {
+  const { data: requirement, error: requirementError } = await admin
+    .from("pact_requirements")
+    .select("target_amount")
+    .eq("pact_id", pactId)
+    .eq("requirement_type", "steps")
+    .maybeSingle();
+  if (requirementError) throw requirementError;
+
+  if (!requirement) return null;
+
+  const { error: goalError } = await admin
+    .from("weekly_step_goals")
+    .upsert(
+      { pact_id: pactId, user_id: userId, target_steps: Number(requirement.target_amount) },
+      { onConflict: "pact_id,user_id", ignoreDuplicates: true },
+    );
+  if (goalError) throw goalError;
+
+  return getStepTracker(admin, pactId, userId);
+}
