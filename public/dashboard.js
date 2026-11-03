@@ -1737,7 +1737,13 @@ document.querySelectorAll("[data-quick-action]").forEach(button => {
 
         const action = button.dataset.quickAction;
 
-        if (action === "exercise") await openQuickExercise();
+        if (action === "exercise") {
+
+            closeQuickActionMenu();
+            workoutModal.style.display = "flex";
+
+        }
+        if (action === "tracker") await openQuickExercise();
         if (action === "week-pact") {
 
             closeQuickActionMenu();
