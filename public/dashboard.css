@@ -193,18 +193,18 @@ body.dashboard-page {
     position: absolute;
     z-index: 7;
     right: 0;
-    bottom: 0;
+    bottom: max(12px, env(safe-area-inset-bottom));
     left: 0;
     pointer-events: none;
 }
 
 .dashboard-bottom-nav-controls {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: 10px;
     width: min(100%, 650px);
     margin-inline: auto;
-    padding: 0 max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right));
+    padding: 0 max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right));
     pointer-events: auto;
 }
 
@@ -259,7 +259,8 @@ body.dashboard-page {
     flex: 0 0 62px;
     place-items: center;
     width: 62px;
-    min-height: 62px;
+    height: 62px;
+    min-height: 0;
     padding: 0;
     border: 1px solid rgba(145, 242, 100, .68);
     border-radius: 50%;
@@ -268,6 +269,7 @@ body.dashboard-page {
     box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
     font-size: 2rem;
     line-height: 1;
+    aspect-ratio: 1;
 }
 .quick-action-toggle > span { transition: transform .2s ease; }
 .quick-action-toggle[aria-expanded="true"] { background: #1b2020; color: var(--green); }
@@ -284,7 +286,7 @@ body.dashboard-page {
 .quick-action-menu {
     position: absolute;
     right: max(12px, env(safe-area-inset-right));
-    bottom: calc(82px + env(safe-area-inset-bottom));
+    bottom: 76px;
     display: grid;
     gap: 14px;
     min-width: min(270px, calc(100vw - 24px));
@@ -1083,13 +1085,13 @@ body.dashboard-page {
     .brand-lockup { gap: 7px; }
     .brand-lockup .wordmark-image { width: min(170px, calc(100vw - 190px)); }
     .header-workout-action { padding-inline: 10px; font-size: .72rem; }
-    .dashboard-bottom-nav-controls { gap: 8px; padding-inline: max(8px, env(safe-area-inset-left)); }
+    .dashboard-bottom-nav-controls { gap: 8px; padding-inline: max(12px, env(safe-area-inset-left)); }
     .dashboard-bottom-nav-inner { border-radius: 21px; padding: 4px; }
     .dashboard-tab { min-height: 58px; padding-inline: 2px; font-size: .64rem; }
     .dashboard-tab-icon { width: 27px; height: 27px; font-size: 1.28rem; }
     .dashboard-tab-icon svg { width: 20px; height: 20px; }
-    .quick-action-toggle { flex-basis: 58px; width: 58px; min-height: 58px; font-size: 1.8rem; }
-    .quick-action-menu { right: max(8px, env(safe-area-inset-right)); bottom: calc(76px + env(safe-area-inset-bottom)); gap: 12px; }
+    .quick-action-toggle { flex-basis: 58px; width: 58px; height: 58px; min-height: 0; font-size: 1.8rem; }
+    .quick-action-menu { right: max(12px, env(safe-area-inset-right)); bottom: 70px; gap: 12px; }
     .quick-action-item { font-size: .86rem; }
     .quick-action-item-icon { flex-basis: 50px; width: 50px; height: 50px; }
     .month-pact-card { padding: 17px; }
