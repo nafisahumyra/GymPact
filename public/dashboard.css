@@ -262,18 +262,30 @@ body.dashboard-page {
     height: 62px;
     min-height: 0;
     padding: 0;
-    border: 1px solid rgba(145, 242, 100, .68);
+    border: 1px solid rgba(205, 205, 205, .28);
     border-radius: 50%;
-    background: var(--green);
-    color: #071006;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .09), transparent 38%),
+        linear-gradient(145deg, #393939, #303030 58%, #292929);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 -1px 0 rgba(0, 0, 0, .28), 0 12px 30px rgba(0, 0, 0, .35);
     font-size: 2rem;
     line-height: 1;
     aspect-ratio: 1;
 }
-.quick-action-toggle-icon { display: grid; width: 38px; height: 38px; transition: transform .2s ease; }
+.quick-action-toggle:hover:not(:disabled),
+.quick-action-toggle:focus-visible,
+.quick-action-toggle[aria-expanded="true"] {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .09), transparent 38%),
+        linear-gradient(145deg, #393939, #303030 58%, #292929);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 -1px 0 rgba(0, 0, 0, .28), 0 12px 30px rgba(0, 0, 0, .35);
+    transform: none;
+}
+.quick-action-toggle:focus-visible { outline-color: rgba(255, 255, 255, .72); }
+.quick-action-toggle-icon { display: grid; width: 35%; height: 35%; transition: transform .2s ease; }
 .quick-action-toggle-icon svg { width: 100%; height: 100%; }
-.quick-action-toggle[aria-expanded="true"] { background: #1b2020; color: var(--green); }
 .quick-action-toggle[aria-expanded="true"] .quick-action-toggle-icon { transform: rotate(45deg); }
 .quick-action-backdrop {
     position: fixed;
@@ -1092,7 +1104,6 @@ body.dashboard-page {
     .dashboard-tab-icon { width: 27px; height: 27px; font-size: 1.28rem; }
     .dashboard-tab-icon svg { width: 20px; height: 20px; }
     .quick-action-toggle { flex-basis: 58px; width: 58px; height: 58px; min-height: 0; font-size: 1.8rem; }
-    .quick-action-toggle-icon { width: 35px; height: 35px; }
     .quick-action-menu { right: max(12px, env(safe-area-inset-right)); bottom: 70px; gap: 12px; }
     .quick-action-item { font-size: .86rem; }
     .quick-action-item-icon { flex-basis: 50px; width: 50px; height: 50px; }
