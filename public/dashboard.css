@@ -133,18 +133,6 @@ body.dashboard-page {
     white-space: nowrap;
 }
 
-.layout-preview-link {
-    display: inline-block;
-    margin-top: 5px;
-    flex: none;
-    color: var(--muted);
-    font-size: .7rem;
-    font-weight: 800;
-    letter-spacing: .04em;
-    text-decoration: none;
-    text-transform: uppercase;
-}
-.layout-preview-link:hover { color: var(--green); }
 .header-workout-plus { color: var(--green); font-size: 1rem; font-weight: 850; }
 .header-workout-action:hover:not(:disabled) {
     border-color: rgba(145, 242, 100, .7);
@@ -339,6 +327,16 @@ body.dashboard-page {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 -1px 0 rgba(0, 0, 0, .28);
 }
 .quick-action-item-icon svg { width: 52%; height: 52%; }
+.quick-action-item-dev { color: #aeb5b4; font-size: .78rem; font-weight: 750; letter-spacing: .04em; }
+.quick-action-item-dev:hover:not(:disabled) { color: #d7dcdb; }
+.quick-action-item-dev .quick-action-item-icon {
+    border-color: rgba(184, 191, 190, .18);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 42%),
+        linear-gradient(145deg, #252728, #1b1d1e 62%, #171819);
+    color: #c6cecc;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), inset 0 -1px 0 rgba(0, 0, 0, .34);
+}
 .quick-exercise-options { display: grid; gap: 9px; }
 .quick-exercise-options > p { color: var(--muted); font-size: .88rem; }
 .quick-exercise-options button { border-color: var(--line); background: var(--panel-elevated); color: var(--text); text-align: left; }

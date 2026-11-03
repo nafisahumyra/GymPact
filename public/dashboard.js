@@ -1751,6 +1751,12 @@ document.querySelectorAll("[data-quick-action]").forEach(button => {
 
         }
         if (action === "month-pact") await openQuickMonthlyPact();
+        if (action === "dev-view") {
+
+            closeQuickActionMenu();
+            window.location.href = "preview-layout.html";
+
+        }
 
     });
 
