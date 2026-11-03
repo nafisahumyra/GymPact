@@ -66,6 +66,14 @@
 
         </section>
 
+        <section class="dashboard-section activity-section" data-dashboard-tab-content="activity" hidden>
+            <header class="activity-page-heading">
+                <h3>Activity</h3>
+                <p>Shared workouts</p>
+            </header>
+            <div id="activity-workouts" class="activity-workouts" aria-live="polite"></div>
+        </section>
+
         <section class="dashboard-section" data-dashboard-tab-content="pact" hidden>
 
             <div class="pact-navigation-card">
@@ -179,6 +187,14 @@
                         </svg>
                     </span>
                     <span>Home</span>
+                </button>
+                <button id="activity-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
+                    <span class="dashboard-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 12h3l2-6 4 12 2-6h5"></path>
+                        </svg>
+                    </span>
+                    <span>Activity</span>
                 </button>
                 <button id="progress-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
                     <span class="dashboard-tab-icon" aria-hidden="true">↗</span>
@@ -318,6 +334,42 @@
     </div>
 
 
+    </div>
+
+
+    <dialog id="activity-photo-dialog" class="history-photo-dialog">
+        <button id="close-activity-photo" class="history-photo-close" type="button" aria-label="Close photo">Close</button>
+        <img id="activity-photo-full" alt="">
+    </dialog>
+
+    <div id="edit-workout-modal" class="modal">
+        <div class="modal-content edit-workout-modal-content">
+            <h2>Edit workout</h2>
+
+            <label>
+                Workout date and time
+                <input id="edit-workout-date-time" type="datetime-local" required>
+            </label>
+
+            <h3>Muscle Groups</h3>
+            <div id="edit-workout-muscles" class="edit-workout-muscles" aria-label="Muscle groups"></div>
+
+            <section class="measurements-section" aria-label="Workout measurements">
+                <div id="edit-workout-measurements" class="measurement-rows"></div>
+            </section>
+
+            <label>
+                Notes (optional)
+                <textarea id="edit-workout-notes" placeholder="How did it go?"></textarea>
+            </label>
+
+            <p id="edit-workout-error" class="form-error" role="alert" hidden></p>
+
+            <div class="modal-buttons">
+                <button id="cancel-edit-workout" type="button">Cancel</button>
+                <button id="save-edit-workout" type="button">Save changes</button>
+            </div>
+        </div>
     </div>
 
 

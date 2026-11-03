@@ -32,6 +32,21 @@ const quickExerciseOptions = document.getElementById("quick-exercise-options");
 const cancelQuickExerciseButton = document.getElementById("cancel-quick-exercise");
 const pactProgressSection = document.getElementById("pact-progress-section");
 const pactProgressDetail = document.getElementById("pact-progress-detail");
+const activityWorkoutsContainer = document.getElementById("activity-workouts");
+const activityPhotoDialog = document.getElementById("activity-photo-dialog");
+const activityPhotoFull = document.getElementById("activity-photo-full");
+const closeActivityPhotoButton = document.getElementById("close-activity-photo");
+const editWorkoutModal = document.getElementById("edit-workout-modal");
+const editWorkoutDateTime = document.getElementById("edit-workout-date-time");
+const editWorkoutMuscles = document.getElementById("edit-workout-muscles");
+const editWorkoutMeasurements = document.getElementById("edit-workout-measurements");
+const editWorkoutNotes = document.getElementById("edit-workout-notes");
+const editWorkoutError = document.getElementById("edit-workout-error");
+const cancelEditWorkoutButton = document.getElementById("cancel-edit-workout");
+const saveEditWorkoutButton = document.getElementById("save-edit-workout");
+const ACTIVITY_MUSCLES = ["Abs", "Back", "Biceps", "Boxing", "Cardio", "Chest", "HIIT", "Legs", "Pullups", "Pushups", "Shoulders", "Triceps"];
+let activityWorkouts = [];
+let editingWorkout = null;
 let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
 const monthPactContent = document.getElementById("month-pact-content");
@@ -965,8 +980,498 @@ function showDashboardTab(tab) {
     renderExerciseTrackers();
 
     if (tab === "month") loadMonthlyPact();
+    if (tab === "activity") loadActivityWorkouts();
 
 }
+
+function getActivityDateKey(value) {
+
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: GYMPACT_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).formatToParts(new Date(value));
+    const parsed = Object.fromEntries(parts.map(part => [part.type, part.value]));
+
+    return `${parsed.year}-${parsed.month}-${parsed.day}`;
+
+}
+
+function formatActivityTimestamp(value) {
+
+    const date = new Date(value);
+    const dateKey = getActivityDateKey(date);
+    const today = getCalendarDayInGymPactTimeZone();
+    const time = new Intl.DateTimeFormat("en-US", {
+        timeZone: GYMPACT_TIME_ZONE,
+        hour: "numeric",
+        minute: "2-digit"
+    }).format(date);
+
+    if (dateKey === today) return `Today at ${time}`;
+    if (dateKey === addCalendarDays(today, -1)) return `Yesterday at ${time}`;
+
+    const dateLabel = new Intl.DateTimeFormat("en-US", {
+        timeZone: GYMPACT_TIME_ZONE,
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+    }).format(date);
+
+    return `${dateLabel} at ${time}`;
+
+}
+
+function formatActivityMonth(value) {
+
+    return new Intl.DateTimeFormat("en-US", {
+        timeZone: GYMPACT_TIME_ZONE,
+        month: "long",
+        year: "numeric"
+    }).format(new Date(value));
+
+}
+
+function parseActivityMuscles(muscles) {
+
+    try {
+
+        const parsed = JSON.parse(muscles);
+
+        if (Array.isArray(parsed)) return parsed.filter(item => typeof item === "string" && item.trim());
+
+    } catch {
+
+        return typeof muscles === "string" ? muscles.split(", ").filter(Boolean) : [];
+
+    }
+
+    return [];
+
+}
+
+function getActivityMeasurements(workout) {
+
+    if (Array.isArray(workout.measurements)) {
+
+        return workout.measurements.filter(measurement => (
+            measurement && Number(measurement.amount) > 0 && typeof measurement.unit === "string"
+        ));
+
+    }
+
+    return Number(workout.duration_minutes) > 0
+        ? [{ amount: Number(workout.duration_minutes), unit: "minutes" }]
+        : [];
+
+}
+
+function formatActivityMeasurement(measurement) {
+
+    const unit = { minutes: "min", reps: "reps", sets: "sets", miles: "mi", steps: "steps" }[measurement.unit] || measurement.unit;
+
+    return `${Number(measurement.amount).toLocaleString()} ${unit}`;
+
+}
+
+function getActivityInitials(name) {
+
+    return String(name || "GymPact athlete")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join("")
+        .toUpperCase();
+
+}
+
+function closeActivityMenus() {
+
+    document.querySelectorAll(".activity-card-menu").forEach(menu => { menu.hidden = true; });
+    document.querySelectorAll(".activity-card-menu-toggle").forEach(button => {
+
+        button.setAttribute("aria-expanded", "false");
+
+    });
+
+}
+
+function openActivityPhoto(photo) {
+
+    activityPhotoFull.src = photo.src;
+    activityPhotoFull.alt = photo.alt;
+    activityPhotoDialog.showModal();
+
+}
+
+function createActivityText(tagName, className, text) {
+
+    const element = document.createElement(tagName);
+    element.className = className;
+    element.textContent = text;
+    return element;
+
+}
+
+function renderActivityWorkouts() {
+
+    activityWorkoutsContainer.innerHTML = "";
+
+    if (!activityWorkouts.length) {
+
+        activityWorkoutsContainer.innerHTML = '<div class="activity-empty-state"><p>No shared workouts yet.</p></div>';
+        return;
+
+    }
+
+    const grouped = new Map();
+
+    activityWorkouts.forEach(workout => {
+
+        const group = formatActivityMonth(workout.logged_at);
+        if (!grouped.has(group)) grouped.set(group, []);
+        grouped.get(group).push(workout);
+
+    });
+
+    const selectedAthleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    grouped.forEach((workouts, month) => {
+
+        const section = document.createElement("section");
+        section.className = "activity-month-group";
+        const heading = document.createElement("h4");
+        heading.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><path d="M8 3v4M16 3v4M3.5 10h17M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01M16 17.5h.01"></path></svg><span></span>';
+        heading.querySelector("span").textContent = month;
+        section.appendChild(heading);
+
+        workouts.forEach(workout => {
+
+            const card = document.createElement("article");
+            card.className = "activity-card";
+            const header = document.createElement("header");
+            header.className = "activity-card-header";
+            const avatar = createActivityText("span", "activity-avatar", getActivityInitials(workout.athlete_name));
+            const identity = document.createElement("div");
+            identity.className = "activity-identity";
+            identity.append(
+                createActivityText("h5", "activity-athlete-name", workout.athlete_name || "GymPact athlete"),
+                createActivityText("p", "activity-timestamp", formatActivityTimestamp(workout.logged_at)),
+            );
+            header.append(avatar, identity);
+
+            if (workout.user_id === selectedAthleteId) {
+
+                const menuWrap = document.createElement("div");
+                menuWrap.className = "activity-card-menu-wrap";
+                const toggle = document.createElement("button");
+                toggle.type = "button";
+                toggle.className = "activity-card-menu-toggle";
+                toggle.setAttribute("aria-label", `Actions for ${workout.athlete_name}'s workout`);
+                toggle.setAttribute("aria-expanded", "false");
+                toggle.textContent = "•••";
+                const menu = document.createElement("div");
+                menu.className = "activity-card-menu";
+                menu.hidden = true;
+                const edit = document.createElement("button");
+                edit.type = "button";
+                edit.textContent = "Edit";
+                edit.addEventListener("click", () => openWorkoutEditor(workout));
+                menu.appendChild(edit);
+                toggle.addEventListener("click", event => {
+
+                    event.stopPropagation();
+                    const willOpen = menu.hidden;
+                    closeActivityMenus();
+                    menu.hidden = !willOpen;
+                    toggle.setAttribute("aria-expanded", String(willOpen));
+
+                });
+                menuWrap.append(toggle, menu);
+                header.appendChild(menuWrap);
+
+            }
+
+            card.appendChild(header);
+
+            if (workout.photo_url) {
+
+                const photo = document.createElement("img");
+                photo.className = "activity-workout-photo";
+                photo.src = workout.photo_url;
+                photo.alt = `Workout proof for ${workout.activity_name || workout.athlete_name}`;
+                photo.tabIndex = 0;
+                photo.setAttribute("role", "button");
+                photo.addEventListener("click", () => openActivityPhoto(photo));
+                photo.addEventListener("keydown", event => {
+
+                    if (event.key === "Enter" || event.key === " ") {
+
+                        event.preventDefault();
+                        openActivityPhoto(photo);
+
+                    }
+
+                });
+                card.appendChild(photo);
+
+            }
+
+            const measurements = getActivityMeasurements(workout);
+            if (measurements.length) card.appendChild(createActivityText("p", "activity-summary", measurements.map(formatActivityMeasurement).join(" · ")));
+
+            const muscles = parseActivityMuscles(workout.muscles);
+            if (muscles.length) card.appendChild(createActivityText("p", "activity-details", muscles.join(" · ")));
+            if (workout.notes) card.appendChild(createActivityText("p", "activity-notes", workout.notes));
+
+            section.appendChild(card);
+
+        });
+
+        activityWorkoutsContainer.appendChild(section);
+
+    });
+
+}
+
+async function loadActivityWorkouts() {
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    if (!sessionToken || !activityWorkoutsContainer) return;
+
+    try {
+
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("list-workouts", {
+            body: { sessionToken, dataEnvironment: "production" }
+        });
+        if (error || !Array.isArray(data?.workouts)) throw error || new Error("Workout history was unavailable.");
+        activityWorkouts = [...data.workouts].sort((a, b) => new Date(b.logged_at) - new Date(a.logged_at));
+        renderActivityWorkouts();
+
+    } catch (error) {
+
+        console.error("Unable to load Activity.", error);
+        activityWorkoutsContainer.innerHTML = '<div class="activity-empty-state"><p>Unable to load shared workouts.</p></div>';
+
+    }
+
+}
+
+function formatGymPactDateTimeInput(value) {
+
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: GYMPACT_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+    }).formatToParts(new Date(value));
+    const parsed = Object.fromEntries(parts.map(part => [part.type, part.value]));
+
+    return `${parsed.year}-${parsed.month}-${parsed.day}T${parsed.hour}:${parsed.minute}`;
+
+}
+
+function gymPactDateTimeToISOString(value) {
+
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+    if (!match) return null;
+
+    const [, year, month, day, hour, minute] = match;
+    const wallClock = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
+    const zoneParts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: GYMPACT_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+    }).formatToParts(new Date(wallClock));
+    const parsed = Object.fromEntries(zoneParts.map(part => [part.type, part.value]));
+    const displayedAsUtc = Date.UTC(
+        Number(parsed.year),
+        Number(parsed.month) - 1,
+        Number(parsed.day),
+        Number(parsed.hour),
+        Number(parsed.minute)
+    );
+
+    return new Date(wallClock - (displayedAsUtc - wallClock)).toISOString();
+
+}
+
+function setEditWorkoutError(message = "") {
+
+    editWorkoutError.textContent = message;
+    editWorkoutError.hidden = !message;
+
+}
+
+function createEditMeasurementRow(measurement) {
+
+    const row = document.createElement("div");
+    row.className = "edit-workout-measurement";
+    const amount = document.createElement("input");
+    amount.type = "number";
+    amount.min = "1";
+    amount.step = "1";
+    amount.inputMode = "numeric";
+    amount.value = String(measurement.amount);
+    amount.setAttribute("aria-label", "Measurement amount");
+    const unit = document.createElement("select");
+    unit.setAttribute("aria-label", "Measurement unit");
+    ["minutes", "reps", "sets", "miles", "steps"].forEach(value => {
+
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        option.selected = value === measurement.unit;
+        unit.appendChild(option);
+
+    });
+    row.append(amount, unit);
+    editWorkoutMeasurements.appendChild(row);
+
+}
+
+function openWorkoutEditor(workout) {
+
+    closeActivityMenus();
+    editingWorkout = workout;
+    editWorkoutDateTime.value = formatGymPactDateTimeInput(workout.logged_at);
+    editWorkoutNotes.value = workout.notes || "";
+    editWorkoutMuscles.innerHTML = "";
+    const selectedMuscles = new Set(parseActivityMuscles(workout.muscles));
+
+    ACTIVITY_MUSCLES.forEach(muscle => {
+
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = muscle;
+        input.checked = selectedMuscles.has(muscle);
+        label.append(input, document.createTextNode(muscle));
+        editWorkoutMuscles.appendChild(label);
+
+    });
+
+    editWorkoutMeasurements.innerHTML = "";
+    getActivityMeasurements(workout).forEach(createEditMeasurementRow);
+    setEditWorkoutError();
+    editWorkoutModal.style.display = "flex";
+
+}
+
+function closeWorkoutEditor() {
+
+    editingWorkout = null;
+    editWorkoutModal.style.display = "none";
+    setEditWorkoutError();
+
+}
+
+async function saveWorkoutEdit() {
+
+    if (!editingWorkout) return;
+
+    const muscles = Array.from(editWorkoutMuscles.querySelectorAll("input:checked"))
+        .map(input => input.value);
+    const measurements = Array.from(editWorkoutMeasurements.querySelectorAll(".edit-workout-measurement"))
+        .map(row => ({
+            amount: Number(row.querySelector("input").value),
+            unit: row.querySelector("select").value
+        }));
+    const loggedAt = gymPactDateTimeToISOString(editWorkoutDateTime.value);
+
+    if (!loggedAt || new Date(loggedAt) > new Date()) {
+
+        setEditWorkoutError("Choose a valid workout date and time that is not in the future.");
+        return;
+
+    }
+
+    if (!muscles.length) {
+
+        setEditWorkoutError("Select at least one muscle group.");
+        return;
+
+    }
+
+    if (!measurements.length || measurements.some(item => !Number.isInteger(item.amount) || item.amount <= 0)) {
+
+        setEditWorkoutError("Each measurement needs a whole number greater than zero.");
+        return;
+
+    }
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const userId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    if (!sessionToken || !userId) {
+
+        setEditWorkoutError("Please unlock GymPact and choose your athlete first.");
+        return;
+
+    }
+
+    saveEditWorkoutButton.disabled = true;
+    setEditWorkoutError();
+
+    try {
+
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("update-workout", {
+            body: {
+                sessionToken,
+                userId,
+                workoutId: editingWorkout.id,
+                activityName: muscles.join(" · "),
+                muscles,
+                measurements,
+                notes: editWorkoutNotes.value,
+                loggedAt,
+                dataEnvironment: "production"
+            }
+        });
+        if (error || data?.error) throw error || new Error(data?.error || "Unable to save workout.");
+
+        closeWorkoutEditor();
+        await Promise.all([loadActivityWorkouts(), refreshDashboard()]);
+
+    } catch (error) {
+
+        console.error("Unable to edit workout.", error);
+        setEditWorkoutError("We couldn’t save that workout. Please try again.");
+
+    } finally {
+
+        saveEditWorkoutButton.disabled = false;
+
+    }
+
+}
+
+closeActivityPhotoButton.addEventListener("click", () => activityPhotoDialog.close());
+activityPhotoDialog.addEventListener("click", event => {
+
+    if (event.target === activityPhotoDialog) activityPhotoDialog.close();
+
+});
+cancelEditWorkoutButton.addEventListener("click", closeWorkoutEditor);
+editWorkoutModal.addEventListener("click", event => {
+
+    if (event.target === editWorkoutModal) closeWorkoutEditor();
+
+});
+saveEditWorkoutButton.addEventListener("click", saveWorkoutEdit);
+document.addEventListener("click", event => {
+
+    if (!event.target.closest(".activity-card-menu-wrap")) closeActivityMenus();
+
+});
 
 
 function renderCurrentChallenge(challenge) {
@@ -1461,7 +1966,7 @@ dashboardTabs.forEach(button => {
 });
 const requestedDashboardTab = new URLSearchParams(window.location.search).get("tab");
 
-showDashboardTab(["progress", "pact", "month"].includes(requestedDashboardTab) ? requestedDashboardTab : "overview");
+showDashboardTab(["activity", "progress", "pact", "month"].includes(requestedDashboardTab) ? requestedDashboardTab : "overview");
 if (dashboardRefreshButton) {
 
     dashboardRefreshButton.addEventListener("click", refreshDashboard);
@@ -1795,7 +2300,7 @@ document.getElementById("choose-monthly-pact").addEventListener("click", async (
 
 workoutHistoryButton.addEventListener("click", () => {
 
-    window.location.href = "history.html?view=workouts";
+    showDashboardTab("activity");
 
 });
 

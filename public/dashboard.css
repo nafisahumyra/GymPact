@@ -198,7 +198,7 @@ body.dashboard-page {
 
 .dashboard-bottom-nav-inner {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     flex: 1 1 auto;
     min-width: 0;
     padding: 5px;
@@ -1051,6 +1051,91 @@ body.dashboard-page {
 .history-empty-state { padding: 22px; }
 .history-empty-state p:first-child { font-size: 1.05rem; font-weight: 750; }
 .history-empty-state p:nth-child(2) { margin: 7px 0 17px; color: var(--muted); }
+.activity-page-heading { margin-bottom: 18px; }
+.activity-page-heading h3 { margin: 0; }
+.activity-page-heading p { margin: 4px 0 0; color: var(--muted); font-size: .88rem; }
+.activity-month-group { margin-bottom: 26px; }
+.activity-month-group > h4 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 14px;
+    color: #bcc4c2;
+    font-size: .9rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+.activity-month-group > h4::after { height: 1px; flex: 1; margin-left: 4px; background: var(--line-soft); content: ""; }
+.activity-month-group > h4 svg { width: 21px; height: 21px; color: var(--muted); }
+.activity-card {
+    position: relative;
+    margin-bottom: 14px;
+    padding: 16px;
+    border: 1px solid var(--line-soft);
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(15, 18, 18, .98), rgba(8, 10, 10, .98));
+}
+.activity-card-header { display: flex; align-items: center; gap: 10px; min-height: 42px; }
+.activity-avatar {
+    display: grid;
+    flex: 0 0 42px;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(145, 242, 100, .27);
+    border-radius: 50%;
+    background: rgba(145, 242, 100, .1);
+    color: var(--green);
+    font-size: .76rem;
+    font-weight: 850;
+}
+.activity-identity { min-width: 0; }
+.activity-athlete-name { margin: 0; color: var(--text); font-size: 1rem; }
+.activity-timestamp { margin: 3px 0 0; color: var(--muted); font-size: .76rem; }
+.activity-card-menu-wrap { position: relative; margin-left: auto; }
+.activity-card-menu-toggle {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 6px 7px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1rem;
+    letter-spacing: .12em;
+}
+.activity-card-menu-toggle:hover:not(:disabled), .activity-card-menu-toggle[aria-expanded="true"] { background: var(--panel-elevated); color: var(--text); box-shadow: none; transform: none; }
+.activity-card-menu {
+    position: absolute;
+    z-index: 2;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 84px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #1a1e1e;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, .4);
+}
+.activity-card-menu button { width: 100%; min-height: 32px; padding: 5px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--text); font-size: .76rem; text-align: left; }
+.activity-card-menu button:hover:not(:disabled) { background: rgba(145, 242, 100, .11); color: var(--green); box-shadow: none; transform: none; }
+.activity-workout-photo { display: block; width: 100%; max-height: min(65vh, 520px); margin-top: 15px; border: 1px solid var(--line-soft); border-radius: 14px; background: #090b0b; cursor: zoom-in; object-fit: contain; }
+.activity-workout-photo:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.activity-summary { margin: 15px 0 0; color: var(--text); font-size: 1rem; font-weight: 800; line-height: 1.35; }
+.activity-details { margin: 6px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.45; }
+.activity-notes { margin: 12px 0 0; color: #d9dfdd; font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }
+.activity-empty-state { padding: 22px; border: 1px solid var(--line-soft); border-radius: 18px; background: var(--panel); color: var(--muted); }
+.activity-empty-state p { margin: 0; }
+.edit-workout-modal-content { max-width: 620px; }
+.edit-workout-modal-content > label { display: grid; gap: 7px; margin-top: 16px; color: var(--muted); font-size: .8rem; font-weight: 750; }
+.edit-workout-modal-content > label input, .edit-workout-modal-content > label textarea { width: 100%; }
+.edit-workout-modal-content h3 { margin: 20px 0 9px; font-size: .82rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.edit-workout-muscles { display: flex; flex-wrap: wrap; gap: 7px; }
+.edit-workout-muscles label { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-elevated); color: var(--text); font-size: .74rem; }
+.edit-workout-muscles input { accent-color: var(--green); }
+.edit-workout-measurement { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, .7fr); gap: 8px; margin-bottom: 8px; }
+.edit-workout-measurement input, .edit-workout-measurement select { width: 100%; }
 .month-history-empty-state {
     display: grid;
     place-items: center;
@@ -1101,9 +1186,9 @@ body.dashboard-page {
     .brand-lockup { gap: 7px; }
     .brand-lockup .wordmark-image { width: min(170px, calc(100vw - 190px)); }
     .header-workout-action { padding-inline: 10px; font-size: .72rem; }
-    .dashboard-bottom-nav-controls { gap: 14px; padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+    .dashboard-bottom-nav-controls { gap: 10px; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
     .dashboard-bottom-nav-inner { border-radius: 21px; padding: 4px; }
-    .dashboard-tab { min-height: 58px; padding-inline: 2px; font-size: .64rem; }
+    .dashboard-tab { min-height: 58px; padding-inline: 1px; font-size: .58rem; }
     .dashboard-tab-icon { width: 27px; height: 27px; font-size: 1.28rem; }
     .dashboard-tab-icon svg { width: 20px; height: 20px; }
     .quick-action-toggle { flex-basis: 58px; width: 58px; height: 58px; min-height: 0; font-size: 1.8rem; }
