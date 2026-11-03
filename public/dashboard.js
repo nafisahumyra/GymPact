@@ -24,6 +24,12 @@ const dashboardRefreshFeedback =
     document.getElementById("dashboard-refresh-feedback");
 const dashboardTabs = document.querySelectorAll(".dashboard-tab");
 const dashboardTabContent = document.querySelectorAll("[data-dashboard-tab-content]");
+const quickActionToggle = document.getElementById("quick-action-toggle");
+const quickActionMenu = document.getElementById("quick-action-menu");
+const quickActionBackdrop = document.getElementById("quick-action-backdrop");
+const quickExerciseModal = document.getElementById("quick-exercise-modal");
+const quickExerciseOptions = document.getElementById("quick-exercise-options");
+const cancelQuickExerciseButton = document.getElementById("cancel-quick-exercise");
 const pactProgressSection = document.getElementById("pact-progress-section");
 const pactProgressDetail = document.getElementById("pact-progress-detail");
 let activeDashboardTab = "overview";
@@ -1494,6 +1500,132 @@ const confirmCancelChallengeButton =
 const keepChallengeButton =
     document.getElementById("keep-challenge");
 const newPactChoiceModal = document.getElementById("new-pact-choice-modal");
+let quickActionPreviousFocus = null;
+
+function closeQuickActionMenu({ restoreFocus = false } = {}) {
+
+    if (!quickActionMenu || !quickActionToggle || !quickActionBackdrop) return;
+
+    quickActionMenu.hidden = true;
+    quickActionBackdrop.hidden = true;
+    quickActionToggle.setAttribute("aria-expanded", "false");
+    quickActionToggle.setAttribute("aria-label", "Open quick actions");
+
+    if (restoreFocus && quickActionPreviousFocus instanceof HTMLElement) {
+
+        quickActionPreviousFocus.focus();
+
+    }
+
+    quickActionPreviousFocus = null;
+
+}
+
+function openQuickActionMenu() {
+
+    if (!quickActionMenu || !quickActionToggle || !quickActionBackdrop) return;
+
+    quickActionPreviousFocus = document.activeElement;
+    quickActionMenu.hidden = false;
+    quickActionBackdrop.hidden = false;
+    quickActionToggle.setAttribute("aria-expanded", "true");
+    quickActionToggle.setAttribute("aria-label", "Close quick actions");
+    quickActionMenu.querySelector("button")?.focus();
+
+}
+
+function toggleQuickActionMenu() {
+
+    if (quickActionMenu?.hidden) openQuickActionMenu();
+    else closeQuickActionMenu({ restoreFocus: true });
+
+}
+
+function closeQuickExerciseModal() {
+
+    quickExerciseModal.style.display = "none";
+    quickExerciseOptions.innerHTML = "";
+
+}
+
+function addQuickExerciseChoice(label, onChoose) {
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.textContent = label;
+    button.addEventListener("click", onChoose);
+    quickExerciseOptions.appendChild(button);
+
+}
+
+async function openQuickExercise() {
+
+    closeQuickActionMenu();
+
+    try {
+
+        if (!exerciseTrackersLoaded) await loadExerciseTrackers({ preserveOnError: true });
+
+        quickExerciseOptions.innerHTML = "";
+        const activeTrackers = exerciseTrackers.filter(tracker => tracker.status === "active");
+
+        if (activeTrackers.length) {
+
+            const copy = document.createElement("p");
+
+            copy.textContent = "Choose a tracker";
+            quickExerciseOptions.appendChild(copy);
+            activeTrackers.forEach(tracker => {
+
+                addQuickExerciseChoice(`Log ${tracker.exerciseName}`, () => {
+
+                    closeQuickExerciseModal();
+                    openExerciseSetModal(tracker.exerciseName);
+
+                });
+
+            });
+
+        } else {
+
+            const copy = document.createElement("p");
+
+            copy.textContent = "Set up a tracker";
+            quickExerciseOptions.appendChild(copy);
+            ["Pushups", "Pullups", "Steps"].forEach(exerciseName => {
+
+                addQuickExerciseChoice(`Track ${exerciseName}`, () => {
+
+                    closeQuickExerciseModal();
+                    openExerciseTargetModal(exerciseName);
+
+                });
+
+            });
+
+        }
+
+        quickExerciseModal.style.display = "flex";
+
+    } catch (error) {
+
+        console.error("Unable to open exercise logging.", error);
+        alert("We couldn't load your trackers. Please try again.");
+
+    }
+
+}
+
+async function openQuickMonthlyPact() {
+
+    closeQuickActionMenu();
+    await loadMonthlyPact();
+
+    if (!monthlyPact) openMonthlyCreate();
+    else showDashboardTab("month");
+
+}
 
 function dismissSheet(sheet) {
 
@@ -1582,7 +1714,7 @@ async function startWeeklyPact() {
 
     if (!currentChallenge) {
 
-        window.location.href = "create-pact.html";
+        window.location.href = `create-pact.html?returnTab=${encodeURIComponent(activeDashboardTab)}`;
 
         return;
 
@@ -1594,6 +1726,46 @@ async function startWeeklyPact() {
 
 newChallengeButton.addEventListener("click", () => {
     newPactChoiceModal.style.display = "flex";
+});
+
+quickActionToggle.addEventListener("click", toggleQuickActionMenu);
+quickActionBackdrop.addEventListener("click", () => closeQuickActionMenu({ restoreFocus: true }));
+
+document.querySelectorAll("[data-quick-action]").forEach(button => {
+
+    button.addEventListener("click", async () => {
+
+        const action = button.dataset.quickAction;
+
+        if (action === "exercise") await openQuickExercise();
+        if (action === "week-pact") {
+
+            closeQuickActionMenu();
+            await startWeeklyPact();
+
+        }
+        if (action === "month-pact") await openQuickMonthlyPact();
+
+    });
+
+});
+
+cancelQuickExerciseButton.addEventListener("click", closeQuickExerciseModal);
+quickExerciseModal.addEventListener("click", event => {
+
+    if (event.target === quickExerciseModal) closeQuickExerciseModal();
+
+});
+
+document.addEventListener("keydown", event => {
+
+    if (event.key === "Escape" && !quickActionMenu.hidden) {
+
+        event.preventDefault();
+        closeQuickActionMenu({ restoreFocus: true });
+
+    }
+
 });
 
 document.getElementById("choose-weekly-pact").addEventListener("click", async () => {

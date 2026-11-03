@@ -124,8 +124,26 @@
 
         </main>
 
+        <div id="quick-action-backdrop" class="quick-action-backdrop" hidden></div>
+
         <nav class="dashboard-bottom-nav" aria-label="Dashboard sections">
 
+            <div id="quick-action-menu" class="quick-action-menu" role="menu" aria-label="Quick actions" hidden>
+                <button class="quick-action-item" type="button" role="menuitem" data-quick-action="exercise">
+                    <span>Log Exercise</span>
+                    <span class="quick-action-item-icon" aria-hidden="true">↗</span>
+                </button>
+                <button class="quick-action-item" type="button" role="menuitem" data-quick-action="week-pact">
+                    <span>Week Pact</span>
+                    <span class="quick-action-item-icon" aria-hidden="true">✓</span>
+                </button>
+                <button class="quick-action-item" type="button" role="menuitem" data-quick-action="month-pact">
+                    <span>Month Pact</span>
+                    <span class="quick-action-item-icon" aria-hidden="true">▣</span>
+                </button>
+            </div>
+
+            <div class="dashboard-bottom-nav-controls">
             <div class="dashboard-bottom-nav-inner" role="tablist">
                 <button id="overview-tab" class="dashboard-tab is-active" type="button" role="tab" aria-selected="true">
                     <span class="dashboard-tab-icon" aria-hidden="true">
@@ -158,6 +176,10 @@
                     </span>
                     <span>Month</span>
                 </button>
+            </div>
+            <button id="quick-action-toggle" class="quick-action-toggle" type="button" aria-label="Open quick actions" aria-expanded="false" aria-controls="quick-action-menu">
+                <span aria-hidden="true">+</span>
+            </button>
             </div>
 
         </nav>
@@ -471,6 +493,20 @@
             <div class="modal-buttons">
                 <button id="cancel-exercise-set" type="button">Cancel</button>
                 <button id="save-exercise-set" type="button">Log set</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="quick-exercise-modal" class="modal" aria-labelledby="quick-exercise-title">
+
+        <div class="modal-content exercise-modal-content quick-exercise-content">
+
+            <h2 id="quick-exercise-title">Log Exercise</h2>
+            <div id="quick-exercise-options" class="quick-exercise-options"></div>
+            <div class="modal-buttons">
+                <button id="cancel-quick-exercise" type="button">Cancel</button>
             </div>
 
         </div>

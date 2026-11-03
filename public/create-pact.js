@@ -8,6 +8,16 @@ const REQUIREMENT_TYPES = [
     { value: "steps", label: "Steps" }
 ];
 
+function dashboardDestination() {
+
+    const returnTab = new URLSearchParams(window.location.search).get("returnTab");
+
+    return ["overview", "progress", "pact", "month"].includes(returnTab)
+        ? `dashboard.html?tab=${encodeURIComponent(returnTab)}`
+        : "dashboard.html";
+
+}
+
 function formatLocalDate(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
@@ -110,11 +120,11 @@ createPactForm.addEventListener("submit", async event => {
             const details = await error.context?.json().catch(() => null);
             throw new Error(details?.code === "open-pact" ? "You already have an active Pact." : "We couldn't create that Pact. Please try again.");
         }
-        window.location.href = "dashboard.html";
+        window.location.href = dashboardDestination();
     } catch (error) {
         console.error("Unable to create pact.", error);
         alert(error.message || "We couldn't create that Pact. Please try again.");
     } finally { submitButton.disabled = false; }
 });
 
-cancelPactButton.addEventListener("click", () => { window.location.href = "dashboard.html"; });
+cancelPactButton.addEventListener("click", () => { window.location.href = dashboardDestination(); });
