@@ -28,6 +28,7 @@ const quickActionToggle = document.getElementById("quick-action-toggle");
 const quickActionMenu = document.getElementById("quick-action-menu");
 const quickActionBackdrop = document.getElementById("quick-action-backdrop");
 const quickExerciseModal = document.getElementById("quick-exercise-modal");
+const quickExerciseTitle = document.getElementById("quick-exercise-title");
 const quickExerciseOptions = document.getElementById("quick-exercise-options");
 const cancelQuickExerciseButton = document.getElementById("cancel-quick-exercise");
 const pactProgressSection = document.getElementById("pact-progress-section");
@@ -2151,32 +2152,20 @@ async function openQuickExercise() {
         if (!exerciseTrackersLoaded) await loadExerciseTrackers({ preserveOnError: true });
 
         quickExerciseOptions.innerHTML = "";
-        const activeTrackers = exerciseTrackers.filter(tracker => tracker.status === "active");
+        const activeTrackerNames = new Set(
+            exerciseTrackers
+                .filter(tracker => tracker.status === "active")
+                .map(tracker => tracker.exerciseName)
+        );
+        const availableTrackers = ["Pushups", "Pullups", "Steps"].filter(
+            exerciseName => !activeTrackerNames.has(exerciseName)
+        );
 
-        if (activeTrackers.length) {
+        quickExerciseTitle.textContent = "Set up a tracker";
 
-            const copy = document.createElement("p");
+        if (availableTrackers.length) {
 
-            copy.textContent = "Choose a tracker";
-            quickExerciseOptions.appendChild(copy);
-            activeTrackers.forEach(tracker => {
-
-                addQuickExerciseChoice(`Log ${tracker.exerciseName}`, () => {
-
-                    closeQuickExerciseModal();
-                    openExerciseSetModal(tracker.exerciseName);
-
-                });
-
-            });
-
-        } else {
-
-            const copy = document.createElement("p");
-
-            copy.textContent = "Set up a tracker";
-            quickExerciseOptions.appendChild(copy);
-            ["Pushups", "Pullups", "Steps"].forEach(exerciseName => {
+            availableTrackers.forEach(exerciseName => {
 
                 addQuickExerciseChoice(`Track ${exerciseName}`, () => {
 
@@ -2186,6 +2175,13 @@ async function openQuickExercise() {
                 });
 
             });
+
+        } else {
+
+            const copy = document.createElement("p");
+
+            copy.textContent = "All available trackers are set up.";
+            quickExerciseOptions.appendChild(copy);
 
         }
 
