@@ -1995,7 +1995,6 @@ refreshDashboard();
 
 const newChallengeButton =
     document.getElementById("new-challenge-button");
-const workoutHistoryButton = document.getElementById("open-workout-history");
 const pactHistoryButton = document.getElementById("open-pact-history");
 
 const challengeActiveModal =
@@ -2303,13 +2302,6 @@ document.getElementById("choose-monthly-pact").addEventListener("click", async (
     showDashboardTab("month");
     await loadMonthlyPact();
     if (!monthlyPact) openMonthlyCreate();
-});
-
-
-workoutHistoryButton.addEventListener("click", () => {
-
-    showDashboardTab("activity");
-
 });
 
 
