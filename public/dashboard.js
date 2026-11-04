@@ -958,6 +958,7 @@ function renderPactProgressDetail(challenge) {
 function showDashboardTab(tab) {
 
     activeDashboardTab = tab;
+    document.body.classList.toggle("is-activity-tab", tab === "activity");
     const dashboardContent = document.getElementById("dashboard-content");
 
     if (dashboardContent) dashboardContent.scrollTop = 0;
@@ -1015,11 +1016,19 @@ function formatActivityTimestamp(value) {
     const dateLabel = new Intl.DateTimeFormat("en-US", {
         timeZone: GYMPACT_TIME_ZONE,
         month: "short",
-        day: "numeric",
-        year: "numeric"
+        day: "numeric"
     }).format(date);
 
-    return `${dateLabel} at ${time}`;
+    const workoutYear = new Intl.DateTimeFormat("en-US", {
+        timeZone: GYMPACT_TIME_ZONE,
+        year: "numeric"
+    }).format(date);
+    const currentYear = new Intl.DateTimeFormat("en-US", {
+        timeZone: GYMPACT_TIME_ZONE,
+        year: "numeric"
+    }).format(new Date());
+
+    return `${dateLabel}${workoutYear === currentYear ? "" : `, ${workoutYear}`} at ${time}`;
 
 }
 

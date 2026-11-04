@@ -35,6 +35,10 @@ body.dashboard-page {
 .dashboard-header-content {
     padding: max(16px, env(safe-area-inset-top)) clamp(16px, 4vw, 40px) 12px;
 }
+.dashboard-page.is-activity-tab .dashboard-header-content {
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: 6px;
+}
 
 .dashboard-header,
 .history-header {
@@ -45,6 +49,7 @@ body.dashboard-page {
 }
 
 .dashboard-header { min-width: 0; margin-bottom: 9px; }
+.dashboard-page.is-activity-tab .dashboard-header { margin-bottom: 0; }
 .dashboard-header .brand-lockup { min-width: 0; }
 
 .dashboard-content {
@@ -1120,7 +1125,7 @@ body.dashboard-page {
 }
 .activity-card-menu button { width: 100%; min-height: 32px; padding: 5px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--text); font-size: .76rem; text-align: left; }
 .activity-card-menu button:hover:not(:disabled) { background: rgba(145, 242, 100, .11); color: var(--green); box-shadow: none; transform: none; }
-.activity-workout-photo { display: block; width: 100%; max-height: min(65vh, 520px); margin-top: 15px; border: 1px solid var(--line-soft); border-radius: 14px; background: #090b0b; cursor: zoom-in; object-fit: contain; }
+.activity-workout-photo { display: block; width: 100%; aspect-ratio: 4 / 3; margin-top: 15px; border: 1px solid var(--line-soft); border-radius: 14px; background: #090b0b; cursor: zoom-in; object-fit: cover; }
 .activity-workout-photo:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
 .activity-summary { margin: 15px 0 0; color: var(--text); font-size: 1rem; font-weight: 800; line-height: 1.35; }
 .activity-details { margin: 6px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.45; }
