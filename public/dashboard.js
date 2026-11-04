@@ -2152,18 +2152,19 @@ async function openQuickExercise() {
         if (!exerciseTrackersLoaded) await loadExerciseTrackers({ preserveOnError: true });
 
         quickExerciseOptions.innerHTML = "";
+        const activeTrackers = exerciseTrackers.filter(
+            tracker => tracker.status === "active"
+        );
         const activeTrackerNames = new Set(
-            exerciseTrackers
-                .filter(tracker => tracker.status === "active")
-                .map(tracker => tracker.exerciseName)
+            activeTrackers.map(tracker => tracker.exerciseName)
         );
         const availableTrackers = ["Pushups", "Pullups", "Steps"].filter(
             exerciseName => !activeTrackerNames.has(exerciseName)
         );
 
-        quickExerciseTitle.textContent = "Set up a tracker";
-
         if (availableTrackers.length) {
+
+            quickExerciseTitle.textContent = "Set up a tracker";
 
             availableTrackers.forEach(exerciseName => {
 
@@ -2178,10 +2179,22 @@ async function openQuickExercise() {
 
         } else {
 
-            const copy = document.createElement("p");
+            quickExerciseTitle.textContent = "Update a tracker";
 
-            copy.textContent = "All available trackers are set up.";
-            quickExerciseOptions.appendChild(copy);
+            activeTrackers.forEach(tracker => {
+
+                const target = tracker.exerciseName === "Steps"
+                    ? tracker.targetSteps
+                    : tracker.targetReps;
+
+                addQuickExerciseChoice(`Update ${tracker.exerciseName}`, () => {
+
+                    closeQuickExerciseModal();
+                    openExerciseTargetModal(tracker.exerciseName, target, false);
+
+                });
+
+            });
 
         }
 
