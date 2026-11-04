@@ -45,7 +45,14 @@ const editWorkoutError = document.getElementById("edit-workout-error");
 const cancelEditWorkoutButton = document.getElementById("cancel-edit-workout");
 const saveEditWorkoutButton = document.getElementById("save-edit-workout");
 const ACTIVITY_MUSCLES = ["Abs", "Back", "Biceps", "Boxing", "Cardio", "Chest", "HIIT", "Legs", "Pullups", "Pushups", "Shoulders", "Triceps"];
+const ACTIVITY_PAGE_SIZE = 10;
 let activityWorkouts = [];
+let activityWorkoutsLoaded = false;
+let activityWorkoutsLoading = false;
+let activityHasMore = true;
+let activityNextCursor = null;
+let activityLoadError = false;
+let activityLoadObserver = null;
 let editingWorkout = null;
 let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
@@ -1129,7 +1136,19 @@ function renderActivityWorkouts() {
 
     if (!activityWorkouts.length) {
 
-        activityWorkoutsContainer.innerHTML = '<div class="activity-empty-state"><p>No shared workouts yet.</p></div>';
+        const emptyState = document.createElement("div");
+        emptyState.className = "activity-empty-state";
+        emptyState.appendChild(createActivityText("p", "", activityLoadError ? "Unable to load shared workouts." : "No shared workouts yet."));
+        if (activityLoadError) {
+
+            const retry = document.createElement("button");
+            retry.type = "button";
+            retry.textContent = "Retry";
+            retry.addEventListener("click", () => loadActivityWorkouts({ reset: true }));
+            emptyState.appendChild(retry);
+
+        }
+        activityWorkoutsContainer.appendChild(emptyState);
         return;
 
     }
@@ -1145,6 +1164,8 @@ function renderActivityWorkouts() {
     });
 
     const selectedAthleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    let renderedPhotoCount = 0;
 
     grouped.forEach((workouts, month) => {
 
@@ -1209,6 +1230,10 @@ function renderActivityWorkouts() {
                 const photo = document.createElement("img");
                 photo.className = "activity-workout-photo";
                 photo.src = workout.photo_url;
+                photo.loading = renderedPhotoCount < 2 ? "eager" : "lazy";
+                photo.decoding = "async";
+                if (renderedPhotoCount < 2) photo.fetchPriority = "high";
+                renderedPhotoCount += 1;
                 photo.alt = `Workout proof for ${workout.activity_name || workout.athlete_name}`;
                 photo.tabIndex = 0;
                 photo.setAttribute("role", "button");
@@ -1242,26 +1267,72 @@ function renderActivityWorkouts() {
 
     });
 
+    if (activityHasMore || activityLoadError) {
+
+        const controls = document.createElement("div");
+        controls.className = "activity-load-more";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = activityLoadError ? "Retry loading workouts" : activityWorkoutsLoading ? "Loading workouts…" : "Load more workouts";
+        button.disabled = activityWorkoutsLoading;
+        button.addEventListener("click", () => loadActivityWorkouts({ nextPage: true }));
+        controls.appendChild(button);
+        activityWorkoutsContainer.appendChild(controls);
+
+        activityLoadObserver?.disconnect();
+        if (activityHasMore && !activityLoadError && "IntersectionObserver" in window) {
+
+            activityLoadObserver = new IntersectionObserver(entries => {
+
+                if (entries.some(entry => entry.isIntersecting)) loadActivityWorkouts({ nextPage: true });
+
+            }, { rootMargin: "400px 0px" });
+            activityLoadObserver.observe(controls);
+
+        }
+
+    }
+
 }
 
-async function loadActivityWorkouts() {
+async function loadActivityWorkouts({ reset = false, nextPage = false } = {}) {
 
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
     if (!sessionToken || !activityWorkoutsContainer) return;
+    if (activityWorkoutsLoading || (!reset && !nextPage && activityWorkoutsLoaded) || (nextPage && !activityHasMore)) return;
+
+    activityWorkoutsLoading = true;
+    activityLoadError = false;
+    if (nextPage) renderActivityWorkouts();
 
     try {
 
         const { data, error } = await GymPactSupabase.getClient().functions.invoke("list-workouts", {
-            body: { sessionToken, dataEnvironment: "production" }
+            body: {
+                sessionToken,
+                dataEnvironment: "production",
+                limit: ACTIVITY_PAGE_SIZE,
+                cursor: reset ? null : activityNextCursor
+            }
         });
         if (error || !Array.isArray(data?.workouts)) throw error || new Error("Workout history was unavailable.");
-        activityWorkouts = [...data.workouts].sort((a, b) => new Date(b.logged_at) - new Date(a.logged_at));
-        renderActivityWorkouts();
+        const pageWorkouts = data.workouts;
+        const existingIds = reset ? new Set() : new Set(activityWorkouts.map(workout => workout.id));
+        activityWorkouts = (reset ? pageWorkouts : [...activityWorkouts, ...pageWorkouts.filter(workout => !existingIds.has(workout.id))])
+            .sort((a, b) => new Date(b.logged_at) - new Date(a.logged_at));
+        activityNextCursor = data.nextCursor || null;
+        activityHasMore = Boolean(data.hasMore);
+        activityWorkoutsLoaded = true;
 
     } catch (error) {
 
         console.error("Unable to load Activity.", error);
-        activityWorkoutsContainer.innerHTML = '<div class="activity-empty-state"><p>Unable to load shared workouts.</p></div>';
+        activityLoadError = true;
+
+    } finally {
+
+        activityWorkoutsLoading = false;
+        renderActivityWorkouts();
 
     }
 
@@ -1447,7 +1518,7 @@ async function saveWorkoutEdit() {
         if (error || data?.error) throw error || new Error(data?.error || "Unable to save workout.");
 
         closeWorkoutEditor();
-        await Promise.all([loadActivityWorkouts(), refreshDashboard()]);
+        await Promise.all([loadActivityWorkouts({ reset: true }), refreshDashboard()]);
 
     } catch (error) {
 

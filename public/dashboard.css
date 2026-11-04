@@ -1127,6 +1127,8 @@ body.dashboard-page {
 .activity-notes { margin: 12px 0 0; color: #d9dfdd; font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }
 .activity-empty-state { padding: 22px; border: 1px solid var(--line-soft); border-radius: 18px; background: var(--panel); color: var(--muted); }
 .activity-empty-state p { margin: 0; }
+.activity-empty-state button, .activity-load-more button { min-height: 38px; margin-top: 12px; padding: 7px 12px; border-color: var(--line); background: var(--panel-elevated); color: var(--text); font-size: .76rem; }
+.activity-load-more { display: grid; place-items: center; min-height: 72px; padding-bottom: 6px; }
 .edit-workout-modal-content { max-width: 620px; }
 .edit-workout-modal-content > label { display: grid; gap: 7px; margin-top: 16px; color: var(--muted); font-size: .8rem; font-weight: 750; }
 .edit-workout-modal-content > label input, .edit-workout-modal-content > label textarea { width: 100%; }

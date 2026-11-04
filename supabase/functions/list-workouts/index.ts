@@ -36,7 +36,7 @@ serve(async (request) => {
   }
 
   try {
-    const { sessionToken, dataEnvironment } = await request.json();
+    const { sessionToken, dataEnvironment, limit, cursor } = await request.json();
     const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
 
@@ -48,20 +48,45 @@ serve(async (request) => {
     }
 
     const admin = getAdminClient();
-    const { data, error } = await admin
+    const requestedLimit = Number(limit);
+    const usePagination = Number.isInteger(requestedLimit) && requestedLimit > 0;
+    const pageSize = Math.min(requestedLimit, 25);
+    const cursorLoggedAt = typeof cursor?.loggedAt === "string" ? new Date(cursor.loggedAt) : null;
+    const cursorId = typeof cursor?.id === "string" ? cursor.id : null;
+
+    if (usePagination && cursor && (!cursorLoggedAt || Number.isNaN(cursorLoggedAt.valueOf()) || !cursorId)) {
+      return new Response(JSON.stringify({ error: "Invalid workout cursor." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let query = admin
       .from("workouts")
       .select("id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at, users(display_name)")
       .eq("data_environment", environment)
-      .order("logged_at", { ascending: false });
+      .order("logged_at", { ascending: false })
+      .order("id", { ascending: false });
+
+    if (usePagination && cursorLoggedAt && cursorId) {
+      query = query.or(`logged_at.lt.${cursorLoggedAt.toISOString()},and(logged_at.eq.${cursorLoggedAt.toISOString()},id.lt.${cursorId})`);
+    }
+
+    if (usePagination) query = query.limit(pageSize + 1);
+
+    const { data, error } = await query;
 
     if (error) {
       throw error;
     }
 
-    const workouts = await Promise.all((data ?? []).map(async workout => {
-      const { data: photo, error: photoError } = await admin.storage
-        .from("workout-proofs")
-        .createSignedUrl(workout.photo_path, 60 * 60);
+    const rows = data ?? [];
+    const hasMore = usePagination && rows.length > pageSize;
+    const page = hasMore ? rows.slice(0, pageSize) : rows;
+    const workouts = await Promise.all(page.map(async workout => {
+      const { data: photo, error: photoError } = workout.photo_path
+        ? await admin.storage.from("workout-proofs").createSignedUrl(workout.photo_path, 60 * 60)
+        : { data: null, error: null };
 
       return {
         ...workout,
@@ -70,7 +95,12 @@ serve(async (request) => {
       };
     }));
 
-    return new Response(JSON.stringify({ workouts }), {
+    const lastWorkout = page.at(-1);
+    const nextCursor = hasMore && lastWorkout
+      ? { loggedAt: lastWorkout.logged_at, id: lastWorkout.id }
+      : null;
+
+    return new Response(JSON.stringify({ workouts, hasMore, nextCursor }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
