@@ -958,7 +958,6 @@ function renderPactProgressDetail(challenge) {
 function showDashboardTab(tab) {
 
     activeDashboardTab = tab;
-    document.body.classList.toggle("is-activity-tab", tab === "activity");
     const dashboardContent = document.getElementById("dashboard-content");
 
     if (dashboardContent) dashboardContent.scrollTop = 0;

@@ -35,10 +35,6 @@ body.dashboard-page {
 .dashboard-header-content {
     padding: max(16px, env(safe-area-inset-top)) clamp(16px, 4vw, 40px) 12px;
 }
-.dashboard-page.is-activity-tab .dashboard-header-content {
-    padding-top: max(10px, env(safe-area-inset-top));
-    padding-bottom: 6px;
-}
 
 .dashboard-header,
 .history-header {
@@ -49,7 +45,6 @@ body.dashboard-page {
 }
 
 .dashboard-header { min-width: 0; margin-bottom: 9px; }
-.dashboard-page.is-activity-tab .dashboard-header { margin-bottom: 0; }
 .dashboard-header .brand-lockup { min-width: 0; }
 
 .dashboard-content {
