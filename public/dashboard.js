@@ -1500,16 +1500,20 @@ function renderActivityWorkouts() {
                 if (completionMonthLabel) card.appendChild(createActivityText("p", "activity-details", completionMonthLabel));
                 if (workout.monthly_goal) card.appendChild(createActivityText("p", "activity-notes activity-month-pact-goal", `Goal: ${workout.monthly_goal}`));
 
-                const share = document.createElement("button");
-                share.type = "button";
-                share.className = "activity-month-pact-share";
-                share.setAttribute("aria-label", `Share ${workout.athlete_name}'s ${completionMonthLabel || "Month Pact"} completion`);
-                share.append(
-                    createActivityIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m21 3-7.5 18-3.7-7.8L2 9.5 21 3Z"></path><path d="m9.8 13.2 4.7-4.7"></path></svg>'),
-                    document.createTextNode("Share")
-                );
-                share.addEventListener("click", () => shareMonthlyCompletion({ ...workout, month_label: completionMonthLabel }, share));
-                card.appendChild(share);
+                if (workout.user_id === selectedAthleteId) {
+
+                    const share = document.createElement("button");
+                    share.type = "button";
+                    share.className = "activity-month-pact-share";
+                    share.setAttribute("aria-label", `Share ${workout.athlete_name}'s ${completionMonthLabel || "Month Pact"} completion`);
+                    share.append(
+                        createActivityIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m21 3-7.5 18-3.7-7.8L2 9.5 21 3Z"></path><path d="m9.8 13.2 4.7-4.7"></path></svg>'),
+                        document.createTextNode("Share")
+                    );
+                    share.addEventListener("click", () => shareMonthlyCompletion({ ...workout, month_label: completionMonthLabel }, share));
+                    card.appendChild(share);
+
+                }
 
             } else {
 
