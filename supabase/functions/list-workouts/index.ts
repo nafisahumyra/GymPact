@@ -36,7 +36,7 @@ serve(async (request) => {
   }
 
   try {
-    const { sessionToken, dataEnvironment, limit, cursor } = await request.json();
+    const { sessionToken, dataEnvironment, limit, cursor, activityFeed } = await request.json();
     const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
 
@@ -61,9 +61,15 @@ serve(async (request) => {
       });
     }
 
+    const isActivityFeed = activityFeed === true;
+    const source = isActivityFeed ? "activity_feed" : "workouts";
+    const fields = isActivityFeed
+      ? "id, activity_type, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at, month_start, monthly_goal, athlete_name"
+      : "id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at, users(display_name)";
+
     let query = admin
-      .from("workouts")
-      .select("id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at, users(display_name)")
+      .from(source)
+      .select(fields)
       .eq("data_environment", environment)
       .order("logged_at", { ascending: false })
       .order("id", { ascending: false });
@@ -84,13 +90,17 @@ serve(async (request) => {
     const hasMore = usePagination && rows.length > pageSize;
     const page = hasMore ? rows.slice(0, pageSize) : rows;
     const workouts = await Promise.all(page.map(async workout => {
+      const photoBucket = workout.activity_type === "monthly_goal_completion"
+        ? "monthly-pact-proofs"
+        : "workout-proofs";
       const { data: photo, error: photoError } = workout.photo_path
-        ? await admin.storage.from("workout-proofs").createSignedUrl(workout.photo_path, 60 * 60)
+        ? await admin.storage.from(photoBucket).createSignedUrl(workout.photo_path, 60 * 60)
         : { data: null, error: null };
 
       return {
         ...workout,
-        athlete_name: workout.users?.display_name ?? "GymPact athlete",
+        activity_type: workout.activity_type ?? "workout",
+        athlete_name: workout.athlete_name ?? workout.users?.display_name ?? "GymPact athlete",
         photo_url: photoError ? null : photo.signedUrl,
       };
     }));

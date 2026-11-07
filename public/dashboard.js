@@ -1089,6 +1089,17 @@ function formatActivityMonth(value) {
 
 }
 
+function formatMonthlyPactMonth(value) {
+
+    if (!value) return "";
+    return new Intl.DateTimeFormat("en-US", {
+        timeZone: GYMPACT_TIME_ZONE,
+        month: "long",
+        year: "numeric"
+    }).format(new Date(`${value}T12:00:00Z`));
+
+}
+
 function parseActivityMuscles(muscles) {
 
     try {
@@ -1171,6 +1182,175 @@ function createActivityText(tagName, className, text) {
 
 }
 
+function createActivityIcon(svg) {
+
+    const icon = document.createElement("span");
+    icon.className = "activity-inline-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = svg;
+    return icon;
+
+}
+
+function drawShareRoundedRect(context, x, y, width, height, radius) {
+
+    const corner = Math.min(radius, width / 2, height / 2);
+    context.beginPath();
+    context.moveTo(x + corner, y);
+    context.arcTo(x + width, y, x + width, y + height, corner);
+    context.arcTo(x + width, y + height, x, y + height, corner);
+    context.arcTo(x, y + height, x, y, corner);
+    context.arcTo(x, y, x + width, y, corner);
+    context.closePath();
+
+}
+
+function drawShareWrappedText(context, text, x, y, width, lineHeight) {
+
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    let line = "";
+    let cursorY = y;
+
+    words.forEach(word => {
+
+        const nextLine = line ? `${line} ${word}` : word;
+        if (line && context.measureText(nextLine).width > width) {
+
+            context.fillText(line, x, cursorY);
+            cursorY += lineHeight;
+            line = word;
+
+        } else {
+
+            line = nextLine;
+
+        }
+
+    });
+
+    if (line) context.fillText(line, x, cursorY);
+    return cursorY;
+
+}
+
+async function createMonthlyCompletionShareImage(completion) {
+
+    if (!completion.photo_url) throw new Error("The proof photo is unavailable.");
+
+    const response = await fetch(completion.photo_url);
+    if (!response.ok) throw new Error("The proof photo is unavailable.");
+    const image = await createImageBitmap(await response.blob());
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1350;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Your browser cannot prepare this share image.");
+
+    context.fillStyle = "#101312";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    drawShareRoundedRect(context, 24, 24, 1032, 1302, 38);
+    context.fillStyle = "#171b1a";
+    context.fill();
+    context.lineWidth = 15;
+    context.strokeStyle = "#c9a64d";
+    context.stroke();
+
+    const confetti = [[84, 104, 18, 7], [172, 150, 7, 20], [272, 88, 20, 8], [398, 126, 8, 19], [502, 76, 20, 8], [658, 142, 8, 20], [786, 90, 19, 8], [914, 132, 8, 20], [976, 84, 19, 8]];
+    context.fillStyle = "#d7b85b";
+    confetti.forEach(([x, y, width, height], index) => {
+
+        context.save();
+        context.translate(x, y);
+        context.rotate((index % 2 ? 1 : -1) * .52);
+        context.fillRect(-width / 2, -height / 2, width, height);
+        context.restore();
+
+    });
+
+    context.fillStyle = "#d8b85b";
+    context.font = "700 28px system-ui, sans-serif";
+    context.letterSpacing = "4px";
+    context.fillText("MONTH PACT COMPLETE", 88, 154);
+    context.letterSpacing = "0px";
+    context.fillStyle = "#f1f3f2";
+    context.font = "800 48px system-ui, sans-serif";
+    context.fillText(completion.month_label || "GymPact", 88, 220);
+
+    const frame = { x: 88, y: 270, width: 904, height: 650 };
+    drawShareRoundedRect(context, frame.x, frame.y, frame.width, frame.height, 25);
+    context.save();
+    context.clip();
+    const scale = Math.min(frame.width / image.width, frame.height / image.height);
+    const width = image.width * scale;
+    const height = image.height * scale;
+    context.fillStyle = "#070909";
+    context.fillRect(frame.x, frame.y, frame.width, frame.height);
+    context.drawImage(image, frame.x + (frame.width - width) / 2, frame.y + (frame.height - height) / 2, width, height);
+    context.restore();
+    image.close();
+
+    context.fillStyle = "#f5f6f5";
+    context.font = "800 42px system-ui, sans-serif";
+    const lastTextY = drawShareWrappedText(context, "I completed my Month-long goal on GymPact!", 88, 1005, 904, 55);
+    context.fillStyle = "#c7cecb";
+    context.font = "500 30px system-ui, sans-serif";
+    context.fillText(completion.monthly_goal ? `Goal: ${completion.monthly_goal}` : "GymPact", 88, Math.min(lastTextY + 64, 1234));
+    context.fillStyle = "#d8b85b";
+    context.font = "700 25px system-ui, sans-serif";
+    context.fillText("GYMPACT", 88, 1280);
+
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("Your browser could not create the share image.");
+    return new File([blob], "gympact-month-pact-complete.png", { type: "image/png" });
+
+}
+
+async function shareMonthlyCompletion(completion, button) {
+
+    const originalLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = "Preparing…";
+    const text = `I completed my Month-long goal on GymPact! ${completion.month_label || ""}`.trim();
+
+    try {
+
+        const file = await createMonthlyCompletionShareImage(completion);
+        const payload = { title: "GymPact Month Pact complete", text, files: [file] };
+
+        if (navigator.share && (!navigator.canShare || navigator.canShare(payload))) {
+
+            await navigator.share(payload);
+
+        } else if (navigator.clipboard?.writeText) {
+
+            await navigator.clipboard.writeText(text);
+            button.textContent = "Copied";
+            window.setTimeout(() => { button.textContent = originalLabel; }, 1600);
+
+        } else {
+
+            throw new Error("Sharing is not available in this browser.");
+
+        }
+
+    } catch (error) {
+
+        if (error?.name !== "AbortError") {
+
+            console.error("Unable to share Month Pact completion.", error);
+            button.textContent = "Try again";
+            window.setTimeout(() => { button.textContent = originalLabel; }, 1600);
+
+        }
+
+    } finally {
+
+        button.disabled = false;
+
+    }
+
+}
+
 function renderActivityWorkouts() {
 
     activityWorkoutsContainer.innerHTML = "";
@@ -1219,8 +1399,10 @@ function renderActivityWorkouts() {
 
         workouts.forEach(workout => {
 
+            const isMonthlyCompletion = workout.activity_type === "monthly_goal_completion";
+            const completionMonthLabel = isMonthlyCompletion ? formatMonthlyPactMonth(workout.month_start) : "";
             const card = document.createElement("article");
-            card.className = "activity-card";
+            card.className = `activity-card${isMonthlyCompletion ? " activity-month-pact-completion" : ""}`;
             const header = document.createElement("header");
             header.className = "activity-card-header";
             const avatar = createActivityText("span", "activity-avatar", getActivityInitials(workout.athlete_name));
@@ -1232,7 +1414,17 @@ function renderActivityWorkouts() {
             );
             header.append(avatar, identity);
 
-            if (workout.user_id === selectedAthleteId) {
+            if (isMonthlyCompletion) {
+
+                const badge = document.createElement("span");
+                badge.className = "activity-month-pact-badge";
+                badge.append(
+                    createActivityIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M5.64 5.64l2.12 2.12M3 12h3M5.64 18.36l2.12-2.12M12 18v3M18.36 18.36l-2.12-2.12M18 12h3M18.36 5.64l-2.12 2.12"></path><circle cx="12" cy="12" r="3"></circle></svg>'),
+                    document.createTextNode("Month Pact")
+                );
+                header.appendChild(badge);
+
+            } else if (workout.user_id === selectedAthleteId) {
 
                 const menuWrap = document.createElement("div");
                 menuWrap.className = "activity-card-menu-wrap";
@@ -1275,7 +1467,9 @@ function renderActivityWorkouts() {
                 photo.decoding = "async";
                 if (renderedPhotoCount < 2) photo.fetchPriority = "high";
                 renderedPhotoCount += 1;
-                photo.alt = `Workout proof for ${workout.activity_name || workout.athlete_name}`;
+                photo.alt = isMonthlyCompletion
+                    ? `Month Pact proof for ${workout.athlete_name}`
+                    : `Workout proof for ${workout.activity_name || workout.athlete_name}`;
                 photo.tabIndex = 0;
                 photo.setAttribute("role", "button");
                 photo.addEventListener("click", () => openActivityPhoto(photo));
@@ -1293,12 +1487,37 @@ function renderActivityWorkouts() {
 
             }
 
-            const measurements = getActivityMeasurements(workout);
-            if (measurements.length) card.appendChild(createActivityText("p", "activity-summary", measurements.map(formatActivityMeasurement).join(" · ")));
+            if (isMonthlyCompletion) {
 
-            const muscles = parseActivityMuscles(workout.muscles);
-            if (muscles.length) card.appendChild(createActivityText("p", "activity-details", muscles.join(" · ")));
-            if (workout.notes) card.appendChild(createActivityText("p", "activity-notes", workout.notes));
+                card.appendChild(createActivityText("p", "activity-summary activity-month-pact-message", "I completed my Month-long goal on GymPact!"));
+                if (completionMonthLabel) card.appendChild(createActivityText("p", "activity-details", completionMonthLabel));
+                if (workout.monthly_goal) card.appendChild(createActivityText("p", "activity-notes activity-month-pact-goal", `Goal: ${workout.monthly_goal}`));
+
+                if (workout.user_id === selectedAthleteId) {
+
+                    const share = document.createElement("button");
+                    share.type = "button";
+                    share.className = "activity-month-pact-share";
+                    share.setAttribute("aria-label", `Share ${completionMonthLabel || "Month Pact"} completion`);
+                    share.append(
+                        createActivityIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m21 3-7.5 18-3.7-7.8L2 9.5 21 3Z"></path><path d="m9.8 13.2 4.7-4.7"></path></svg>'),
+                        document.createTextNode("Share")
+                    );
+                    share.addEventListener("click", () => shareMonthlyCompletion({ ...workout, month_label: completionMonthLabel }, share));
+                    card.appendChild(share);
+
+                }
+
+            } else {
+
+                const measurements = getActivityMeasurements(workout);
+                if (measurements.length) card.appendChild(createActivityText("p", "activity-summary", measurements.map(formatActivityMeasurement).join(" · ")));
+
+                const muscles = parseActivityMuscles(workout.muscles);
+                if (muscles.length) card.appendChild(createActivityText("p", "activity-details", muscles.join(" · ")));
+                if (workout.notes) card.appendChild(createActivityText("p", "activity-notes", workout.notes));
+
+            }
 
             section.appendChild(card);
 
@@ -1352,6 +1571,7 @@ async function loadActivityWorkouts({ reset = false, nextPage = false } = {}) {
             body: {
                 sessionToken,
                 dataEnvironment: "production",
+                activityFeed: true,
                 limit: ACTIVITY_PAGE_SIZE,
                 cursor: reset ? null : activityNextCursor
             }
@@ -2077,6 +2297,10 @@ modal("save-monthly-completion").addEventListener("click", async () => {
         }
 
         modal("monthly-completion-modal").style.display = "none";
+        activityWorkoutsLoaded = false;
+        activityHasMore = true;
+        activityNextCursor = null;
+        if (activeDashboardTab === "activity") await loadActivityWorkouts({ reset: true });
         await loadMonthlyPact();
 
     } catch (error) {
