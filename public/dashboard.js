@@ -3356,3 +3356,22 @@ alert("Workout logged successfully 💪");
 
 
 });
+
+const requestedQuickAction = new URLSearchParams(window.location.search).get("quickAction");
+
+if (["exercise", "tracker", "week-pact", "month-pact"].includes(requestedQuickAction)) {
+
+    const requestedUrl = new URL(window.location.href);
+    requestedUrl.searchParams.delete("quickAction");
+    window.history.replaceState({}, "", `${requestedUrl.pathname}${requestedUrl.search}`);
+
+    requestAnimationFrame(async () => {
+
+        if (requestedQuickAction === "exercise") workoutModal.style.display = "flex";
+        if (requestedQuickAction === "tracker") await openQuickExercise();
+        if (requestedQuickAction === "week-pact") await startWeeklyPact();
+        if (requestedQuickAction === "month-pact") await openQuickMonthlyPact();
+
+    });
+
+}

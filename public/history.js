@@ -20,13 +20,80 @@ const monthlyPactHistoryTab = document.getElementById("monthly-pact-history-tab"
 const historyPhotoDialog = document.getElementById("history-photo-dialog");
 const historyPhotoFull = document.getElementById("history-photo-full");
 const closeHistoryPhotoButton = document.getElementById("close-history-photo");
+const historyQuickActionToggle = document.getElementById("history-quick-action-toggle");
+const historyQuickActionMenu = document.getElementById("history-quick-action-menu");
+const historyQuickActionBackdrop = document.getElementById("history-quick-action-backdrop");
 let historyRefreshInFlight = null;
+let historyQuickActionPreviousFocus = null;
 
 historyPageTitle.textContent = activeHistoryTab === "challenges" ? "Pact History" : "Workout History";
 document.title = `GymPact ${historyPageTitle.textContent}`;
 const historyNavigationTarget = activeHistoryTab === "challenges" ? "pact" : "activity";
 document.querySelector(`[data-history-nav="${historyNavigationTarget}"]`)?.classList.add("is-active");
 document.querySelector(`[data-history-nav="${historyNavigationTarget}"]`)?.setAttribute("aria-current", "page");
+
+function closeHistoryQuickActionMenu({ restoreFocus = false } = {}) {
+
+    historyQuickActionMenu.hidden = true;
+    historyQuickActionBackdrop.hidden = true;
+    historyQuickActionToggle.setAttribute("aria-expanded", "false");
+    historyQuickActionToggle.setAttribute("aria-label", "Open quick actions");
+
+    if (restoreFocus && historyQuickActionPreviousFocus instanceof HTMLElement) {
+        historyQuickActionPreviousFocus.focus();
+    }
+
+    historyQuickActionPreviousFocus = null;
+
+}
+
+function openHistoryQuickActionMenu() {
+
+    historyQuickActionPreviousFocus = document.activeElement;
+    historyQuickActionMenu.hidden = false;
+    historyQuickActionBackdrop.hidden = false;
+    historyQuickActionToggle.setAttribute("aria-expanded", "true");
+    historyQuickActionToggle.setAttribute("aria-label", "Close quick actions");
+    historyQuickActionMenu.querySelector("button")?.focus();
+
+}
+
+historyQuickActionToggle.addEventListener("click", () => {
+
+    if (historyQuickActionMenu.hidden) openHistoryQuickActionMenu();
+    else closeHistoryQuickActionMenu({ restoreFocus: true });
+
+});
+
+historyQuickActionBackdrop.addEventListener("click", () => closeHistoryQuickActionMenu({ restoreFocus: true }));
+
+document.querySelectorAll("[data-history-quick-action]").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        const action = button.dataset.historyQuickAction;
+        const destinations = {
+            exercise: "dashboard.html?quickAction=exercise",
+            tracker: "dashboard.html?tab=progress&quickAction=tracker",
+            "week-pact": "dashboard.html?tab=pact&quickAction=week-pact",
+            "month-pact": "dashboard.html?tab=month&quickAction=month-pact",
+            "dev-view": "preview-layout.html"
+        };
+
+        window.location.href = destinations[action];
+
+    });
+
+});
+
+document.addEventListener("keydown", event => {
+
+    if (event.key === "Escape" && !historyQuickActionMenu.hidden) {
+        event.preventDefault();
+        closeHistoryQuickActionMenu({ restoreFocus: true });
+    }
+
+});
 
 function openHistoryPhoto(photo) {
     historyPhotoFull.src = photo.src;
