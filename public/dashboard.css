@@ -1037,6 +1037,8 @@ body.dashboard-page {
 .history-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; width: 100%; margin: 0 0 20px; padding: 4px; border: 1px solid var(--line-soft); border-radius: 13px; background: #101414; }
 .history-tab { min-height: 38px; padding: 7px 12px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--muted); font-size: .8rem; font-weight: 750; box-shadow: none; }
 .history-tab.is-active { border-color: rgba(145,242,100,.24); background: rgba(145,242,100,.13); color: var(--green); box-shadow: none; }
+.history-tab:hover:not(:disabled) { background: transparent; color: var(--muted); box-shadow: none; transform: none; }
+.history-tab.is-active:hover:not(:disabled) { background: rgba(145,242,100,.13); color: var(--green); box-shadow: none; }
 .workout-card,
 .challenge-history-card { margin-bottom: 12px; padding: 18px; }
 .workout-card h3,
