@@ -1192,6 +1192,13 @@ function createActivityIcon(svg) {
 
 }
 
+function getMonthlyCompletionMessage(completion) {
+
+    const athlete = completion.athlete_name || "An athlete";
+    return `${athlete} completed their Month-long goal on GymPact!`;
+
+}
+
 function drawShareRoundedRect(context, x, y, width, height, radius) {
 
     const corner = Math.min(radius, width / 2, height / 2);
@@ -1291,7 +1298,7 @@ async function createMonthlyCompletionShareImage(completion) {
 
     context.fillStyle = "#f5f6f5";
     context.font = "800 42px system-ui, sans-serif";
-    const lastTextY = drawShareWrappedText(context, "I completed my Month-long goal on GymPact!", 88, 1005, 904, 55);
+    const lastTextY = drawShareWrappedText(context, getMonthlyCompletionMessage(completion), 88, 1005, 904, 55);
     context.fillStyle = "#c7cecb";
     context.font = "500 30px system-ui, sans-serif";
     context.fillText(completion.monthly_goal ? `Goal: ${completion.monthly_goal}` : "GymPact", 88, Math.min(lastTextY + 64, 1234));
@@ -1310,7 +1317,7 @@ async function shareMonthlyCompletion(completion, button) {
     const originalLabel = button.textContent;
     button.disabled = true;
     button.textContent = "Preparing…";
-    const text = `I completed my Month-long goal on GymPact! ${completion.month_label || ""}`.trim();
+    const text = `${getMonthlyCompletionMessage(completion)} ${completion.month_label || ""}`.trim();
 
     try {
 
@@ -1489,24 +1496,20 @@ function renderActivityWorkouts() {
 
             if (isMonthlyCompletion) {
 
-                card.appendChild(createActivityText("p", "activity-summary activity-month-pact-message", "I completed my Month-long goal on GymPact!"));
+                card.appendChild(createActivityText("p", "activity-summary activity-month-pact-message", getMonthlyCompletionMessage(workout)));
                 if (completionMonthLabel) card.appendChild(createActivityText("p", "activity-details", completionMonthLabel));
                 if (workout.monthly_goal) card.appendChild(createActivityText("p", "activity-notes activity-month-pact-goal", `Goal: ${workout.monthly_goal}`));
 
-                if (workout.user_id === selectedAthleteId) {
-
-                    const share = document.createElement("button");
-                    share.type = "button";
-                    share.className = "activity-month-pact-share";
-                    share.setAttribute("aria-label", `Share ${completionMonthLabel || "Month Pact"} completion`);
-                    share.append(
-                        createActivityIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m21 3-7.5 18-3.7-7.8L2 9.5 21 3Z"></path><path d="m9.8 13.2 4.7-4.7"></path></svg>'),
-                        document.createTextNode("Share")
-                    );
-                    share.addEventListener("click", () => shareMonthlyCompletion({ ...workout, month_label: completionMonthLabel }, share));
-                    card.appendChild(share);
-
-                }
+                const share = document.createElement("button");
+                share.type = "button";
+                share.className = "activity-month-pact-share";
+                share.setAttribute("aria-label", `Share ${workout.athlete_name}'s ${completionMonthLabel || "Month Pact"} completion`);
+                share.append(
+                    createActivityIcon('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m21 3-7.5 18-3.7-7.8L2 9.5 21 3Z"></path><path d="m9.8 13.2 4.7-4.7"></path></svg>'),
+                    document.createTextNode("Share")
+                );
+                share.addEventListener("click", () => shareMonthlyCompletion({ ...workout, month_label: completionMonthLabel }, share));
+                card.appendChild(share);
 
             } else {
 
