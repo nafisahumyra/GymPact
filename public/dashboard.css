@@ -1213,7 +1213,7 @@ body.dashboard-page {
 
 @media (min-width: 680px) {
     .dashboard-header-content { padding-top: 20px; }
-    .dashboard-content-inner { padding-top: 28px; padding-bottom: 34px; }
+    .dashboard-content-inner { padding-top: 28px; padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
     .dashboard-section { margin-bottom: 28px; }
     .stat-card { padding: 22px; }
     .muscle-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
