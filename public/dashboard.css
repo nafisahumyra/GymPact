@@ -366,23 +366,6 @@ body.dashboard-page {
 .pact-navigation-action small { color: var(--muted); font-size: .75rem; font-weight: 600; }
 .pact-navigation-action:hover:not(:disabled) { color: #071006; }
 .pact-navigation-action:hover:not(:disabled) small { color: #1d3920; }
-.pact-navigation-primary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 13px 18px;
-    border-color: var(--green);
-    background: var(--green);
-    color: #071006;
-    line-height: 1;
-    text-align: center;
-}
-.pact-navigation-primary-label {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
 .month-pact-section { min-width: 0; }
 .month-pact-card {
     padding: 18px;

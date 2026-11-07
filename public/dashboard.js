@@ -2403,8 +2403,6 @@ document.addEventListener("visibilitychange", () => {
 
 refreshDashboard();
 
-const newChallengeButton =
-    document.getElementById("new-challenge-button");
 const pactHistoryButton = document.getElementById("open-pact-history");
 
 const challengeActiveModal =
@@ -2653,10 +2651,6 @@ async function startWeeklyPact() {
     challengeActiveModal.style.display = "flex";
 
 }
-
-newChallengeButton.addEventListener("click", () => {
-    newPactChoiceModal.style.display = "flex";
-});
 
 quickActionToggle.addEventListener("click", toggleQuickActionMenu);
 quickActionBackdrop.addEventListener("click", () => closeQuickActionMenu({ restoreFocus: true }));
