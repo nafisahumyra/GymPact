@@ -36,7 +36,7 @@ serve(async (request) => {
   }
 
   try {
-    const { sessionToken, dataEnvironment, limit, cursor, deferPhotos, summaryOnly } = await request.json();
+    const { sessionToken, dataEnvironment, limit, cursor } = await request.json();
     const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
 
@@ -61,12 +61,9 @@ serve(async (request) => {
       });
     }
 
-    const selectColumns = summaryOnly === true
-      ? "user_id, logged_at"
-      : "id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at, users(display_name)";
     let query = admin
       .from("workouts")
-      .select(selectColumns)
+      .select("id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at, users(display_name)")
       .eq("data_environment", environment)
       .order("logged_at", { ascending: false })
       .order("id", { ascending: false });
@@ -87,19 +84,6 @@ serve(async (request) => {
     const hasMore = usePagination && rows.length > pageSize;
     const page = hasMore ? rows.slice(0, pageSize) : rows;
     const workouts = await Promise.all(page.map(async workout => {
-      if (summaryOnly === true) return workout;
-
-      if (deferPhotos === true) {
-        const { photo_path, users, ...workoutData } = workout;
-
-        return {
-          ...workoutData,
-          athlete_name: users?.display_name ?? "GymPact athlete",
-          has_photo: Boolean(photo_path),
-          photo_url: null,
-        };
-      }
-
       const { data: photo, error: photoError } = workout.photo_path
         ? await admin.storage.from("workout-proofs").createSignedUrl(workout.photo_path, 60 * 60)
         : { data: null, error: null };

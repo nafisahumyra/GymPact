@@ -1121,13 +1121,7 @@ body.dashboard-page {
 .activity-card-menu button { width: 100%; min-height: 32px; padding: 5px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--text); font-size: .76rem; text-align: left; }
 .activity-card-menu button:hover:not(:disabled) { background: rgba(145, 242, 100, .11); color: var(--green); box-shadow: none; transform: none; }
 .activity-workout-photo { display: block; width: 100%; aspect-ratio: 4 / 3; margin-top: 15px; border: 1px solid var(--line-soft); border-radius: 14px; background: #090b0b; cursor: zoom-in; object-fit: cover; }
-.activity-workout-photo.is-loading { cursor: progress; background: linear-gradient(110deg, #090b0b 28%, #151a19 45%, #090b0b 62%); background-size: 220% 100%; animation: activity-photo-loading 1.4s linear infinite; }
-.activity-workout-photo.is-unavailable { cursor: pointer; background: #101414; }
-.activity-photo-retry { display: block; width: 100%; aspect-ratio: 4 / 3; margin-top: 15px; border: 1px solid var(--line-soft); border-radius: 14px; background: #101414; color: var(--muted); }
-.activity-photo-retry:hover:not(:disabled) { color: var(--green); }
 .activity-workout-photo:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
-@keyframes activity-photo-loading { to { background-position: -220% 0; } }
-@media (prefers-reduced-motion: reduce) { .activity-workout-photo.is-loading { animation: none; } }
 .activity-summary { margin: 15px 0 0; color: var(--text); font-size: 1rem; font-weight: 800; line-height: 1.35; }
 .activity-details { margin: 6px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.45; }
 .activity-notes { margin: 12px 0 0; color: #d9dfdd; font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }

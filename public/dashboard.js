@@ -54,8 +54,6 @@ let activityHasMore = true;
 let activityNextCursor = null;
 let activityLoadError = false;
 let activityLoadObserver = null;
-let activityPhotoObserver = null;
-const activityPhotoUrls = new Map();
 let editingWorkout = null;
 let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
@@ -153,7 +151,7 @@ async function loadDashboardMetrics({ preserveOnError = false } = {}) {
         const supabase = GymPactSupabase.getClient();
         const { data, error } = await supabase.functions.invoke(
             "list-workouts",
-            { body: { sessionToken, summaryOnly: true } }
+            { body: { sessionToken } }
         );
 
         if (error || !Array.isArray(data?.workouts)) {
@@ -1124,114 +1122,6 @@ function openActivityPhoto(photo) {
 
 }
 
-function showActivityPhotoRetry(photo) {
-
-    photo.hidden = true;
-    photo._retryButton.hidden = false;
-
-}
-
-async function loadActivityPhoto(workout, photo) {
-
-    if (photo.dataset.photoLoading === "true" || photo.getAttribute("src")) return;
-
-    const cachedUrl = activityPhotoUrls.get(workout.id);
-
-    if (cachedUrl) {
-
-        photo.src = cachedUrl;
-        photo.classList.remove("is-loading");
-        photo.removeAttribute("aria-busy");
-        return;
-
-    }
-
-    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
-    const userId = sessionStorage.getItem("gymPactSelectedAthleteId");
-
-    if (!sessionToken || !userId) return;
-
-    photo.dataset.photoLoading = "true";
-
-    try {
-
-        const { data, error } = await GymPactSupabase.getClient().functions.invoke(
-            "get-workout-photo-url",
-            {
-                body: {
-                    sessionToken,
-                    userId,
-                    workoutId: workout.id,
-                    dataEnvironment: "production"
-                }
-            }
-        );
-
-        if (error || !data?.photoUrl) throw error || new Error("Workout photo was unavailable.");
-
-        activityPhotoUrls.set(workout.id, data.photoUrl);
-        photo.src = data.photoUrl;
-        photo.classList.remove("is-loading");
-        photo.removeAttribute("aria-busy");
-
-    } catch (error) {
-
-        console.error("Unable to load workout photo.", error);
-        photo.classList.remove("is-loading");
-        photo.classList.add("is-unavailable");
-        photo.alt = "Workout photo unavailable. Tap to retry.";
-        photo.setAttribute("aria-label", "Workout photo unavailable. Activate to retry.");
-        showActivityPhotoRetry(photo);
-
-    } finally {
-
-        delete photo.dataset.photoLoading;
-
-    }
-
-}
-
-function queueActivityPhoto(workout, photo, eager = false) {
-
-    if (workout.photo_url) {
-
-        activityPhotoUrls.set(workout.id, workout.photo_url);
-        photo.src = workout.photo_url;
-        photo.classList.remove("is-loading");
-        photo.removeAttribute("aria-busy");
-        return;
-
-    }
-
-    if (eager || !("IntersectionObserver" in window)) {
-
-        loadActivityPhoto(workout, photo);
-        return;
-
-    }
-
-    if (!activityPhotoObserver) {
-
-        activityPhotoObserver = new IntersectionObserver(entries => {
-
-            entries.forEach(entry => {
-
-                if (!entry.isIntersecting) return;
-
-                activityPhotoObserver.unobserve(entry.target);
-                loadActivityPhoto(entry.target._activityWorkout, entry.target);
-
-            });
-
-        }, { rootMargin: "400px 0px" });
-
-    }
-
-    photo._activityWorkout = workout;
-    activityPhotoObserver.observe(photo);
-
-}
-
 function createActivityText(tagName, className, text) {
 
     const element = document.createElement(tagName);
@@ -1243,8 +1133,6 @@ function createActivityText(tagName, className, text) {
 
 function renderActivityWorkouts() {
 
-    activityPhotoObserver?.disconnect();
-    activityPhotoObserver = null;
     activityWorkoutsContainer.innerHTML = "";
 
     if (!activityWorkouts.length) {
@@ -1338,67 +1226,30 @@ function renderActivityWorkouts() {
 
             card.appendChild(header);
 
-            if (workout.photo_url || workout.has_photo) {
+            if (workout.photo_url) {
 
                 const photo = document.createElement("img");
-                const loadImmediately = renderedPhotoCount < 2;
-
-                photo.className = "activity-workout-photo is-loading";
-                photo.loading = loadImmediately ? "eager" : "lazy";
+                photo.className = "activity-workout-photo";
+                photo.src = workout.photo_url;
+                photo.loading = renderedPhotoCount < 2 ? "eager" : "lazy";
                 photo.decoding = "async";
-                if (loadImmediately) photo.fetchPriority = "high";
+                if (renderedPhotoCount < 2) photo.fetchPriority = "high";
                 renderedPhotoCount += 1;
                 photo.alt = `Workout proof for ${workout.activity_name || workout.athlete_name}`;
-                photo.setAttribute("aria-busy", "true");
                 photo.tabIndex = 0;
                 photo.setAttribute("role", "button");
-                photo.addEventListener("click", () => {
-
-                    if (photo.getAttribute("src")) openActivityPhoto(photo);
-                    else loadActivityPhoto(workout, photo);
-
-                });
+                photo.addEventListener("click", () => openActivityPhoto(photo));
                 photo.addEventListener("keydown", event => {
 
                     if (event.key === "Enter" || event.key === " ") {
 
                         event.preventDefault();
-                        if (photo.getAttribute("src")) openActivityPhoto(photo);
-                        else loadActivityPhoto(workout, photo);
+                        openActivityPhoto(photo);
 
                     }
 
                 });
-                photo.addEventListener("error", () => {
-
-                    activityPhotoUrls.delete(workout.id);
-                    photo.removeAttribute("src");
-                    photo.classList.add("is-unavailable");
-                    photo.alt = "Workout photo unavailable. Tap to retry.";
-                    photo.setAttribute("aria-label", "Workout photo unavailable. Activate to retry.");
-                    showActivityPhotoRetry(photo);
-
-                });
-                const retryPhoto = document.createElement("button");
-
-                retryPhoto.type = "button";
-                retryPhoto.className = "activity-photo-retry";
-                retryPhoto.textContent = "Retry photo";
-                retryPhoto.hidden = true;
-                retryPhoto.addEventListener("click", () => {
-
-                    retryPhoto.hidden = true;
-                    photo.hidden = false;
-                    photo.classList.remove("is-unavailable");
-                    photo.classList.add("is-loading");
-                    photo.setAttribute("aria-busy", "true");
-                    loadActivityPhoto(workout, photo);
-
-                });
-                photo._retryButton = retryPhoto;
                 card.appendChild(photo);
-                card.appendChild(retryPhoto);
-                queueActivityPhoto(workout, photo, loadImmediately);
 
             }
 
@@ -1462,8 +1313,7 @@ async function loadActivityWorkouts({ reset = false, nextPage = false } = {}) {
                 sessionToken,
                 dataEnvironment: "production",
                 limit: ACTIVITY_PAGE_SIZE,
-                cursor: reset ? null : activityNextCursor,
-                deferPhotos: true
+                cursor: reset ? null : activityNextCursor
             }
         });
         if (error || !Array.isArray(data?.workouts)) throw error || new Error("Workout history was unavailable.");
