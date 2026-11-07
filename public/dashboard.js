@@ -43,6 +43,15 @@ const editWorkoutNotes = document.getElementById("edit-workout-notes");
 const editWorkoutError = document.getElementById("edit-workout-error");
 const cancelEditWorkoutButton = document.getElementById("cancel-edit-workout");
 const saveEditWorkoutButton = document.getElementById("save-edit-workout");
+const profileMenuButton = document.getElementById("profile-menu-button");
+const profileMenuInitials = document.getElementById("profile-menu-initials");
+const profileMenuImage = document.getElementById("profile-menu-image");
+const profilePhotoModal = document.getElementById("profile-photo-modal");
+const profilePhotoInput = document.getElementById("profile-photo-input");
+const profilePhotoError = document.getElementById("profile-photo-error");
+const cancelProfilePhotoButton = document.getElementById("cancel-profile-photo");
+const removeProfilePhotoButton = document.getElementById("remove-profile-photo");
+const saveProfilePhotoButton = document.getElementById("save-profile-photo");
 const ACTIVITY_MUSCLES = ["Abs", "Back", "Biceps", "Boxing", "Cardio", "Chest", "HIIT", "Legs", "Pullups", "Pushups", "Shoulders", "Triceps"];
 const ACTIVITY_PAGE_SIZE = 10;
 let activityWorkouts = [];
@@ -53,6 +62,7 @@ let activityNextCursor = null;
 let activityLoadError = false;
 let activityLoadObserver = null;
 let editingWorkout = null;
+let profilePhotoUrl = null;
 let monthlyCompletionBrandAssetsPromise = null;
 let activeDashboardTab = "overview";
 let activePactType = "weekly";
@@ -1220,6 +1230,151 @@ function getActivityInitials(name) {
         .map(part => part[0])
         .join("")
         .toUpperCase();
+
+}
+
+function renderProfileAvatar({ displayName = currentUser, photoUrl = null } = {}) {
+
+    profilePhotoUrl = photoUrl;
+    profileMenuInitials.textContent = getActivityInitials(displayName);
+    profileMenuImage.hidden = !photoUrl;
+    profileMenuInitials.hidden = Boolean(photoUrl);
+    profileMenuImage.removeAttribute("src");
+
+    if (photoUrl) profileMenuImage.src = photoUrl;
+
+}
+
+function setProfilePhotoError(message = "") {
+
+    profilePhotoError.textContent = message;
+    profilePhotoError.hidden = !message;
+
+}
+
+function closeProfilePhotoModal() {
+
+    profilePhotoModal.style.display = "none";
+    profilePhotoInput.value = "";
+    setProfilePhotoError();
+
+}
+
+function openProfilePhotoModal() {
+
+    profilePhotoInput.value = "";
+    setProfilePhotoError();
+    removeProfilePhotoButton.hidden = !profilePhotoUrl;
+    profilePhotoModal.style.display = "flex";
+
+}
+
+async function loadProfilePhoto() {
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const userId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    if (!sessionToken || !userId) return;
+
+    try {
+
+        const selection = await GymPactSupabase.getClient().functions.invoke("select-gympact-athlete", {
+            body: { sessionToken, userId }
+        });
+
+        if (selection.error || selection.data?.error) {
+
+            throw selection.error || new Error(selection.data.error);
+
+        }
+
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("profile", {
+            body: { action: "get", sessionToken }
+        });
+
+        if (error || data?.error) throw error || new Error(data.error);
+        renderProfileAvatar({ displayName: data.displayName || currentUser, photoUrl: data.photoUrl || null });
+
+    } catch (error) {
+
+        console.error("Unable to load profile photo.", error);
+        renderProfileAvatar();
+
+    }
+
+}
+
+async function saveProfilePhoto() {
+
+    const photo = profilePhotoInput.files?.[0];
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const userId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    if (!photo) {
+
+        setProfilePhotoError("Choose a photo first.");
+        return;
+
+    }
+
+    if (!sessionToken || !userId) return;
+
+    saveProfilePhotoButton.disabled = true;
+    setProfilePhotoError();
+
+    try {
+
+        const form = new FormData();
+        form.append("action", "update");
+        form.append("sessionToken", sessionToken);
+        form.append("photo", photo);
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("profile", { body: form });
+
+        if (error || data?.error) throw error || new Error(data.error);
+        renderProfileAvatar({ displayName: data.displayName || currentUser, photoUrl: data.photoUrl || null });
+        closeProfilePhotoModal();
+
+    } catch (error) {
+
+        setProfilePhotoError(error?.message || "Unable to save your profile photo.");
+
+    } finally {
+
+        saveProfilePhotoButton.disabled = false;
+
+    }
+
+}
+
+async function removeProfilePhoto() {
+
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const userId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    if (!sessionToken || !userId) return;
+
+    removeProfilePhotoButton.disabled = true;
+    setProfilePhotoError();
+
+    try {
+
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("profile", {
+            body: { action: "remove", sessionToken }
+        });
+
+        if (error || data?.error) throw error || new Error(data.error);
+        renderProfileAvatar({ displayName: data.displayName || currentUser, photoUrl: null });
+        closeProfilePhotoModal();
+
+    } catch (error) {
+
+        setProfilePhotoError(error?.message || "Unable to remove your profile photo.");
+
+    } finally {
+
+        removeProfilePhotoButton.disabled = false;
+
+    }
 
 }
 
@@ -2453,6 +2608,18 @@ document.addEventListener("visibilitychange", () => {
 });
 
 refreshDashboard();
+renderProfileAvatar();
+loadProfilePhoto();
+
+profileMenuButton.addEventListener("click", openProfilePhotoModal);
+cancelProfilePhotoButton.addEventListener("click", closeProfilePhotoModal);
+saveProfilePhotoButton.addEventListener("click", saveProfilePhoto);
+removeProfilePhotoButton.addEventListener("click", removeProfilePhoto);
+profilePhotoModal.addEventListener("click", event => {
+
+    if (event.target === profilePhotoModal) closeProfilePhotoModal();
+
+});
 
 const pactHistoryButton = document.getElementById("open-pact-history");
 

@@ -48,6 +48,24 @@ async function restoreAthleteSelection() {
 
         }
 
+        if (!sessionStorage.getItem("gymPactSelectedAthleteId") && data.athleteId) {
+
+            const athlete = await resolveAthleteById(data.athleteId);
+
+            if (!athlete) {
+
+                sessionStorage.removeItem("gymPactSessionToken");
+                return;
+
+            }
+
+            sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
+            localStorage.setItem("currentUser", athlete.display_name);
+            window.location.href = "dashboard.html";
+            return;
+
+        }
+
         if (!sessionStorage.getItem("gymPactSelectedAthleteId")) {
 
             showAthleteSelection();
@@ -143,6 +161,21 @@ async function resolveAthlete(selectedUser) {
 
 }
 
+async function resolveAthleteById(id) {
+
+    const supabase = GymPactSupabase.getClient();
+    const { data, error } = await supabase
+        .from("users")
+        .select("id, display_name")
+        .eq("id", id)
+        .maybeSingle();
+
+    if (error || !data) return null;
+
+    return data;
+
+}
+
 
 userCards.forEach(card => {
 
@@ -153,6 +186,18 @@ userCards.forEach(card => {
         try {
 
             const athlete = await resolveAthlete(selectedUser);
+
+            const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+            const { data: selection, error: selectionError } = await supabase.functions.invoke(
+                "select-gympact-athlete",
+                { body: { sessionToken, userId: athlete.id } }
+            );
+
+            if (selectionError || selection?.error) {
+
+                throw selectionError || new Error(selection.error);
+
+            }
 
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);

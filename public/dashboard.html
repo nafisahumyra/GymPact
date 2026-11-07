@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="dashboard.css?v=tracker-heading-space-v1">
+    <link rel="stylesheet" href="dashboard.css?v=profile-avatar-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=four-tabs-v1">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=profile-avatar-v1">
 
     <div class="dashboard-shell">
 
@@ -30,6 +30,11 @@
                 <img src="assets/gp-images/logo.png" alt="GymPact">
                 <img class="wordmark-image" src="assets/gp-images/gympact-wordmark.png" alt="">
             </h1>
+
+            <button id="profile-menu-button" class="profile-menu-button" type="button" aria-label="Edit profile photo" aria-haspopup="dialog">
+                <span id="profile-menu-initials" class="profile-menu-initials"></span>
+                <img id="profile-menu-image" alt="" hidden>
+            </button>
 
                 </div>
 
@@ -595,6 +600,21 @@
 
         </div>
 
+    </div>
+
+    <div id="profile-photo-modal" class="modal" aria-labelledby="profile-photo-title">
+        <div class="modal-content exercise-modal-content profile-photo-modal-content">
+            <h2 id="profile-photo-title">Profile photo</h2>
+            <p>Choose a photo to show in your GymPact header.</p>
+            <label for="profile-photo-input">Photo</label>
+            <input id="profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp">
+            <p id="profile-photo-error" class="exercise-form-error" hidden></p>
+            <div class="modal-buttons">
+                <button id="cancel-profile-photo" type="button">Cancel</button>
+                <button id="remove-profile-photo" type="button" hidden>Remove photo</button>
+                <button id="save-profile-photo" type="button">Save photo</button>
+            </div>
+        </div>
     </div>
 
 

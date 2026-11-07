@@ -68,7 +68,7 @@ export async function verifyGymPactSession(token: unknown) {
   const now = new Date().toISOString();
   const { data, error } = await admin
     .from("gympact_sessions")
-    .select("id, expires_at")
+    .select("id, expires_at, athlete_id")
     .eq("token_hash", tokenHash)
     .gt("expires_at", now)
     .maybeSingle();

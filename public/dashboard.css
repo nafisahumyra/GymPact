@@ -46,6 +46,38 @@ body.dashboard-page {
 
 .dashboard-header { min-width: 0; margin-bottom: 9px; }
 .dashboard-header .brand-lockup { min-width: 0; }
+.profile-menu-button {
+    display: grid;
+    flex: 0 0 42px;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    min-height: 0;
+    margin-left: auto;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(145, 242, 100, .36);
+    border-radius: 50%;
+    background: rgba(145, 242, 100, .12);
+    color: var(--green);
+    box-shadow: none;
+}
+.profile-menu-button:hover:not(:disabled) {
+    border-color: var(--green);
+    background: rgba(145, 242, 100, .18);
+    color: var(--green);
+    transform: none;
+}
+.profile-menu-initials {
+    font-size: .86rem;
+    font-weight: 850;
+    letter-spacing: .03em;
+}
+.profile-menu-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
 .dashboard-content {
     flex: 1 1 auto;
@@ -1060,6 +1092,10 @@ body.dashboard-page {
 .exercise-modal-content p { color: var(--muted); line-height: 1.55; }
 .exercise-modal-content label { display: block; margin: 4px 0 8px; color: var(--text); font-size: .92rem; font-weight: 650; }
 .exercise-form-error { margin-top: 10px !important; color: #ff8a8c !important; font-size: .84rem; }
+.profile-photo-modal-content > p { color: var(--muted); line-height: 1.5; }
+.profile-photo-modal-content .modal-buttons { flex-wrap: wrap; }
+.profile-photo-modal-content .modal-buttons button { min-width: 112px; }
+.profile-photo-modal-content #remove-profile-photo { border-color: rgba(255, 138, 140, .48); color: #ff9a9c; }
 .pact-form { margin: 24px auto 0; }
 .pact-weekly-summary { margin: -8px 0 18px 54px; color: var(--muted); font-size: .84rem; font-weight: 700; }
 .pact-requirements { margin: 0; padding: 0; border: 0; }

@@ -65,6 +65,15 @@
 
         }
 
+        if (session.athleteId && session.athleteId !== athleteId) {
+
+            clearIdentity();
+            redirectToLanding();
+
+            return;
+
+        }
+
         const { data: athlete, error: athleteError } = await supabase
             .from("users")
             .select("id, display_name")

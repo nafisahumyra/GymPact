@@ -41,6 +41,7 @@ serve(async (request) => {
     return new Response(JSON.stringify({
       valid: Boolean(session),
       expiresAt: session?.expires_at ?? null,
+      athleteId: session?.athlete_id ?? null,
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
