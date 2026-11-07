@@ -189,7 +189,7 @@ async function loadDashboardMetrics({ preserveOnError = false } = {}) {
         const streak = calculatePactStreak(weeklyHistoryResponse.data.pacts, monthlyHistoryResponse.data.pacts, athleteId);
 
         workoutCount.textContent = athleteWorkouts.length;
-        streakCount.textContent = `${streak} ${streak === 1 ? "Pact" : "Pacts"}`;
+        streakCount.textContent = `${streak} 🔥`;
 
     } catch (error) {
 
