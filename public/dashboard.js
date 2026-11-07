@@ -53,6 +53,7 @@ let activityNextCursor = null;
 let activityLoadError = false;
 let activityLoadObserver = null;
 let editingWorkout = null;
+let monthlyCompletionBrandAssetsPromise = null;
 let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
 const monthPactContent = document.getElementById("month-pact-content");
@@ -1199,6 +1200,31 @@ function getMonthlyCompletionMessage(completion) {
 
 }
 
+function getMonthlyCompletionBrandAssets() {
+
+    if (!monthlyCompletionBrandAssetsPromise) {
+
+        monthlyCompletionBrandAssetsPromise = Promise.all([
+            fetch(new URL("assets/gp-images/logo.png", window.location.href)).then(response => {
+
+                if (!response.ok) throw new Error("The GymPact logo is unavailable.");
+                return response.blob();
+
+            }).then(blob => createImageBitmap(blob)),
+            fetch(new URL("assets/gp-images/gympact-wordmark.png", window.location.href)).then(response => {
+
+                if (!response.ok) throw new Error("The GymPact wordmark is unavailable.");
+                return response.blob();
+
+            }).then(blob => createImageBitmap(blob))
+        ]);
+
+    }
+
+    return monthlyCompletionBrandAssetsPromise;
+
+}
+
 function drawShareRoundedRect(context, x, y, width, height, radius) {
 
     const corner = Math.min(radius, width / 2, height / 2);
@@ -1244,7 +1270,10 @@ async function createMonthlyCompletionShareImage(completion) {
 
     if (!completion.photo_url) throw new Error("The proof photo is unavailable.");
 
-    const response = await fetch(completion.photo_url);
+    const [response, [brandIcon, brandWordmark]] = await Promise.all([
+        fetch(completion.photo_url),
+        getMonthlyCompletionBrandAssets()
+    ]);
     if (!response.ok) throw new Error("The proof photo is unavailable.");
     const image = await createImageBitmap(await response.blob());
     const canvas = document.createElement("canvas");
@@ -1302,9 +1331,12 @@ async function createMonthlyCompletionShareImage(completion) {
     context.fillStyle = "#c7cecb";
     context.font = "500 30px system-ui, sans-serif";
     context.fillText(completion.monthly_goal ? `Goal: ${completion.monthly_goal}` : "GymPact", 88, Math.min(lastTextY + 64, 1234));
-    context.fillStyle = "#d8b85b";
-    context.font = "700 25px system-ui, sans-serif";
-    context.fillText("GYMPACT", 88, 1280);
+    const logoSize = 48;
+    const wordmarkWidth = 316;
+    const wordmarkHeight = wordmarkWidth * (brandWordmark.height / brandWordmark.width);
+    const logoY = 1237;
+    context.drawImage(brandIcon, 88, logoY, logoSize, logoSize);
+    context.drawImage(brandWordmark, 153, logoY + (logoSize - wordmarkHeight) / 2, wordmarkWidth, wordmarkHeight);
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new Error("Your browser could not create the share image.");
