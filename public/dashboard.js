@@ -31,8 +31,6 @@ const quickExerciseModal = document.getElementById("quick-exercise-modal");
 const quickExerciseTitle = document.getElementById("quick-exercise-title");
 const quickExerciseOptions = document.getElementById("quick-exercise-options");
 const cancelQuickExerciseButton = document.getElementById("cancel-quick-exercise");
-const pactProgressSection = document.getElementById("pact-progress-section");
-const pactProgressDetail = document.getElementById("pact-progress-detail");
 const activityWorkoutsContainer = document.getElementById("activity-workouts");
 const activityPhotoDialog = document.getElementById("activity-photo-dialog");
 const activityPhotoFull = document.getElementById("activity-photo-full");
@@ -58,6 +56,7 @@ let editingWorkout = null;
 let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
 const monthPactContent = document.getElementById("month-pact-content");
+const homeMonthPactContent = document.getElementById("home-month-pact");
 let monthlyPact = null;
 let monthlyCandidate = null;
 let monthlyCheckinDate = null;
@@ -625,6 +624,45 @@ function formatChallengeDate(date) {
 
 }
 
+function formatShortPactDate(date) {
+
+    return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric"
+    });
+
+}
+
+function getNextWeekPactRange() {
+
+    const today = currentMonthDate();
+    const start = new Date(Date.UTC(today.year, Number(today.month) - 1, today.day, 12));
+    const end = new Date(start);
+
+    end.setUTCDate(end.getUTCDate() + 7);
+
+    return `${formatShortPactDate(start.toISOString().slice(0, 10))} → ${formatShortPactDate(end.toISOString().slice(0, 10))}`;
+
+}
+
+function renderNextWeekPactCard() {
+
+    const kicker = document.createElement("p");
+    const range = document.createElement("h4");
+    const create = document.createElement("button");
+
+    currentChallengeContainer.classList.add("home-cycle-empty");
+    kicker.className = "home-cycle-kicker";
+    kicker.textContent = "No Active Week Pact";
+    range.textContent = getNextWeekPactRange();
+    create.className = "home-cycle-action";
+    create.type = "button";
+    create.textContent = "+ Create Week Pact";
+    create.addEventListener("click", startWeeklyPact);
+    currentChallengeContainer.append(kicker, range, create);
+
+}
+
 function getChallengeStatusText(status, challenge) {
 
     if (status === "pending") {
@@ -934,22 +972,21 @@ function appendRequirementTarget(container, requirement, timeframe) {
 }
 
 
-function renderPactProgressDetail(challenge) {
+function createPactProgressOverview(challenge) {
 
-    pactProgressDetail.innerHTML = "";
+    const progress = document.createElement("section");
+    const title = document.createElement("h4");
 
-    if (!challenge || challenge.status !== "active") {
+    progress.className = "home-pact-progress";
+    title.className = "challenge-progress-title";
+    title.textContent = "Pact Progress";
+    progress.appendChild(title);
 
-        pactProgressSection.hidden = true;
+    const details = document.createElement("div");
+    details.className = "pact-progress-detail";
 
-        return;
+    (challenge.progress || []).forEach(participant => {
 
-    }
-
-    pactProgressSection.hidden = activeDashboardTab !== "progress";
-    const participantProgress = challenge.progress || [];
-
-    participantProgress.forEach(participant => {
         const card = document.createElement("article");
         const heading = document.createElement("h4");
 
@@ -957,8 +994,12 @@ function renderPactProgressDetail(challenge) {
         heading.textContent = participant.displayName;
         card.appendChild(heading);
         participant.requirements.forEach(requirement => appendRequirementProgress(card, requirement, "pact"));
-        pactProgressDetail.appendChild(card);
+        details.appendChild(card);
+
     });
+
+    progress.appendChild(details);
+    return progress;
 
 }
 
@@ -984,7 +1025,6 @@ function showDashboardTab(tab) {
 
     });
     welcomeMessage.hidden = tab !== "overview";
-    renderPactProgressDetail(currentChallenge);
     renderExerciseTrackers();
 
     if (tab === "month") loadMonthlyPact();
@@ -1557,19 +1597,12 @@ document.addEventListener("click", event => {
 function renderCurrentChallenge(challenge) {
 
     currentChallengeContainer.innerHTML = "";
+    currentChallengeContainer.classList.remove("home-cycle-empty");
 
 
     if (!challenge) {
 
-        const message = document.createElement("p");
-        const description = document.createElement("p");
-
-        message.textContent = "No active Pact.";
-        description.textContent =
-            "Start one to keep each other accountable.";
-
-        currentChallengeContainer.append(message, description);
-        renderPactProgressDetail(null);
+        renderNextWeekPactCard();
 
         return;
 
@@ -1587,39 +1620,7 @@ function renderCurrentChallenge(challenge) {
 
     if (challenge.status === "active" && Array.isArray(challenge.progress)) {
 
-        const progress = document.createElement("div");
-
-        progress.classList.add("challenge-progress");
-        const progressTitle = document.createElement("h4");
-
-        progressTitle.classList.add("challenge-progress-title");
-        progressTitle.textContent = "Your progress";
-        progress.appendChild(progressTitle);
-        const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
-        const athleteProgress = challenge.progress.find(participant => participant.userId === athleteId);
-
-        if (athleteProgress?.requirements?.length) {
-
-            sortRequirementsForDisplay(athleteProgress.requirements).forEach(requirement => {
-
-                appendRequirementProgress(progress, requirement);
-
-            });
-
-        } else {
-
-            challenge.progress.forEach(participant => {
-
-                const participantProgress = document.createElement("p");
-
-                participantProgress.textContent = `${participant.displayName}: ${participant.completed} / ${participant.target}`;
-                progress.appendChild(participantProgress);
-
-            });
-
-        }
-
-        currentChallengeContainer.appendChild(progress);
+        currentChallengeContainer.appendChild(createPactProgressOverview(challenge));
         celebratePactCompletion(challenge);
 
     }
@@ -1661,8 +1662,6 @@ function renderCurrentChallenge(challenge) {
         appendPendingChallengeActions(currentChallengeContainer);
 
     }
-
-    renderPactProgressDetail(challenge);
 
 }
 
@@ -1883,6 +1882,65 @@ function renderMonthlyCalendar(pact, container, { interactive = true } = {}) {
     container.appendChild(calendar);
 }
 
+function renderHomeMonthPact() {
+
+    if (!homeMonthPactContent) return;
+
+    homeMonthPactContent.innerHTML = "";
+    const card = document.createElement("article");
+    const kicker = document.createElement("p");
+    const title = document.createElement("h3");
+    const action = document.createElement("button");
+
+    card.className = "home-month-card";
+
+    if (!monthlyPact) {
+
+        const label = monthlyCandidate?.candidateLabel || new Intl.DateTimeFormat(undefined, {
+            timeZone: "America/New_York",
+            month: "long",
+            year: "numeric"
+        }).format(new Date(`${currentMonthDate().year}-${currentMonthDate().month}-01T12:00:00Z`));
+        const monthName = new Intl.DateTimeFormat(undefined, {
+            timeZone: "America/New_York",
+            month: "long"
+        }).format(new Date(`${currentMonthDate().year}-${currentMonthDate().month}-01T12:00:00Z`));
+
+        card.classList.add("home-cycle-empty");
+        kicker.className = "home-cycle-kicker";
+        kicker.textContent = "No Active Month Pact";
+        title.textContent = label;
+        action.className = "home-cycle-action";
+        action.type = "button";
+        action.textContent = `+ Create ${monthName} Pact`;
+        action.addEventListener("click", openMonthlyCreate);
+        card.append(kicker, title, action);
+
+    } else {
+
+        const statusLabels = {
+            active: "Active",
+            pending: "Pending",
+            upcoming: "Upcoming",
+            completed: "Pact Complete",
+            failed: "Pact Failed"
+        };
+
+        kicker.className = "home-cycle-kicker";
+        kicker.textContent = "This Month";
+        title.textContent = monthlyPact.monthLabel;
+        action.className = "home-cycle-secondary-action";
+        action.type = "button";
+        action.textContent = `${statusLabels[monthlyPact.status] || "View Pact"} →`;
+        action.addEventListener("click", () => showDashboardTab("month"));
+        card.append(kicker, title, action);
+
+    }
+
+    homeMonthPactContent.appendChild(card);
+
+}
+
 function renderMonthPact() {
     if (!monthPactContent) return;
     monthPactContent.innerHTML = "";
@@ -1939,8 +1997,8 @@ function renderMonthPact() {
 
 async function loadMonthlyPact({ preserveOnError = false } = {}) {
     if (!monthPactContent) return;
-    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; renderMonthPact(); }
-    catch (error) { console.error("Unable to load Month Pact.", error); if (preserveOnError) throw error; monthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; }
+    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; renderMonthPact(); renderHomeMonthPact(); }
+    catch (error) { console.error("Unable to load Month Pact.", error); if (preserveOnError) throw error; monthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; homeMonthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; }
 }
 
 const modal = id => document.getElementById(id);

@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="dashboard.css?v=home-cycle-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=history-nav-plus-v1">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=home-cycle-v1">
 
     <div class="dashboard-shell">
 
@@ -96,11 +96,6 @@
         </section>
 
 
-        <section id="pact-progress-section" class="dashboard-section" data-dashboard-tab-content="progress" hidden>
-            <h3>🔥 Pact Progress</h3>
-            <div id="pact-progress-detail" class="pact-progress-detail"></div>
-        </section>
-
         <section class="dashboard-section exercise-tracking-section" data-dashboard-tab-content="pact" aria-labelledby="exercise-progress-title" hidden>
 
             <h3 id="exercise-progress-title">🔥 Exercise Progress</h3>
@@ -111,9 +106,17 @@
 
         <section class="dashboard-section" data-dashboard-tab-content="overview">
 
-            <h3>🔥 Current Pact</h3>
+            <h3>This Week</h3>
 
             <div id="current-challenge" class="pact-card"></div>
+
+        </section>
+
+        <section class="dashboard-section home-month-section" data-dashboard-tab-content="overview">
+
+            <h3>This Month</h3>
+
+            <div id="home-month-pact" aria-live="polite"></div>
 
         </section>
 
