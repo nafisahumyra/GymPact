@@ -108,6 +108,14 @@ serve(async request => {
       return json({ pact: currentPact ? await mapPact(admin, currentPact) : null, candidateMonth, candidateLabel: monthLabel(candidateMonth) }, request);
     }
 
+    if (action === "list") {
+      const { data, error } = await admin.from("monthly_pacts").select("*")
+        .eq("data_environment", environment).in("status", ["completed", "failed"])
+        .order("month_start", { ascending: false });
+      if (error) throw error;
+      return json({ pacts: await Promise.all((data ?? []).map(item => mapPact(admin, item))) }, request);
+    }
+
     if (!await validUser(admin, body.userId)) return json({ error: "Unknown athlete." }, request, 400);
 
     if (action === "create") {
@@ -155,11 +163,6 @@ serve(async request => {
       const { error } = await admin.from("monthly_pact_checkins").insert({ monthly_pact_id: pact.id, user_id: body.userId, checkin_date: date, body: text });
       if (error) throw error;
       return json({ checkinSaved: true }, request, 201);
-    }
-    if (action === "list") {
-      const { data, error } = await admin.from("monthly_pacts").select("*").eq("data_environment", environment).in("status", ["completed", "failed"]).order("month_start", { ascending: false });
-      if (error) throw error;
-      return json({ pacts: await Promise.all((data ?? []).map(item => mapPact(admin, item))) }, request);
     }
     return json({ error: "Unknown action." }, request, 400);
   } catch (error) {
