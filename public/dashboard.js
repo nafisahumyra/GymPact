@@ -55,8 +55,15 @@ let activityLoadObserver = null;
 let editingWorkout = null;
 let monthlyCompletionBrandAssetsPromise = null;
 let activeDashboardTab = "overview";
+let activePactType = "weekly";
 let dashboardRefreshInFlight = null;
 const monthPactContent = document.getElementById("month-pact-content");
+const monthPactOriginalHost = document.getElementById("month-pact-original-host");
+const pactMonthPactContent = document.getElementById("pact-month-pact-content");
+const pactWeeklyPanel = document.getElementById("pact-weekly-panel");
+const pactMonthlyPanel = document.getElementById("pact-monthly-panel");
+const pactWeeklyTab = document.getElementById("pact-weekly-tab");
+const pactMonthlyTab = document.getElementById("pact-monthly-tab");
 const homeMonthPactContent = document.getElementById("home-month-pact");
 let monthlyPact = null;
 let monthlyCandidate = null;
@@ -253,13 +260,25 @@ function renderExerciseTrackers() {
 
     if (exerciseTrackers.length === 0) {
 
-        exerciseTrackingSection.hidden = true;
+        exerciseTrackingSection.hidden = activeDashboardTab !== "pact" || activePactType !== "weekly";
+
+        const emptyState = document.createElement("div");
+        const message = document.createElement("p");
+        const createButton = document.createElement("button");
+
+        emptyState.className = "exercise-tracker-empty";
+        message.textContent = "No active trackers";
+        createButton.type = "button";
+        createButton.textContent = "+ Create tracker";
+        createButton.addEventListener("click", openQuickExercise);
+        emptyState.append(message, createButton);
+        exerciseTrackersContainer.appendChild(emptyState);
 
         return;
 
     }
 
-    exerciseTrackingSection.hidden = activeDashboardTab !== exerciseTrackingSection.dataset.dashboardTabContent;
+    exerciseTrackingSection.hidden = activeDashboardTab !== "pact" || activePactType !== "weekly";
 
     exerciseTrackers.forEach(tracker => {
 
@@ -1047,10 +1066,53 @@ function showDashboardTab(tab) {
 
     });
     welcomeMessage.hidden = tab !== "overview";
+
+    if (tab === "month" && monthPactOriginalHost && monthPactContent.parentElement !== monthPactOriginalHost) {
+
+        monthPactOriginalHost.appendChild(monthPactContent);
+
+    }
+
     renderExerciseTrackers();
 
     if (tab === "month") loadMonthlyPact();
     if (tab === "activity") loadActivityWorkouts();
+
+}
+
+function showPactType(type) {
+
+    activePactType = type;
+    const isWeekly = type === "weekly";
+
+    pactWeeklyTab.classList.toggle("is-active", isWeekly);
+    pactWeeklyTab.setAttribute("aria-selected", String(isWeekly));
+    pactMonthlyTab.classList.toggle("is-active", !isWeekly);
+    pactMonthlyTab.setAttribute("aria-selected", String(!isWeekly));
+    pactWeeklyPanel.hidden = !isWeekly;
+    pactMonthlyPanel.hidden = isWeekly;
+
+    if (isWeekly) {
+
+        if (monthPactOriginalHost && monthPactContent.parentElement !== monthPactOriginalHost) {
+
+            monthPactOriginalHost.appendChild(monthPactContent);
+
+        }
+
+        renderExerciseTrackers();
+        return;
+
+    }
+
+    if (pactMonthPactContent && monthPactContent.parentElement !== pactMonthPactContent) {
+
+        pactMonthPactContent.appendChild(monthPactContent);
+
+    }
+
+    renderMonthPact();
+    loadMonthlyPact();
 
 }
 
@@ -2716,6 +2778,8 @@ document.getElementById("choose-monthly-pact").addEventListener("click", async (
     if (!monthlyPact) openMonthlyCreate();
 });
 
+pactWeeklyTab.addEventListener("click", () => showPactType("weekly"));
+pactMonthlyTab.addEventListener("click", () => showPactType("monthly"));
 
 pactHistoryButton.addEventListener("click", () => {
 

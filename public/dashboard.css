@@ -344,28 +344,63 @@ body.dashboard-page {
 @media (prefers-reduced-motion: reduce) {
     .quick-action-toggle-icon { transition: none; }
 }
-.pact-navigation-card {
+.pact-page-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.pact-type-tabs {
     display: grid;
-    gap: 9px;
-    padding: 9px;
+    flex: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
     border: 1px solid var(--line-soft);
-    border-radius: 20px;
-    background: linear-gradient(145deg, rgba(25, 29, 30, .94), rgba(13, 16, 17, .98));
+    border-radius: 13px;
+    background: #101414;
 }
-.pact-navigation-action {
+.pact-type-tab {
+    min-height: 38px;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    font-size: .8rem;
+    font-weight: 750;
+}
+.pact-type-tab.is-active {
+    background: rgba(145, 242, 100, .14);
+    color: var(--green);
+}
+.pact-history-icon-button {
     display: grid;
-    gap: 3px;
-    min-height: 58px;
-    padding: 13px 14px;
+    flex: 0 0 46px;
+    place-items: center;
+    width: 46px;
+    min-height: 46px;
+    padding: 0;
     border-color: var(--line);
+    border-radius: 13px;
     background: var(--panel-elevated);
-    color: var(--text);
-    text-align: left;
+    color: var(--muted);
 }
-.pact-navigation-action span { font-size: .94rem; }
-.pact-navigation-action small { color: var(--muted); font-size: .75rem; font-weight: 600; }
-.pact-navigation-action:hover:not(:disabled) { color: #071006; }
-.pact-navigation-action:hover:not(:disabled) small { color: #1d3920; }
+.pact-history-icon-button svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+.pact-history-icon-button:hover:not(:disabled) {
+    border-color: rgba(145, 242, 100, .45);
+    color: var(--green);
+}
+.pact-type-panel[hidden] { display: none; }
+.pact-type-panel .exercise-tracking-section { margin: 0; }
 .month-pact-section { min-width: 0; }
 .month-pact-card {
     padding: 18px;
@@ -688,9 +723,30 @@ body.dashboard-page {
 }
 
 .exercise-tracker-empty {
-    padding: 16px 2px 2px;
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border: 1px dashed var(--line);
+    border-radius: 18px;
+    background: var(--panel);
+}
+.exercise-tracker-empty p {
+    margin: 0;
     color: var(--muted);
     font-size: .9rem;
+}
+.exercise-tracker-empty button {
+    justify-self: start;
+    min-height: 38px;
+    padding: 7px 12px;
+    border-color: var(--line);
+    background: var(--panel-elevated);
+    color: var(--text);
+    font-size: .78rem;
+}
+.exercise-tracker-empty button:hover:not(:disabled) {
+    border-color: var(--green);
+    color: var(--green);
 }
 
 .pact-card > p:first-child {
