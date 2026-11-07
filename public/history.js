@@ -228,16 +228,37 @@ async function renderWorkoutHistory({ preserveOnError = false } = {}) {
 
 function formatDateRange(startDate, endDate) {
 
-    const formatDate = date =>
-        new Date(`${date}T00:00:00`).toLocaleDateString();
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T00:00:00`);
+    const sameYear = start.getFullYear() === end.getFullYear();
+    const sameMonth = sameYear && start.getMonth() === end.getMonth();
+    const shortMonth = new Intl.DateTimeFormat(undefined, { month: "short" });
+    const year = new Intl.DateTimeFormat(undefined, { year: "numeric" });
 
-    return `${formatDate(startDate)} – ${formatDate(endDate)}`;
+    if (sameMonth) {
+        return `${shortMonth.format(start)} ${start.getDate()} – ${end.getDate()}, ${year.format(end)}`;
+    }
+
+    if (sameYear) {
+        return `${shortMonth.format(start)} ${start.getDate()} – ${shortMonth.format(end)} ${end.getDate()}, ${year.format(end)}`;
+    }
+
+    return `${shortMonth.format(start)} ${start.getDate()}, ${year.format(start)} – ${shortMonth.format(end)} ${end.getDate()}, ${year.format(end)}`;
 
 }
 
-function getRequirementLabel(type) {
+function getRequirementDetails(type) {
 
-    return { workouts: "🏋️ Workouts", hiit: "⚡ HIIT", steps: "👟 Steps" }[type] || type;
+    const requirements = {
+        workouts: { label: "Workouts", icon: "assets/gp-images/Workout.png" },
+        hiit: { label: "HIIT", icon: "assets/gp-images/HIIT.png" },
+        steps: { label: "Steps", icon: "assets/gp-images/steps.png" }
+    };
+
+    return requirements[type] || {
+        label: String(type || "Requirement").replace(/\b\w/g, letter => letter.toUpperCase()),
+        icon: null
+    };
 
 }
 
@@ -257,14 +278,25 @@ function createRequirementScore(requirement) {
 
     const row = document.createElement("div");
     const label = document.createElement("div");
+    const identity = document.createElement("span");
     const text = document.createElement("span");
     const score = document.createElement("span");
+    const details = getRequirementDetails(requirement.type);
 
     row.classList.add("pact-requirement", "pact-history-requirement");
     label.classList.add("pact-requirement-label");
-    text.textContent = getRequirementLabel(requirement.type);
-    score.textContent = `${requirement.completed.toLocaleString()} / ${requirement.targetAmount.toLocaleString()}`;
-    label.append(text, score);
+    identity.classList.add("pact-history-requirement-identity");
+    if (details.icon) {
+        const icon = document.createElement("img");
+        icon.className = "pact-history-requirement-icon";
+        icon.src = details.icon;
+        icon.alt = "";
+        identity.appendChild(icon);
+    }
+    text.textContent = details.label;
+    score.textContent = `${Number(requirement.completed || 0).toLocaleString()} / ${Number(requirement.targetAmount || 0).toLocaleString()}`;
+    identity.appendChild(text);
+    label.append(identity, score);
     row.appendChild(label);
     return row;
 
@@ -304,7 +336,6 @@ function renderEmptyChallengeState() {
 function renderEmptyMonthlyPactState() {
     challengeHistoryContainer.innerHTML = `
         <div class="history-empty-state month-history-empty-state">
-            <span aria-hidden="true">🗓️</span>
             <p>No Month Pacts yet</p>
         </div>
     `;
@@ -314,12 +345,12 @@ function renderMonthlyPactHistoryError() {
     challengeHistoryContainer.innerHTML = `<div class="history-empty-state"><p>We couldn’t load Month Pact History.</p><p>Your completed Month Pacts will appear here when the connection is available.</p></div>`;
 }
 
-function createMonthlyHistoryResult(achieved, label) {
+function createHistoryStatus(successful, label) {
 
     const result = document.createElement("span");
     const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-    result.className = `monthly-history-result ${achieved ? "is-achieved" : "is-failed"}`;
+    result.className = `pact-history-status ${successful ? "is-success" : "is-unsuccessful"}`;
     icon.setAttribute("viewBox", "0 0 24 24");
     icon.setAttribute("fill", "none");
     icon.setAttribute("stroke", "currentColor");
@@ -327,7 +358,7 @@ function createMonthlyHistoryResult(achieved, label) {
     icon.setAttribute("stroke-linecap", "round");
     icon.setAttribute("stroke-linejoin", "round");
     icon.setAttribute("aria-hidden", "true");
-    icon.innerHTML = achieved
+    icon.innerHTML = successful
         ? '<path d="m5 12 4.2 4.2L19 6.5"></path>'
         : '<path d="m7 7 10 10M17 7 7 17"></path>';
     result.append(icon, document.createTextNode(label));
@@ -335,11 +366,37 @@ function createMonthlyHistoryResult(achieved, label) {
 
 }
 
+function createPactHistoryHeader(titleText, successful, statusText) {
+
+    const header = document.createElement("header");
+    const title = document.createElement("h3");
+
+    header.className = "pact-history-card-header";
+    title.textContent = titleText;
+    header.append(title, createHistoryStatus(successful, statusText));
+    return header;
+
+}
+
+function createPactHistoryParticipant(nameText, outcome) {
+
+    const participant = document.createElement("section");
+    const header = document.createElement("div");
+    const name = document.createElement("h4");
+
+    participant.className = "pact-history-participant";
+    header.className = "pact-history-participant-header";
+    name.textContent = nameText;
+    header.appendChild(name);
+    if (outcome) header.appendChild(outcome);
+    participant.appendChild(header);
+    return participant;
+
+}
+
 function createMonthlyHistoryCard(pact) {
 
     const card = document.createElement("article");
-    const header = document.createElement("div");
-    const title = document.createElement("h3");
     const people = document.createElement("div");
     const commitments = new Map((pact.commitments || []).map(item => [item.userId, item]));
     const participants = (pact.participants?.length ? pact.participants : pact.commitments || []);
@@ -349,29 +406,27 @@ function createMonthlyHistoryCard(pact) {
 
     });
 
-    card.className = "challenge-history-card monthly-history-card";
-    header.className = "monthly-history-header";
-    title.textContent = pact.monthLabel;
-    header.append(title, createMonthlyHistoryResult(complete, complete ? "Completed" : "Incomplete"));
-    people.className = "month-pact-people monthly-history-people";
+    card.className = "challenge-history-card pact-history-card monthly-history-card";
+    people.className = "pact-history-participants monthly-history-people";
 
     participants.forEach(participant => {
 
         const commitment = commitments.get(participant.userId);
-        const person = document.createElement("section");
-        const name = document.createElement("strong");
-        const goal = document.createElement("span");
+        const goal = document.createElement("p");
         const achieved = Boolean(commitment?.completedByDeadline);
 
-        person.className = "month-pact-person";
-        name.textContent = participant.displayName;
+        const person = createPactHistoryParticipant(
+            participant.displayName,
+            createHistoryStatus(achieved, achieved ? "Achieved" : "Failed")
+        );
+        goal.className = "pact-history-goal";
         goal.textContent = commitment?.goal || "No goal submitted";
-        person.append(name, goal, createMonthlyHistoryResult(achieved, achieved ? "Achieved" : "Failed"));
+        person.appendChild(goal);
         people.appendChild(person);
 
     });
 
-    card.append(header, people);
+    card.append(createPactHistoryHeader(pact.monthLabel, complete, complete ? "Completed" : "Incomplete"), people);
     return card;
 
 }
@@ -443,44 +498,48 @@ async function renderChallengeHistory({ preserveOnError = false } = {}) {
     data.pacts.forEach(challenge => {
 
         const card = document.createElement("article");
-        const heading = document.createElement("h3");
-        const dateRange = document.createElement("p");
-        const scoreHeading = document.createElement("h4");
-        const result = document.createElement("p");
+        const people = document.createElement("div");
         const wagerHeading = document.createElement("h4");
         const wager = document.createElement("p");
+        const wagerType = document.createElement("p");
+        const resultText = getChallengeResultText(challenge);
+        const successful = challenge.result !== "both_failed";
 
-        card.classList.add("challenge-history-card");
-        heading.textContent = "🤝 Pact";
-        dateRange.classList.add("challenge-history-date");
-        dateRange.textContent = formatDateRange(
-            challenge.startDate,
-            challenge.endDate
-        );
-        scoreHeading.textContent = "Final score";
-        result.classList.add("challenge-history-result");
-        result.textContent = getChallengeResultText(challenge);
+        card.classList.add("challenge-history-card", "pact-history-card", "weekly-history-card");
+        people.className = "pact-history-participants";
         wagerHeading.textContent = "Wager";
+        wagerHeading.className = "pact-history-section-label";
         wager.textContent = challenge.wagerDescription;
-
-        card.append(heading, dateRange, scoreHeading);
+        wager.className = "pact-history-wager-description";
+        if (challenge.wagerType) {
+            wagerType.className = "pact-history-wager-type";
+            wagerType.textContent = challenge.wagerType === "reward" ? "Reward" : "Punishment";
+        }
 
         challenge.participants.forEach(participant => {
 
-            const score = document.createElement("section");
-            const participantName = document.createElement("h5");
-
-            score.classList.add("pact-history-person");
-            participantName.textContent = participant.displayName;
-            score.appendChild(participantName);
+            const score = createPactHistoryParticipant(participant.displayName);
             sortRequirementsForDisplay(participant.requirements || []).forEach(requirement => {
                 score.appendChild(createRequirementScore(requirement));
             });
-            card.appendChild(score);
+            people.appendChild(score);
 
         });
 
-        card.append(result, wagerHeading, wager);
+        const wagerSection = document.createElement("section");
+        wagerSection.className = "pact-history-wager";
+        wagerSection.append(wagerHeading);
+        if (challenge.wagerType) wagerSection.appendChild(wagerType);
+        wagerSection.appendChild(wager);
+        card.append(
+            createPactHistoryHeader(
+                formatDateRange(challenge.startDate, challenge.endDate),
+                successful,
+                resultText
+            ),
+            people,
+            wagerSection
+        );
         challengeHistoryContainer.appendChild(card);
 
     });

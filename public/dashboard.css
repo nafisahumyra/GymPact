@@ -1029,13 +1029,14 @@ body.dashboard-page {
 @keyframes celebration-message { 0%, 100% { opacity: 0; } 12%, 80% { opacity: 1; } }
 
 .history-page { width: min(100%, 820px); }
-.history-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-.history-back-button { min-height: 34px; padding: 5px 0; border: 0; border-radius: 0; background: transparent; color: var(--muted); font-size: .88rem; font-weight: 750; }
+.history-header { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.history-back-button { display: inline-flex; align-items: center; gap: 3px; min-height: 34px; padding: 5px 0; border: 0; border-radius: 0; background: transparent; color: var(--muted); font-size: .88rem; font-weight: 750; }
+.history-back-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
 .history-back-button:hover { color: var(--green); background: transparent; }
 .history-page-title { margin: 0; color: var(--text); font-size: 1.15rem; }
-.history-tabs { display: flex; gap: 8px; margin: 0 0 20px; }
-.history-tab { min-height: 36px; padding: 7px 14px; border-color: var(--line); background: var(--panel-elevated); color: var(--muted); font-size: .78rem; }
-.history-tab.is-active { border-color: rgba(145,242,100,.55); background: rgba(145,242,100,.12); color: var(--green); }
+.history-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; width: 100%; margin: 0 0 20px; padding: 4px; border: 1px solid var(--line-soft); border-radius: 13px; background: #101414; }
+.history-tab { min-height: 38px; padding: 7px 12px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--muted); font-size: .8rem; font-weight: 750; box-shadow: none; }
+.history-tab.is-active { border-color: rgba(145,242,100,.24); background: rgba(145,242,100,.13); color: var(--green); box-shadow: none; }
 .workout-card,
 .challenge-history-card { margin-bottom: 12px; padding: 18px; }
 .workout-card h3,
@@ -1146,40 +1147,37 @@ body.dashboard-page {
     background: linear-gradient(145deg, rgba(25, 29, 30, .7), rgba(13, 16, 17, .9));
     text-align: center;
 }
-.month-history-empty-state span {
-    display: grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
-    margin-bottom: 10px;
-    border: 1px solid rgba(145, 242, 100, .35);
-    border-radius: 12px;
-    background: rgba(145, 242, 100, .07);
-    font-size: 1.25rem;
-}
 .month-history-empty-state p:first-of-type {
     margin: 0;
     color: var(--text);
     font-size: 1rem;
     font-weight: 750;
 }
-.challenge-history-card h4 { margin: 16px 0 7px; color: var(--muted); font-size: .75rem; letter-spacing: .07em; text-transform: uppercase; }
-.challenge-history-date { color: var(--muted) !important; }
-.challenge-history-score { font-weight: 700; }
-.challenge-history-result { margin-top: 16px !important; color: var(--green) !important; font-weight: 800; }
-.monthly-history-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.monthly-history-header h3 { margin: 0; }
-.monthly-history-people { margin-top: 14px; }
-.monthly-history-result { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px; font-size: .78rem; font-weight: 800; }
-.month-pact-person .monthly-history-result { display: inline-flex; margin-top: 7px; }
-.monthly-history-result svg { width: 15px; height: 15px; flex: 0 0 15px; }
-.monthly-history-header > .monthly-history-result { flex: 0 0 auto; margin: 0; }
-.monthly-history-result.is-achieved { color: var(--green); }
-.monthly-history-result.is-failed { color: #ff9a9a; }
-.pact-history-person { margin-top: 10px; padding: 12px; border: 1px solid var(--line-soft); border-radius: 13px; background: rgba(0, 0, 0, .16); }
-.pact-history-person h5 { margin: 0 0 8px; color: var(--text); font-size: .9rem; }
-.pact-history-person .pact-requirement { padding: 8px 0; }
-.pact-history-person .pact-requirement:last-child { padding-bottom: 0; }
+.pact-history-card { padding: 18px; border-color: #303837; border-radius: 18px; background: #161a1a; box-shadow: none; }
+.pact-history-card-header { display: grid; gap: 8px; }
+.pact-history-card-header h3 { margin: 0; color: var(--text); font-size: 1.02rem; line-height: 1.3; }
+.pact-history-status { display: inline-flex; align-items: center; justify-self: start; gap: 5px; min-height: 25px; padding: 4px 8px; border: 1px solid currentColor; border-radius: 999px; font-size: .73rem; font-weight: 800; line-height: 1; }
+.pact-history-status svg { width: 14px; height: 14px; flex: 0 0 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.pact-history-status.is-success { color: var(--green); background: rgba(145,242,100,.08); border-color: rgba(145,242,100,.3); }
+.pact-history-status.is-unsuccessful { color: #e6a2a2; background: rgba(214,118,118,.08); border-color: rgba(214,118,118,.28); }
+.pact-history-participants { margin-top: 17px; }
+.pact-history-participant { padding: 15px 0; }
+.pact-history-participant + .pact-history-participant { border-top: 1px solid rgba(255,255,255,.09); }
+.pact-history-participant:first-child { padding-top: 0; }
+.pact-history-participant:last-child { padding-bottom: 0; }
+.pact-history-participant-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.pact-history-participant-header h4 { min-width: 0; margin: 0; color: var(--text); font-size: .93rem; font-weight: 750; line-height: 1.35; }
+.pact-history-participant-header .pact-history-status { flex: 0 0 auto; margin-top: -2px; }
+.pact-history-requirement { gap: 0; padding: 10px 0 0; border: 0; }
+.pact-history-requirement-label { align-items: center; font-size: .88rem; }
+.pact-history-requirement-label > span:last-child { flex: 0 0 auto; color: #edf1ee; font-variant-numeric: tabular-nums; font-weight: 750; }
+.pact-history-requirement-identity { display: inline-flex; align-items: center; min-width: 0; gap: 8px; }
+.pact-history-requirement-icon { width: 22px; height: 22px; flex: 0 0 22px; object-fit: contain; }
+.pact-history-goal { margin: 9px 0 0; color: #d5dcd6; font-size: .89rem; line-height: 1.5; }
+.pact-history-wager { margin-top: 17px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.09); }
+.pact-history-section-label { margin: 0; color: var(--muted); font-size: .71rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.pact-history-wager-type { margin: 7px 0 0; color: var(--muted); font-size: .78rem; font-weight: 700; }
+.pact-history-wager-description { margin: 4px 0 0; color: #d5dcd6; font-size: .89rem; line-height: 1.5; }
 
 @media (min-width: 680px) {
     .dashboard-header-content { padding-top: 20px; }
