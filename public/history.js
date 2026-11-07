@@ -314,6 +314,68 @@ function renderMonthlyPactHistoryError() {
     challengeHistoryContainer.innerHTML = `<div class="history-empty-state"><p>We couldn’t load Month Pact History.</p><p>Your completed Month Pacts will appear here when the connection is available.</p></div>`;
 }
 
+function createMonthlyHistoryResult(achieved, label) {
+
+    const result = document.createElement("span");
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+    result.className = `monthly-history-result ${achieved ? "is-achieved" : "is-failed"}`;
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("fill", "none");
+    icon.setAttribute("stroke", "currentColor");
+    icon.setAttribute("stroke-width", "2.5");
+    icon.setAttribute("stroke-linecap", "round");
+    icon.setAttribute("stroke-linejoin", "round");
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = achieved
+        ? '<path d="m5 12 4.2 4.2L19 6.5"></path>'
+        : '<path d="m7 7 10 10M17 7 7 17"></path>';
+    result.append(icon, document.createTextNode(label));
+    return result;
+
+}
+
+function createMonthlyHistoryCard(pact) {
+
+    const card = document.createElement("article");
+    const header = document.createElement("div");
+    const title = document.createElement("h3");
+    const people = document.createElement("div");
+    const commitments = new Map((pact.commitments || []).map(item => [item.userId, item]));
+    const participants = (pact.participants?.length ? pact.participants : pact.commitments || []);
+    const complete = participants.length === 2 && participants.every(participant => {
+
+        return Boolean(commitments.get(participant.userId)?.completedByDeadline);
+
+    });
+
+    card.className = "challenge-history-card monthly-history-card";
+    header.className = "monthly-history-header";
+    title.textContent = pact.monthLabel;
+    header.append(title, createMonthlyHistoryResult(complete, complete ? "Completed" : "Incomplete"));
+    people.className = "month-pact-people monthly-history-people";
+
+    participants.forEach(participant => {
+
+        const commitment = commitments.get(participant.userId);
+        const person = document.createElement("section");
+        const name = document.createElement("strong");
+        const goal = document.createElement("span");
+        const achieved = Boolean(commitment?.completedByDeadline);
+
+        person.className = "month-pact-person";
+        name.textContent = participant.displayName;
+        goal.textContent = commitment?.goal || "No goal submitted";
+        person.append(name, goal, createMonthlyHistoryResult(achieved, achieved ? "Achieved" : "Failed"));
+        people.appendChild(person);
+
+    });
+
+    card.append(header, people);
+    return card;
+
+}
+
 async function renderMonthlyPactHistory({ preserveOnError = false } = {}) {
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
     if (!sessionToken) { renderEmptyMonthlyPactState(); return; }
@@ -322,7 +384,7 @@ async function renderMonthlyPactHistory({ preserveOnError = false } = {}) {
     // mistaken for Month Pact history while this request is in flight.
     challengeHistoryContainer.innerHTML = "";
 
-    const { data, error } = await GymPactSupabase.getClient().functions.invoke("monthly-pacts", { body: { action: "list", sessionToken } });
+    const { data, error } = await GymPactSupabase.getClient().functions.invoke("monthly-pacts", { body: { action: "list", sessionToken, dataEnvironment: "production" } });
     if (error || !Array.isArray(data?.pacts)) {
         console.error("Unable to load Month Pact history.", error);
         renderMonthlyPactHistoryError();
@@ -330,16 +392,7 @@ async function renderMonthlyPactHistory({ preserveOnError = false } = {}) {
     }
     if (!data.pacts.length) { renderEmptyMonthlyPactState(); return; }
     challengeHistoryContainer.innerHTML = "";
-    data.pacts.forEach(pact => {
-        const card = document.createElement("article"); card.className = "challenge-history-card";
-        const result = pact.finalResult === "succeeded" ? "Both completed" : "Both failed";
-        card.innerHTML = `<h3>🗓️ Month Pact</h3><p class="challenge-history-date">${pact.monthLabel}</p><h4>Goals</h4>${pact.commitments.map(item => `<p class="challenge-history-score">${item.displayName}: ${item.goal}${item.completedAt ? " ✓" : ""}</p>`).join("")}<p class="challenge-history-result">${result}</p><p>Shared consequence: ${pact.consequence}</p>`;
-        const checkins = pact.checkins || [];
-        if (checkins.length) {
-            const details = document.createElement("details"); details.innerHTML = `<summary>View check-ins</summary>${checkins.map(checkin => `<p>${checkin.displayName} · ${formatDateRange(checkin.date, checkin.date)}: ${checkin.body}</p>`).join("")}`; card.appendChild(details);
-        }
-        challengeHistoryContainer.appendChild(card);
-    });
+    data.pacts.forEach(pact => challengeHistoryContainer.appendChild(createMonthlyHistoryCard(pact)));
 }
 
 

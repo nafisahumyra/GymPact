@@ -1167,6 +1167,15 @@ body.dashboard-page {
 .challenge-history-date { color: var(--muted) !important; }
 .challenge-history-score { font-weight: 700; }
 .challenge-history-result { margin-top: 16px !important; color: var(--green) !important; font-weight: 800; }
+.monthly-history-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.monthly-history-header h3 { margin: 0; }
+.monthly-history-people { margin-top: 14px; }
+.monthly-history-result { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px; font-size: .78rem; font-weight: 800; }
+.month-pact-person .monthly-history-result { display: inline-flex; margin-top: 7px; }
+.monthly-history-result svg { width: 15px; height: 15px; flex: 0 0 15px; }
+.monthly-history-header > .monthly-history-result { flex: 0 0 auto; margin: 0; }
+.monthly-history-result.is-achieved { color: var(--green); }
+.monthly-history-result.is-failed { color: #ff9a9a; }
 .pact-history-person { margin-top: 10px; padding: 12px; border: 1px solid var(--line-soft); border-radius: 13px; background: rgba(0, 0, 0, .16); }
 .pact-history-person h5 { margin: 0 0 8px; color: var(--text); font-size: .9rem; }
 .pact-history-person .pact-requirement { padding: 8px 0; }

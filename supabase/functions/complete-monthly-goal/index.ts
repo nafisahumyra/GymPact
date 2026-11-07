@@ -8,6 +8,19 @@ const headers = (request: Request) => {
   return { "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS", "Content-Type": "application/json", ...(origins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {}) };
 };
 
+function localDateString(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function monthEnd(monthStart: string) {
+  const date = new Date(`${monthStart}T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + 1);
+  date.setUTCDate(0);
+  return date.toISOString().slice(0, 10);
+}
+
 serve(async request => {
   if (request.method === "OPTIONS") return new Response(null, { headers: headers(request) });
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: headers(request) });
@@ -24,8 +37,8 @@ serve(async request => {
     }
     const admin = getAdminClient();
     await admin.rpc("finalize_due_monthly_pacts");
-    const { data: pact } = await admin.from("monthly_pacts").select("id, status, created_by, recipient_id").eq("id", pactId).eq("data_environment", environment).maybeSingle();
-    if (!pact || pact.status !== "active" || ![pact.created_by, pact.recipient_id].includes(userId)) {
+    const { data: pact } = await admin.from("monthly_pacts").select("id, month_start, status, created_by, recipient_id").eq("id", pactId).eq("data_environment", environment).maybeSingle();
+    if (!pact || pact.status !== "active" || localDateString() > monthEnd(pact.month_start) || ![pact.created_by, pact.recipient_id].includes(userId)) {
       return new Response(JSON.stringify({ error: "This goal cannot be completed now." }), { status: 409, headers: headers(request) });
     }
     const { data: commitment } = await admin.from("monthly_pact_commitments").select("completed_at").eq("monthly_pact_id", pactId).eq("user_id", userId).maybeSingle();

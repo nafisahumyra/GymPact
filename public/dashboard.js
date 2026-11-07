@@ -1853,7 +1853,7 @@ function renderMonthlyCheckins(pact, container) {
     container.appendChild(list);
 }
 
-function renderMonthlyCalendar(pact, container) {
+function renderMonthlyCalendar(pact, container, { interactive = true } = {}) {
     const calendar = document.createElement("div");
     calendar.className = "monthly-calendar";
     ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(day => {
@@ -1870,12 +1870,14 @@ function renderMonthlyCalendar(pact, container) {
         const button = document.createElement("button"); button.type = "button"; button.className = "monthly-calendar-day"; button.textContent = day;
         if (date === today) button.classList.add("is-today");
         if (checkinDates.has(date)) button.classList.add("has-checkin");
-        if (date === monthlySelectedDate) button.classList.add("is-selected");
-        if (pact.status === "active" && date > today) button.disabled = true;
-        button.addEventListener("click", () => {
-            monthlySelectedDate = date;
-            renderMonthPact();
-        });
+        if (interactive && date === monthlySelectedDate) button.classList.add("is-selected");
+        if (!interactive || (pact.status === "active" && date > today)) button.disabled = true;
+        if (interactive) {
+            button.addEventListener("click", () => {
+                monthlySelectedDate = date;
+                renderMonthPact();
+            });
+        }
         calendar.appendChild(button);
     }
     container.appendChild(calendar);
@@ -1887,9 +1889,13 @@ function renderMonthPact() {
     const card = document.createElement("article"); card.className = "month-pact-card";
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
     if (!monthlyPact) {
-        const label = monthlyCandidate?.candidateLabel || "Next month";
-        card.innerHTML = `<p class="month-pact-kicker">Monthly Pact</p><h3>${label}</h3>`;
-        const create = document.createElement("button"); create.type = "button"; create.className = "month-pact-action"; create.textContent = "+ Create Month Pact"; create.addEventListener("click", openMonthlyCreate); card.appendChild(create);
+        const candidateMonth = monthlyCandidate?.candidateMonth || `${currentMonthDate().year}-${currentMonthDate().month}-01`;
+        const label = monthlyCandidate?.candidateLabel || new Intl.DateTimeFormat(undefined, { timeZone: "America/New_York", month: "long", year: "numeric" }).format(new Date(`${candidateMonth}T12:00:00Z`));
+        const monthName = new Intl.DateTimeFormat(undefined, { timeZone: "America/New_York", month: "long" }).format(new Date(`${candidateMonth}T12:00:00Z`));
+
+        card.innerHTML = `<p class="month-pact-kicker">This Month’s Pact</p><h3>${label}</h3>`;
+        const create = document.createElement("button"); create.type = "button"; create.className = "month-pact-action"; create.textContent = `+ Create ${monthName} Pact`; create.addEventListener("click", openMonthlyCreate); card.appendChild(create);
+        renderMonthlyCalendar({ monthStart: candidateMonth, checkins: [], status: "unavailable" }, card, { interactive: false });
         monthPactContent.appendChild(card); return;
     }
     const creator = monthlyPact.createdBy === athleteId;
@@ -1913,8 +1919,9 @@ function renderMonthPact() {
     monthlyPact.commitments.forEach(item => {
         const person = document.createElement("div"); person.className = "month-pact-person";
         const label = isFinalized ? (item.userId === athleteId ? "Your goal" : `${item.displayName}'s goal`) : item.displayName;
-        const result = item.completedAt ? (isFinalized ? "✓ Achieved" : "✓ Goal achieved") : (monthlyPact.status === "failed" ? "Not achieved" : "");
-        person.innerHTML = `<strong>${label}</strong><span>${item.goal}</span>${result ? `<span class="${item.completedAt ? "month-pact-complete" : "month-pact-incomplete"}">${result}</span>` : ""}`;
+        const achieved = item.completedByDeadline ?? Boolean(item.completedAt);
+        const result = achieved ? (isFinalized ? "✓ Achieved" : "✓ Goal achieved") : (monthlyPact.status === "failed" ? "Not achieved" : "");
+        person.innerHTML = `<strong>${label}</strong><span>${item.goal}</span>${result ? `<span class="${achieved ? "month-pact-complete" : "month-pact-incomplete"}">${result}</span>` : ""}`;
         people.appendChild(person);
     });
     card.appendChild(people);
@@ -1927,17 +1934,6 @@ function renderMonthPact() {
         if (monthlyPact.status === "active" && own && !own.completedAt) { const complete = document.createElement("button"); complete.type = "button"; complete.className = "month-pact-action"; complete.textContent = "✓ I Achieved My Goal"; complete.addEventListener("click", openMonthlyCompletion); card.appendChild(complete); }
         renderMonthlyCheckins(monthlyPact, card);
     }
-    let nextCard = null;
-    if (isFinalized) {
-        nextCard = document.createElement("article"); nextCard.className = "month-pact-card month-pact-next-card";
-        nextCard.innerHTML = `<p class="month-pact-kicker">Next Month Pact</p><h3>${monthlyCandidate?.candidateLabel || "Next month"}</h3>`;
-        const nextMonthName = monthlyCandidate?.candidateMonth
-            ? new Intl.DateTimeFormat(undefined, { timeZone: "America/New_York", month: "long" }).format(new Date(`${monthlyCandidate.candidateMonth}T12:00:00Z`))
-            : "Next";
-        const create = document.createElement("button"); create.type = "button"; create.className = "month-pact-action"; create.textContent = `+ Create ${nextMonthName} Pact`; create.addEventListener("click", openMonthlyCreate);
-        nextCard.appendChild(create);
-    }
-    if (nextCard) monthPactContent.appendChild(nextCard);
     monthPactContent.appendChild(card);
 }
 

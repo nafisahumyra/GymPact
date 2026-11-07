@@ -14,10 +14,12 @@ function localDateParts(now = new Date()) {
   const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
   return { year: Number(values.year), month: Number(values.month), day: Number(values.day) };
 }
-function monthStartForNewPact() {
+function monthStartForNewPact(environment: "production" | "dev" = "production") {
   const local = localDateParts();
   const date = new Date(Date.UTC(local.year, local.month - 1, 1));
-  if (local.day !== 1) date.setUTCMonth(date.getUTCMonth() + 1);
+
+  if (environment === "dev" && local.day !== 1) date.setUTCMonth(date.getUTCMonth() + 1);
+
   return date.toISOString().slice(0, 10);
 }
 function monthEnd(monthStart: string) {
@@ -35,6 +37,12 @@ function monthLabel(monthStart: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "long", year: "numeric" }).format(new Date(`${monthStart}T12:00:00Z`));
 }
 
+function localDateString(value: string | Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(value));
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 async function mapPact(admin: ReturnType<typeof getAdminClient>, pact: any) {
   const { data: commitments, error } = await admin.from("monthly_pact_commitments")
     .select("user_id, goal, signature, signed_at, completed_at, proof_path, users(display_name)")
@@ -44,11 +52,21 @@ async function mapPact(admin: ReturnType<typeof getAdminClient>, pact: any) {
     .select("id, user_id, checkin_date, body, created_at, users(display_name)")
     .eq("monthly_pact_id", pact.id).order("created_at");
   if (checkinsError) throw checkinsError;
+  const { data: participants, error: participantsError } = await admin.from("users")
+    .select("id, display_name")
+    .in("id", [pact.created_by, pact.recipient_id]);
+  if (participantsError) throw participantsError;
   return {
     id: pact.id, monthStart: pact.month_start, monthEnd: monthEnd(pact.month_start), monthLabel: monthLabel(pact.month_start),
     createdBy: pact.created_by, recipientId: pact.recipient_id, consequence: pact.consequence, status: pact.status,
     finalResult: pact.final_result, createdAt: pact.created_at, signedAt: pact.signed_at, finalizedAt: pact.finalized_at,
-    commitments: (commitments ?? []).map((item: any) => ({ userId: item.user_id, displayName: item.users?.display_name ?? "GymPact athlete", goal: item.goal, signature: item.signature, signedAt: item.signed_at, completedAt: item.completed_at, proofPath: item.proof_path })),
+    commitments: (commitments ?? []).map((item: any) => ({
+      userId: item.user_id, displayName: item.users?.display_name ?? "GymPact athlete", goal: item.goal,
+      signature: item.signature, signedAt: item.signed_at, completedAt: item.completed_at,
+      completedByDeadline: Boolean(item.completed_at && localDateString(item.completed_at) <= monthEnd(pact.month_start)),
+      proofPath: item.proof_path
+    })),
+    participants: (participants ?? []).map(item => ({ userId: item.id, displayName: item.display_name ?? "GymPact athlete" })),
     checkins: (checkins ?? []).map((item: any) => ({ id: item.id, userId: item.user_id, displayName: item.users?.display_name ?? "GymPact athlete", date: item.checkin_date, body: item.body, createdAt: item.created_at })),
   };
 }
@@ -72,20 +90,22 @@ serve(async request => {
     const action = body.action;
 
     if (action === "get") {
-      const { data: openPact, error } = await admin.from("monthly_pacts").select("*")
-        .eq("data_environment", environment).in("status", ["pending", "upcoming", "active"]).order("month_start").limit(1).maybeSingle();
-      if (error) throw error;
-      // Keep the most recently finalized Pact on the Month tab as a record,
-      // including its calendar, while still offering the next month below it.
-      let pactToDisplay = openPact;
-      if (!pactToDisplay) {
-        const { data: finalizedPact, error: finalizedError } = await admin.from("monthly_pacts").select("*")
-          .eq("data_environment", environment).in("status", ["completed", "failed"]).order("month_start", { ascending: false }).limit(1).maybeSingle();
-        if (finalizedError) throw finalizedError;
-        pactToDisplay = finalizedPact;
+      const candidateMonth = monthStartForNewPact(environment);
+      let currentPact;
+      let error;
+
+      if (environment === "dev") {
+        ({ data: currentPact, error } = await admin.from("monthly_pacts").select("*")
+          .eq("data_environment", environment).in("status", ["pending", "upcoming", "active"])
+          .order("month_start").limit(1).maybeSingle());
+      } else {
+        ({ data: currentPact, error } = await admin.from("monthly_pacts").select("*")
+          .eq("data_environment", environment).eq("month_start", candidateMonth)
+          .in("status", ["pending", "upcoming", "active", "completed", "failed"])
+          .maybeSingle());
       }
-      const candidateMonth = monthStartForNewPact();
-      return json({ pact: pactToDisplay ? await mapPact(admin, pactToDisplay) : null, candidateMonth, candidateLabel: monthLabel(candidateMonth) }, request);
+      if (error) throw error;
+      return json({ pact: currentPact ? await mapPact(admin, currentPact) : null, candidateMonth, candidateLabel: monthLabel(candidateMonth) }, request);
     }
 
     if (!await validUser(admin, body.userId)) return json({ error: "Unknown athlete." }, request, 400);
@@ -98,7 +118,7 @@ serve(async request => {
       const { data: users, error: usersError } = await admin.from("users").select("id").order("id");
       if (usersError || users?.length !== 2) throw usersError || new Error("Athletes unavailable");
       const recipient = users.find(user => user.id !== body.userId);
-      const monthStart = monthStartForNewPact();
+      const monthStart = monthStartForNewPact(environment);
       const { data: pact, error } = await admin.from("monthly_pacts").insert({ month_start: monthStart, created_by: body.userId, recipient_id: recipient.id, consequence, status: "pending", data_environment: environment }).select().single();
       if (error) return json({ error: error.code === "23505" ? "A Pact already exists for this month." : "Unable to create Month Pact." }, request, error.code === "23505" ? 409 : 400);
       const { error: commitmentError } = await admin.from("monthly_pact_commitments").insert({ monthly_pact_id: pact.id, user_id: body.userId, goal, signature });
