@@ -84,6 +84,7 @@ serve(async (request) => {
         endDate: pact.end_date,
         completedAt: pact.completed_at,
         result: pact.final_result,
+        winnerId: pact.winner_id,
         winnerName: winner?.displayName ?? null,
         participants,
       };

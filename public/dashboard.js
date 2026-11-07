@@ -109,24 +109,31 @@ function addCalendarDays(date, days) {
 }
 
 
-function getWorkoutDay(workout) {
+function calculatePactStreak(weeklyPacts, monthlyPacts, athleteId) {
 
-    return getCalendarDayInGymPactTimeZone(workout.logged_at);
+    const outcomes = [
+        ...weeklyPacts.map(pact => ({
+            completedAt: pact.completedAt,
+            successful: pact.result === "both_completed" || (pact.result === "winner" && pact.winnerId === athleteId)
+        })),
+        ...monthlyPacts.map(pact => {
 
-}
+            const commitment = (pact.commitments || []).find(item => item.userId === athleteId);
+            return {
+                completedAt: pact.finalizedAt || `${pact.monthEnd}T23:59:59-05:00`,
+                successful: Boolean(commitment?.completedByDeadline)
+            };
 
+        })
+    ].filter(outcome => outcome.completedAt)
+        .sort((left, right) => new Date(right.completedAt) - new Date(left.completedAt));
 
-function calculateCurrentStreak(workouts, now = new Date()) {
-
-    const workoutDays = new Set(workouts.map(getWorkoutDay));
-    const today = getCalendarDayInGymPactTimeZone(now);
-    let cursor = workoutDays.has(today) ? today : addCalendarDays(today, -1);
     let streak = 0;
 
-    while (workoutDays.has(cursor)) {
+    for (const outcome of outcomes) {
 
+        if (!outcome.successful) break;
         streak += 1;
-        cursor = addCalendarDays(cursor, -1);
 
     }
 
@@ -149,14 +156,28 @@ async function loadDashboardMetrics({ preserveOnError = false } = {}) {
     try {
 
         const supabase = GymPactSupabase.getClient();
-        const { data, error } = await supabase.functions.invoke(
-            "list-workouts",
-            { body: { sessionToken } }
-        );
+        const [workoutResponse, weeklyHistoryResponse, monthlyHistoryResponse] = await Promise.all([
+            supabase.functions.invoke("list-workouts", { body: { sessionToken, dataEnvironment: "production" } }),
+            supabase.functions.invoke("list-completed-pacts", { body: { sessionToken, dataEnvironment: "production" } }),
+            supabase.functions.invoke("monthly-pacts", { body: { action: "list", sessionToken, dataEnvironment: "production" } })
+        ]);
+        const { data, error } = workoutResponse;
 
         if (error || !Array.isArray(data?.workouts)) {
 
             throw error || new Error("Workout data was unavailable.");
+
+        }
+
+        if (weeklyHistoryResponse.error || !Array.isArray(weeklyHistoryResponse.data?.pacts)) {
+
+            throw weeklyHistoryResponse.error || new Error("Weekly Pact history was unavailable.");
+
+        }
+
+        if (monthlyHistoryResponse.error || !Array.isArray(monthlyHistoryResponse.data?.pacts)) {
+
+            throw monthlyHistoryResponse.error || new Error("Month Pact history was unavailable.");
 
         }
 
@@ -165,10 +186,10 @@ async function loadDashboardMetrics({ preserveOnError = false } = {}) {
             return workout.user_id === athleteId;
 
         });
-        const streak = calculateCurrentStreak(athleteWorkouts);
+        const streak = calculatePactStreak(weeklyHistoryResponse.data.pacts, monthlyHistoryResponse.data.pacts, athleteId);
 
         workoutCount.textContent = athleteWorkouts.length;
-        streakCount.textContent = `${streak} ${streak === 1 ? "day" : "days"}`;
+        streakCount.textContent = `${streak} ${streak === 1 ? "Pact" : "Pacts"}`;
 
     } catch (error) {
 
