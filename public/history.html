@@ -47,6 +47,39 @@
 
     <div id="challenge-history" hidden></div>
 
+    <nav class="history-bottom-nav" aria-label="GymPact navigation">
+        <div class="history-bottom-nav-inner">
+            <a class="dashboard-tab history-dashboard-tab" href="dashboard.html">
+                <span class="dashboard-tab-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5 10v10h14V10M9 20v-6h6v6"></path></svg>
+                </span>
+                <span>Home</span>
+            </a>
+            <a class="dashboard-tab history-dashboard-tab" data-history-nav="activity" href="dashboard.html?tab=activity">
+                <span class="dashboard-tab-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h3l2-6 4 12 2-6h5"></path></svg>
+                </span>
+                <span>Activity</span>
+            </a>
+            <a class="dashboard-tab history-dashboard-tab" href="dashboard.html?tab=progress">
+                <span class="dashboard-tab-icon" aria-hidden="true">↗</span>
+                <span>Progress</span>
+            </a>
+            <a class="dashboard-tab history-dashboard-tab" data-history-nav="pact" href="dashboard.html?tab=pact">
+                <span class="dashboard-tab-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5M9 14l2 2 4-4"></path></svg>
+                </span>
+                <span>Pact</span>
+            </a>
+            <a class="dashboard-tab history-dashboard-tab" href="dashboard.html?tab=month">
+                <span class="dashboard-tab-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg>
+                </span>
+                <span>Month</span>
+            </a>
+        </div>
+    </nav>
+
     <dialog id="history-photo-dialog" class="history-photo-dialog">
         <button id="close-history-photo" class="history-photo-close" type="button" aria-label="Close photo">Close</button>
         <img id="history-photo-full" alt="">

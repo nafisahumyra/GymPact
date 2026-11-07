@@ -1028,7 +1028,7 @@ body.dashboard-page {
 @keyframes confetti-fall { to { transform: translateY(110vh) rotate(720deg); } }
 @keyframes celebration-message { 0%, 100% { opacity: 0; } 12%, 80% { opacity: 1; } }
 
-.history-page { width: min(100%, 820px); }
+.history-page { width: min(100%, 820px); padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
 .history-header { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
 .history-back-button { display: inline-flex; align-items: center; gap: 3px; min-height: 34px; padding: 5px 0; border: 0; border-radius: 0; background: transparent; color: var(--muted); font-size: .88rem; font-weight: 750; }
 .history-back-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
@@ -1039,6 +1039,12 @@ body.dashboard-page {
 .history-tab.is-active { border-color: rgba(145,242,100,.24); background: rgba(145,242,100,.13); color: var(--green); box-shadow: none; }
 .history-tab:hover:not(:disabled) { background: transparent; color: var(--muted); box-shadow: none; transform: none; }
 .history-tab.is-active:hover:not(:disabled) { background: rgba(145,242,100,.13); color: var(--green); box-shadow: none; }
+.history-bottom-nav { position: fixed; z-index: 7; right: 0; bottom: max(16px, env(safe-area-inset-bottom)); left: 0; pointer-events: none; }
+.history-bottom-nav-inner { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: min(calc(100% - 32px), 650px); margin-inline: auto; padding: 5px; border: 1px solid var(--line); border-radius: 24px; background: rgba(20, 24, 24, .97); box-shadow: 0 12px 30px rgba(0, 0, 0, .34); pointer-events: auto; }
+.history-dashboard-tab { text-decoration: none; }
+.history-dashboard-tab:hover:not(:disabled) { background: #1a1f1f; color: var(--text); box-shadow: none; transform: none; }
+.history-dashboard-tab.is-active { background: rgba(145, 242, 100, .11); color: var(--green); }
+.history-dashboard-tab.is-active .dashboard-tab-icon { background: rgba(145, 242, 100, .16); }
 .workout-card,
 .challenge-history-card { margin-bottom: 12px; padding: 18px; }
 .workout-card h3,

@@ -24,6 +24,9 @@ let historyRefreshInFlight = null;
 
 historyPageTitle.textContent = activeHistoryTab === "challenges" ? "Pact History" : "Workout History";
 document.title = `GymPact ${historyPageTitle.textContent}`;
+const historyNavigationTarget = activeHistoryTab === "challenges" ? "pact" : "activity";
+document.querySelector(`[data-history-nav="${historyNavigationTarget}"]`)?.classList.add("is-active");
+document.querySelector(`[data-history-nav="${historyNavigationTarget}"]`)?.setAttribute("aria-current", "page");
 
 function openHistoryPhoto(photo) {
     historyPhotoFull.src = photo.src;
