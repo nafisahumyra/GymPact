@@ -76,7 +76,7 @@ document.querySelectorAll("[data-history-quick-action]").forEach(button => {
             exercise: "dashboard.html?quickAction=exercise",
             tracker: "dashboard.html?tab=progress&quickAction=tracker",
             "week-pact": "dashboard.html?tab=pact&quickAction=week-pact",
-            "month-pact": "dashboard.html?tab=month&quickAction=month-pact",
+            "month-pact": "dashboard.html?tab=pact&quickAction=month-pact",
             "dev-view": "preview-layout.html"
         };
 

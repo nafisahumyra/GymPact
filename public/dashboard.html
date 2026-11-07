@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="dashboard.css?v=pact-switch-v1">
+    <link rel="stylesheet" href="dashboard.css?v=four-tabs-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=pact-switch-v1">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=four-tabs-v1">
 
     <div class="dashboard-shell">
 
@@ -95,12 +95,6 @@
 
             <div id="pact-monthly-panel" class="pact-type-panel" role="tabpanel" aria-labelledby="pact-monthly-tab" hidden>
                 <div id="pact-month-pact-content" aria-live="polite"></div>
-            </div>
-        </section>
-
-        <section class="dashboard-section month-pact-section" data-dashboard-tab-content="month" hidden>
-            <div id="month-pact-original-host">
-                <div id="month-pact-content" aria-live="polite"></div>
             </div>
         </section>
 
@@ -207,15 +201,6 @@
                         </svg>
                     </span>
                     <span>Pact</span>
-                </button>
-                <button id="month-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
-                    <span class="dashboard-tab-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="5" width="18" height="16" rx="2"></rect>
-                            <path d="M16 3v4M8 3v4M3 10h18"></path>
-                        </svg>
-                    </span>
-                    <span>Month</span>
                 </button>
             </div>
             <button id="quick-action-toggle" class="quick-action-toggle" type="button" aria-label="Open quick actions" aria-expanded="false" aria-controls="quick-action-menu">

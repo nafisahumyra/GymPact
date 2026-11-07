@@ -58,7 +58,6 @@ let activeDashboardTab = "overview";
 let activePactType = "weekly";
 let dashboardRefreshInFlight = null;
 const monthPactContent = document.getElementById("month-pact-content");
-const monthPactOriginalHost = document.getElementById("month-pact-original-host");
 const pactMonthPactContent = document.getElementById("pact-month-pact-content");
 const pactWeeklyPanel = document.getElementById("pact-weekly-panel");
 const pactMonthlyPanel = document.getElementById("pact-monthly-panel");
@@ -1067,15 +1066,8 @@ function showDashboardTab(tab) {
     });
     welcomeMessage.hidden = tab !== "overview";
 
-    if (tab === "month" && monthPactOriginalHost && monthPactContent.parentElement !== monthPactOriginalHost) {
-
-        monthPactOriginalHost.appendChild(monthPactContent);
-
-    }
-
     renderExerciseTrackers();
 
-    if (tab === "month") loadMonthlyPact();
     if (tab === "activity") loadActivityWorkouts();
 
 }
@@ -1093,13 +1085,6 @@ function showPactType(type) {
     pactMonthlyPanel.hidden = isWeekly;
 
     if (isWeekly) {
-
-        if (monthPactOriginalHost && monthPactContent.parentElement !== monthPactOriginalHost) {
-
-            monthPactOriginalHost.appendChild(monthPactContent);
-
-        }
-
         renderExerciseTrackers();
         return;
 
@@ -2274,7 +2259,10 @@ function renderHomeMonthPact() {
         action.className = "home-cycle-secondary-action";
         action.type = "button";
         action.textContent = `${statusLabels[monthlyPact.status] || "View Pact"} →`;
-        action.addEventListener("click", () => showDashboardTab("month"));
+        action.addEventListener("click", () => {
+            showDashboardTab("pact");
+            showPactType("monthly");
+        });
         card.append(kicker, title, action);
 
     }
@@ -2446,7 +2434,8 @@ dashboardTabs.forEach(button => {
 });
 const requestedDashboardTab = new URLSearchParams(window.location.search).get("tab");
 
-showDashboardTab(["activity", "progress", "pact", "month"].includes(requestedDashboardTab) ? requestedDashboardTab : "overview");
+showDashboardTab(["activity", "progress", "pact"].includes(requestedDashboardTab) ? requestedDashboardTab : requestedDashboardTab === "month" ? "pact" : "overview");
+if (requestedDashboardTab === "month") showPactType("monthly");
 if (dashboardRefreshButton) {
 
     dashboardRefreshButton.addEventListener("click", refreshDashboard);
@@ -2612,8 +2601,10 @@ async function openQuickMonthlyPact() {
     closeQuickActionMenu();
     await loadMonthlyPact();
 
+    showDashboardTab("pact");
+    showPactType("monthly");
+
     if (!monthlyPact) openMonthlyCreate();
-    else showDashboardTab("month");
 
 }
 
@@ -2773,7 +2764,8 @@ document.getElementById("choose-weekly-pact").addEventListener("click", async ()
 
 document.getElementById("choose-monthly-pact").addEventListener("click", async () => {
     newPactChoiceModal.style.display = "none";
-    showDashboardTab("month");
+    showDashboardTab("pact");
+    showPactType("monthly");
     await loadMonthlyPact();
     if (!monthlyPact) openMonthlyCreate();
 });
