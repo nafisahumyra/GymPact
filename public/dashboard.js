@@ -2382,6 +2382,23 @@ function createProgressScene({ idle = false, userId = null } = {}) {
 
 }
 
+function createProgressRoad({ empty = false } = {}) {
+
+    const area = document.createElement("section");
+    const labels = document.createElement("div");
+    const road = document.createElement("div");
+
+    area.className = "progress-road-area";
+    labels.className = "progress-road-labels";
+    labels.innerHTML = "<span>Start</span><span>Finish</span>";
+    road.className = `progress-road${empty ? " is-empty" : ""}`;
+    road.innerHTML = '<span class="progress-road-dashes" aria-hidden="true"></span>';
+    area.append(labels, road);
+
+    return { area, road };
+
+}
+
 function progressRaceStateKey(challenge, viewerId) {
 
     return `${PROGRESS_RACE_STATE_PREFIX}${viewerId}:${challenge.id}`;
@@ -2628,7 +2645,7 @@ function renderProgressRace() {
         const copy = document.createElement("div");
         const title = document.createElement("h3");
         const action = document.createElement("button");
-        const road = document.createElement("div");
+        const { area: roadArea } = createProgressRoad({ empty: true });
 
         copy.className = "progress-race-empty-copy progress-race-idle-copy";
         title.textContent = "No active weekly Pact";
@@ -2636,9 +2653,7 @@ function renderProgressRace() {
         action.textContent = "+ Create Pact";
         action.addEventListener("click", startWeeklyPact);
         copy.append(title, action);
-        road.className = "progress-road is-empty";
-        road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
-        progressRaceContainer.append(createProgressScene({ idle: true, userId: viewerId }), copy, road);
+        progressRaceContainer.append(createProgressScene({ idle: true, userId: viewerId }), copy, roadArea);
         return;
 
     }
@@ -2686,11 +2701,8 @@ function renderProgressRace() {
     progressRaceContainer.appendChild(summaryCard);
 
     const race = getProgressRaceMotion(challenge, viewerId, selectedType, participants, selectedParticipant.userId);
-    const road = document.createElement("div");
+    const { area: roadArea, road } = createProgressRoad();
     const roadAvatars = [];
-
-    road.className = "progress-road";
-    road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
 
     participants.forEach((participant, index) => {
 
@@ -2709,7 +2721,7 @@ function renderProgressRace() {
     const scene = createProgressScene({ userId: selectedParticipant.userId });
     const sceneRunner = scene.querySelector("canvas");
 
-    progressRaceContainer.append(scene, road);
+    progressRaceContainer.append(scene, roadArea);
     startProgressRaceMotion({
         motion: race.motion,
         roadAvatars,
