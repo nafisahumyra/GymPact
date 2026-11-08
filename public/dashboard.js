@@ -2371,7 +2371,7 @@ function createProgressScene({ idle = false, userId = null } = {}) {
             <rect width="360" height="360" fill="url(#progress-sky)"/>
             <path d="M0 190c45-28 79-20 116-3 43-42 88-36 126-11 44-27 76-20 118 1v183H0z" fill="#102e22" opacity=".86"/>
             <path d="M0 226c58-8 99-2 138 15 41-20 98-23 150-2 27-4 50-2 72 5v116H0z" fill="#17201e"/>
-            <rect y="240" width="360" height="63" fill="#3b4b43"/>
+            <rect y="286" width="360" height="17" fill="#3b4b43"/>
             <rect y="303" width="360" height="57" fill="#293632"/>
         </svg>
         <span class="progress-scene-runner-slot"></span>`;

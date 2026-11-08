@@ -503,7 +503,7 @@ body.dashboard-page {
 .progress-goal-summary span { color: var(--muted); font-size: .86rem; }
 .progress-scene { position: absolute; z-index: 0; inset: 0; overflow: hidden; pointer-events: none; }
 .progress-scene > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.progress-scene-runner-slot { position: absolute; z-index: 1; bottom: calc(208px + env(safe-area-inset-bottom)); left: 50%; width: clamp(228px, 66vw, 290px); aspect-ratio: 296 / 368; transform: translateX(-50%); }
+.progress-scene-runner-slot { position: absolute; z-index: 1; bottom: calc(92px + env(safe-area-inset-bottom)); left: 50%; width: clamp(228px, 66vw, 290px); aspect-ratio: 296 / 368; transform: translateX(-50%); }
 .progress-scene-runner { display: block; width: 100%; height: 100%; }
 .progress-road-area { position: relative; z-index: 3; display: grid; gap: 8px; margin-top: auto; }
 .progress-road-labels { display: flex; align-items: center; justify-content: space-between; padding-inline: 11px; color: #dbe3dd; font-size: .61rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
