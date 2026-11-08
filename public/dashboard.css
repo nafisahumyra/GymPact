@@ -1404,6 +1404,7 @@ body.dashboard-page {
 .pact-history-status svg { width: 14px; height: 14px; flex: 0 0 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .pact-history-status.is-success { color: var(--green); background: rgba(145,242,100,.08); border-color: rgba(145,242,100,.3); }
 .pact-history-status.is-unsuccessful { color: #e6a2a2; background: rgba(214,118,118,.08); border-color: rgba(214,118,118,.28); }
+.pact-history-status.is-icon-only { justify-content: center; width: 25px; min-width: 25px; padding: 4px; }
 .pact-history-participants { margin-top: 17px; }
 .pact-history-participant { padding: 15px 0; }
 .pact-history-participant + .pact-history-participant { border-top: 1px solid rgba(255,255,255,.09); }
@@ -1412,6 +1413,7 @@ body.dashboard-page {
 .pact-history-participant-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .pact-history-participant-header h4 { min-width: 0; margin: 0; color: var(--text); font-size: .93rem; font-weight: 750; line-height: 1.35; }
 .pact-history-participant-header .pact-history-status { flex: 0 0 auto; margin-top: -2px; }
+.pact-history-participant-header .pact-history-status.is-icon-only + h4 { margin-right: auto; }
 .pact-history-requirement { gap: 0; padding: 10px 0 0; border: 0; }
 .pact-history-requirement-label { align-items: center; font-size: .88rem; }
 .pact-history-requirement-label > span:last-child { flex: 0 0 auto; color: #edf1ee; font-variant-numeric: tabular-nums; font-weight: 750; }

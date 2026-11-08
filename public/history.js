@@ -415,12 +415,13 @@ function renderMonthlyPactHistoryError() {
     challengeHistoryContainer.innerHTML = `<div class="history-empty-state"><p>We couldn’t load Month Pact History.</p><p>Your completed Month Pacts will appear here when the connection is available.</p></div>`;
 }
 
-function createHistoryStatus(successful, label) {
+function createHistoryStatus(successful, label, { iconOnly = false } = {}) {
 
     const result = document.createElement("span");
     const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-    result.className = `pact-history-status ${successful ? "is-success" : "is-unsuccessful"}`;
+    result.className = `pact-history-status ${successful ? "is-success" : "is-unsuccessful"}${iconOnly ? " is-icon-only" : ""}`;
+    if (iconOnly) result.setAttribute("aria-label", label);
     icon.setAttribute("viewBox", "0 0 24 24");
     icon.setAttribute("fill", "none");
     icon.setAttribute("stroke", "currentColor");
@@ -431,7 +432,8 @@ function createHistoryStatus(successful, label) {
     icon.innerHTML = successful
         ? '<path d="m5 12 4.2 4.2L19 6.5"></path>'
         : '<path d="m7 7 10 10M17 7 7 17"></path>';
-    result.append(icon, document.createTextNode(label));
+    result.append(icon);
+    if (!iconOnly) result.append(document.createTextNode(label));
     return result;
 
 }
@@ -448,7 +450,7 @@ function createPactHistoryHeader(titleText, successful, statusText) {
 
 }
 
-function createPactHistoryParticipant(nameText, outcome) {
+function createPactHistoryParticipant(nameText, outcome, { outcomeBeforeName = false } = {}) {
 
     const participant = document.createElement("section");
     const header = document.createElement("div");
@@ -457,8 +459,9 @@ function createPactHistoryParticipant(nameText, outcome) {
     participant.className = "pact-history-participant";
     header.className = "pact-history-participant-header";
     name.textContent = nameText;
+    if (outcomeBeforeName && outcome) header.appendChild(outcome);
     header.appendChild(name);
-    if (outcome) header.appendChild(outcome);
+    if (!outcomeBeforeName && outcome) header.appendChild(outcome);
     participant.appendChild(header);
     return participant;
 
@@ -487,7 +490,8 @@ function createMonthlyHistoryCard(pact) {
 
         const person = createPactHistoryParticipant(
             participant.displayName,
-            createHistoryStatus(achieved, achieved ? "Achieved" : "Failed")
+            createHistoryStatus(achieved, achieved ? "Achieved" : "Failed", { iconOnly: true }),
+            { outcomeBeforeName: true }
         );
         goal.className = "pact-history-goal";
         goal.textContent = commitment?.goal || "No goal submitted";
