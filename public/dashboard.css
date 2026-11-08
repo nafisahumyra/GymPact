@@ -434,19 +434,32 @@ body.dashboard-page {
 .pact-type-panel[hidden] { display: none; }
 .pact-type-panel .exercise-tracking-section { margin: 0; }
 .exercise-tracking-section > h3 { margin-bottom: 16px; }
-.progress-race { display: grid; gap: 18px; padding-bottom: 6px; }
+.progress-race-section {
+    margin: -32px clamp(-40px, -4vw, -16px) calc(-130px - env(safe-area-inset-bottom));
+}
+.progress-race {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    min-height: calc(100dvh - 100px);
+    flex-direction: column;
+    gap: 17px;
+    overflow: hidden;
+    padding: 24px clamp(16px, 4vw, 40px) calc(132px + env(safe-area-inset-bottom));
+    background: #09110f;
+}
+.progress-race > :not(.progress-scene) { position: relative; z-index: 2; }
 .progress-race-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.progress-race-heading p { margin: 0; color: var(--text); font-size: 1rem; font-weight: 760; }
-.progress-race-heading span { flex: 0 0 auto; color: var(--green); font-size: .76rem; font-weight: 760; text-align: right; }
-.progress-week-strip { padding: 15px; border: 1px solid var(--line-soft); border-radius: 19px; background: linear-gradient(145deg, rgba(24, 31, 29, .9), rgba(12, 16, 16, .98)); }
-.progress-week-strip-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.progress-week-strip h3 { margin: 0; color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.progress-race-heading p { margin: 0; color: var(--text); font-size: .95rem; font-weight: 760; }
+.progress-race-heading span { flex: 0 0 auto; color: var(--green); font-size: .72rem; font-weight: 760; text-align: right; }
+.progress-week-strip { display: grid; gap: 8px; }
+.progress-week-strip-header { display: flex; align-items: center; justify-content: flex-end; min-height: 29px; }
 .progress-person-switch { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--line-soft); border-radius: 999px; background: #0c1010; }
 .progress-person-switch button { min-height: 27px; padding: 4px 9px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: .68rem; font-weight: 750; white-space: nowrap; }
 .progress-person-switch button.is-active { background: rgba(145, 242, 100, .14); color: var(--green); }
-.progress-day-buttons { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-top: 15px; }
+.progress-day-buttons { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
 .progress-day { display: grid; justify-items: center; gap: 7px; min-height: 57px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: .68rem; font-weight: 800; }
-.progress-day > span:last-child { display: block; width: 26px; height: 26px; border: 2px solid #4a5652; border-radius: 50%; background: #111616; }
+.progress-day > span:last-child { display: block; width: 27px; height: 27px; border: 2px solid #4a5652; border-radius: 50%; background: rgba(17, 22, 22, .76); }
 .progress-day.is-complete > span:last-child { border-color: var(--green); background: rgba(145, 242, 100, .17); box-shadow: 0 0 0 3px rgba(145,242,100,.08); }
 .progress-day.is-today { color: var(--text); }
 .progress-day.is-today > span:last-child { box-shadow: 0 0 0 2px rgba(255,255,255,.22); }
@@ -455,7 +468,7 @@ body.dashboard-page {
 .progress-day.is-selected { background: rgba(145,242,100,.07); }
 .progress-day:focus-visible, .progress-person-switch button:focus-visible, .progress-goal-selector button:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .progress-week-strip.is-empty { opacity: .62; }
-.progress-day-summary { min-height: 30px; margin-top: 12px; color: var(--muted); font-size: .77rem; line-height: 1.4; }
+.progress-day-summary { margin: 2px auto 0; padding: 8px 11px; border: 1px solid rgba(205, 221, 211, .13); border-radius: 11px; background: rgba(7, 12, 10, .68); color: var(--muted); font-size: .77rem; line-height: 1.4; text-align: center; }
 .progress-day-summary strong { display: block; color: var(--text); font-size: .76rem; }
 .progress-day-summary p { margin: 2px 0 0; }
 .progress-goal-selector { display: flex; gap: 7px; overflow-x: auto; padding: 2px 1px; scrollbar-width: none; }
@@ -467,19 +480,18 @@ body.dashboard-page {
 .progress-goal-summary p { margin: 0; color: var(--muted); font-size: .76rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
 .progress-goal-summary strong { color: var(--text); font-size: clamp(2rem, 10vw, 3.1rem); font-variant-numeric: tabular-nums; letter-spacing: -.06em; line-height: 1; }
 .progress-goal-summary span { color: var(--muted); font-size: .86rem; }
-.progress-race-course { position: relative; display: grid; gap: 0; overflow: hidden; min-height: 224px; border: 1px solid rgba(145,242,100,.2); border-radius: 22px; background: #0b1110; }
-.progress-scene { position: relative; min-height: 166px; overflow: hidden; }
+.progress-scene { position: absolute; z-index: 0; inset: 0; overflow: hidden; pointer-events: none; }
 .progress-scene > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.progress-scene-runner { position: absolute; bottom: 10px; left: 48%; width: 46px; height: 74px; transform: translateX(-50%); }
-.progress-scene-runner i { position: absolute; top: 0; left: 16px; width: 18px; height: 18px; border-radius: 50%; background: var(--green); box-shadow: 0 0 13px rgba(145,242,100,.25); }
-.progress-scene-runner b { position: absolute; top: 18px; left: 14px; width: 19px; height: 29px; border: 4px solid #dce7df; border-radius: 10px 10px 7px 7px; transform: rotate(-12deg); }
-.progress-scene-runner em, .progress-scene-runner strong { position: absolute; bottom: 0; width: 5px; height: 32px; border-radius: 5px; background: #dce7df; transform-origin: top; }
-.progress-scene-runner em { left: 16px; transform: rotate(31deg); }
-.progress-scene-runner strong { left: 30px; transform: rotate(-31deg); }
+.progress-scene-runner { position: absolute; bottom: calc(177px + env(safe-area-inset-bottom)); left: 48%; width: 54px; height: 86px; transform: translateX(-50%); }
+.progress-scene-runner i { position: absolute; top: 0; left: 18px; width: 20px; height: 20px; border-radius: 50%; background: var(--green); box-shadow: 0 0 13px rgba(145,242,100,.25); }
+.progress-scene-runner b { position: absolute; top: 20px; left: 16px; width: 21px; height: 34px; border: 4px solid #dce7df; border-radius: 10px 10px 7px 7px; transform: rotate(-12deg); }
+.progress-scene-runner em, .progress-scene-runner strong { position: absolute; bottom: 0; width: 5px; height: 36px; border-radius: 5px; background: #dce7df; transform-origin: top; }
+.progress-scene-runner em { left: 18px; transform: rotate(31deg); }
+.progress-scene-runner strong { left: 33px; transform: rotate(-31deg); }
 .progress-scene.is-idle .progress-scene-runner { left: 50%; }
 .progress-scene.is-idle .progress-scene-runner em { height: 28px; transform: rotate(8deg); }
 .progress-scene.is-idle .progress-scene-runner strong { height: 28px; transform: rotate(-8deg); }
-.progress-road { position: relative; min-height: 76px; margin: 0 13px 14px; border: 1px solid #3d4a45; border-radius: 999px; background: linear-gradient(180deg, #252d2b, #181e1d); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 9px 22px rgba(0,0,0,.24); }
+.progress-road { position: absolute; right: clamp(16px, 4vw, 40px); bottom: calc(88px + env(safe-area-inset-bottom)); left: clamp(16px, 4vw, 40px); z-index: 3; min-height: 76px; margin: 0; border: 1px solid #3d4a45; border-radius: 999px; background: linear-gradient(180deg, #252d2b, #181e1d); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 9px 22px rgba(0,0,0,.24); }
 .progress-road-dashes { position: absolute; top: 50%; right: 36px; left: 36px; height: 2px; background: repeating-linear-gradient(90deg, #8a9790 0 12px, transparent 12px 23px); opacity: .55; transform: translateY(-50%); }
 .progress-road-start, .progress-road-finish { position: absolute; top: 50%; z-index: 1; color: #dbe3dd; font-size: .61rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; transform: translateY(-50%); }
 .progress-road-start { left: 11px; }
@@ -488,19 +500,17 @@ body.dashboard-page {
 .progress-race-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .progress-race-avatar.lane-0 { top: 5px; }
 .progress-race-avatar.lane-1 { bottom: 5px; border-color: #b6c1bd; background: #26302d; color: #f0f4f1; }
-.progress-race-totals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.progress-race-totals > div { display: grid; gap: 3px; min-width: 0; padding: 11px 12px; border-top: 1px solid var(--line-soft); }
+.progress-race-totals { position: absolute; right: clamp(16px, 4vw, 40px); bottom: calc(171px + env(safe-area-inset-bottom)); left: clamp(16px, 4vw, 40px); z-index: 3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.progress-race-totals > div { display: grid; gap: 3px; min-width: 0; padding: 0 2px; }
 .progress-race-totals strong { overflow: hidden; color: var(--text); font-size: .84rem; text-overflow: ellipsis; white-space: nowrap; }
 .progress-race-totals span { color: var(--muted); font-size: .76rem; font-variant-numeric: tabular-nums; }
-.progress-race-empty { display: grid; gap: 12px; padding: 22px 18px; border: 1px solid var(--line-soft); border-radius: 20px; background: linear-gradient(145deg, rgba(23,29,28,.9), rgba(12,16,16,.98)); }
+.progress-race-empty { align-self: center; display: grid; gap: 12px; margin: auto 0; }
 .progress-race-empty-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .progress-race-empty h3 { margin: 0; color: var(--text); font-size: 1rem; }
 .progress-race-empty p { margin: 0; color: var(--muted); font-size: .86rem; }
 .progress-race-empty button { flex: 0 0 auto; min-height: 38px; padding: 7px 11px; border-color: var(--green); background: transparent; color: var(--green); font-size: .75rem; white-space: nowrap; }
-.progress-race-idle { overflow: hidden; }
+.progress-race-idle { z-index: 2; width: min(100%, 330px); }
 .progress-race-idle > .progress-race-empty-copy { display: flex; gap: 12px; }
-.progress-race-idle .progress-scene { min-height: 150px; margin: 0 -18px; }
-.progress-race-idle .progress-road { margin: -2px 0 0; }
 @media (prefers-reduced-motion: reduce) { .progress-race-avatar { transition: none; } }
 .month-pact-card {
     padding: 18px;

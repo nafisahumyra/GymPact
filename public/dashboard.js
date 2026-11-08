@@ -2260,14 +2260,12 @@ function renderProgressRace() {
     });
     const strip = document.createElement("section");
     const stripHeader = document.createElement("div");
-    const stripTitle = document.createElement("h3");
     const switcher = document.createElement("div");
     const dayButtons = document.createElement("div");
     const summary = document.createElement("div");
 
     strip.className = `progress-week-strip${challenge ? "" : " is-empty"}`;
     stripHeader.className = "progress-week-strip-header";
-    stripTitle.textContent = "Workout days";
     switcher.className = "progress-person-switch";
     dayButtons.className = "progress-day-buttons";
     summary.className = "progress-day-summary";
@@ -2336,14 +2334,11 @@ function renderProgressRace() {
             : "No qualifying workout recorded for this day.";
         summary.append(title, text);
 
-    } else {
-
-        summary.textContent = challenge ? "Tap a day to view workouts." : "Workout days will appear with your Pact.";
-
     }
 
-    stripHeader.append(stripTitle, switcher);
-    strip.append(stripHeader, dayButtons, summary);
+    stripHeader.append(switcher);
+    strip.append(stripHeader, dayButtons);
+    if (challenge && progressSelectedDay) strip.appendChild(summary);
     progressRaceContainer.appendChild(strip);
 
     if (!challenge || !viewer || !challenge.requirements?.length) {
@@ -2363,8 +2358,7 @@ function renderProgressRace() {
         copy.append(title, action);
         road.className = "progress-road is-empty";
         road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
-        empty.append(copy, createProgressScene({ idle: true }), road);
-        progressRaceContainer.appendChild(empty);
+        progressRaceContainer.append(createProgressScene({ idle: true }), empty, road);
         return;
 
     }
@@ -2411,10 +2405,8 @@ function renderProgressRace() {
     summaryCard.innerHTML = `<p>${getRequirementText(selectedType)}</p><strong>${value.completed.toLocaleString()} / ${value.target.toLocaleString()} ${requirementCopy(selectedType, value.target)}</strong><span>${remaining === 0 ? "Goal complete." : `${remaining.toLocaleString()} ${requirementCopy(selectedType, remaining)} to the finish.`}</span>`;
     progressRaceContainer.appendChild(summaryCard);
 
-    const course = document.createElement("section");
     const road = document.createElement("div");
 
-    course.className = "progress-race-course";
     road.className = "progress-road";
     road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
 
@@ -2430,8 +2422,7 @@ function renderProgressRace() {
 
     });
 
-    course.append(createProgressScene(), road);
-    progressRaceContainer.appendChild(course);
+    progressRaceContainer.append(createProgressScene(), road);
 
     const totals = document.createElement("div");
 
