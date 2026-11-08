@@ -92,6 +92,8 @@ let monthlyCandidate = null;
 let monthlyCheckinDate = null;
 let monthlySelectedDate = null;
 let monthlySelectedPactId = null;
+let monthlyCheckinPopover = null;
+let monthlyCheckinPopoverDismiss = null;
 const exerciseTrackersContainer = document.getElementById("exercise-trackers");
 const removeExerciseTrackerModal = document.getElementById("remove-exercise-tracker-modal");
 const removeExerciseTrackerCopy = document.getElementById("remove-exercise-tracker-copy");
@@ -2965,38 +2967,84 @@ function getMonthlyDefaultSelectedDate(pact) {
     return latestCheckin?.date || pact.monthStart;
 }
 
-function renderMonthlyCheckins(pact, container) {
-    const selectedDate = monthlySelectedDate || getMonthlyDefaultSelectedDate(pact);
-    const entries = (pact.checkins || []).filter(entry => entry.date === selectedDate);
-    const list = document.createElement("div");
-    list.className = "monthly-checkin-list";
+function closeMonthlyCheckinPopover() {
+    if (monthlyCheckinPopoverDismiss) {
+        document.removeEventListener("pointerdown", monthlyCheckinPopoverDismiss, true);
+        document.removeEventListener("keydown", monthlyCheckinPopoverDismiss, true);
+    }
+    monthlyCheckinPopoverDismiss = null;
+    monthlyCheckinPopover?.remove();
+    monthlyCheckinPopover = null;
+}
 
-    if (!entries.length) {
-        const empty = document.createElement("p");
-        empty.className = "monthly-checkin-empty";
-        empty.textContent = `No check-ins for ${formatMonthDate(selectedDate)}.`;
-        list.appendChild(empty);
-    } else {
+function openMonthlyCheckinPopover(pact, date, anchor) {
+    closeMonthlyCheckinPopover();
+
+    const entries = (pact.checkins || []).filter(entry => entry.date === date);
+    const popover = document.createElement("aside");
+    popover.className = "monthly-checkin-popover";
+    popover.setAttribute("role", "dialog");
+    popover.setAttribute("aria-label", `Check-ins for ${formatMonthDate(date)}`);
+
+    const title = document.createElement("strong");
+    title.textContent = formatMonthDate(date);
+    popover.appendChild(title);
+
+    if (entries.length) {
         entries.forEach(entry => {
-            const line = document.createElement("div");
-            line.className = "monthly-checkin";
-            line.innerHTML = `<time>${entry.displayName} · ${formatMonthDate(entry.date)}</time>${entry.body}`;
-            list.appendChild(line);
+            const entryNode = document.createElement("div");
+            entryNode.className = "monthly-checkin-popover-entry";
+            const author = document.createElement("span");
+            author.textContent = entry.displayName;
+            const body = document.createElement("p");
+            body.textContent = entry.body;
+            entryNode.append(author, body);
+            popover.appendChild(entryNode);
         });
+    } else {
+        const empty = document.createElement("p");
+        empty.className = "monthly-checkin-popover-empty";
+        empty.textContent = "No check-in yet.";
+        popover.appendChild(empty);
     }
 
     const parts = currentMonthDate();
     const today = `${parts.year}-${parts.month}-${parts.day}`;
-    if (pact.status === "active" && selectedDate <= today) {
+    if (pact.status === "active" && date <= today) {
         const addCheckin = document.createElement("button");
         addCheckin.type = "button";
-        addCheckin.className = "monthly-checkin-add";
-        addCheckin.textContent = "+ Add check-in";
-        addCheckin.addEventListener("click", () => openMonthlyCheckin(selectedDate));
-        list.appendChild(addCheckin);
+        addCheckin.className = "monthly-checkin-popover-action";
+        addCheckin.textContent = entries.length ? "+ Add another check-in" : "+ Add check-in";
+        addCheckin.addEventListener("click", () => {
+            closeMonthlyCheckinPopover();
+            openMonthlyCheckin(date);
+        });
+        popover.appendChild(addCheckin);
     }
 
-    container.appendChild(list);
+    document.body.appendChild(popover);
+    const anchorRect = anchor.getBoundingClientRect();
+    const width = Math.min(280, window.innerWidth - 32);
+    const left = Math.max(16, Math.min(anchorRect.left + (anchorRect.width / 2) - (width / 2), window.innerWidth - width - 16));
+    popover.style.width = `${width}px`;
+    popover.style.left = `${left}px`;
+    let top = anchorRect.bottom + 8;
+    if (top + popover.offsetHeight > window.innerHeight - 16) top = Math.max(16, anchorRect.top - popover.offsetHeight - 8);
+    popover.style.top = `${top}px`;
+
+    monthlyCheckinPopover = popover;
+    monthlyCheckinPopoverDismiss = event => {
+        if (event.type === "keydown") {
+            if (event.key === "Escape") closeMonthlyCheckinPopover();
+            return;
+        }
+        if (!popover.contains(event.target) && !anchor.contains(event.target)) closeMonthlyCheckinPopover();
+    };
+    requestAnimationFrame(() => {
+        if (monthlyCheckinPopover !== popover) return;
+        document.addEventListener("pointerdown", monthlyCheckinPopoverDismiss, true);
+        document.addEventListener("keydown", monthlyCheckinPopoverDismiss, true);
+    });
 }
 
 function renderMonthlyCalendar(pact, container, { interactive = true } = {}) {
@@ -3021,7 +3069,9 @@ function renderMonthlyCalendar(pact, container, { interactive = true } = {}) {
         if (interactive) {
             button.addEventListener("click", () => {
                 monthlySelectedDate = date;
-                renderMonthPact();
+                calendar.querySelectorAll(".monthly-calendar-day.is-selected").forEach(dayButton => dayButton.classList.remove("is-selected"));
+                button.classList.add("is-selected");
+                openMonthlyCheckinPopover(pact, date, button);
             });
         }
         calendar.appendChild(button);
@@ -3091,6 +3141,7 @@ function renderHomeMonthPact() {
 
 function renderMonthPact() {
     if (!monthPactContent) return;
+    closeMonthlyCheckinPopover();
     monthPactContent.innerHTML = "";
     const card = document.createElement("article"); card.className = "month-pact-card";
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
@@ -3148,7 +3199,6 @@ function renderMonthPact() {
     if (["active", "completed", "failed"].includes(monthlyPact.status)) {
         renderMonthlyCalendar(monthlyPact, card);
         if (monthlyPact.status === "active" && own && !own.completedAt) { const complete = document.createElement("button"); complete.type = "button"; complete.className = "month-pact-action"; complete.textContent = "✓ I Achieved My Goal"; complete.addEventListener("click", openMonthlyCompletion); card.appendChild(complete); }
-        renderMonthlyCheckins(monthlyPact, card);
     }
     monthPactContent.appendChild(card);
 }
