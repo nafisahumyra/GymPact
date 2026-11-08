@@ -510,7 +510,7 @@ body.dashboard-page {
 .progress-race-empty h3 { margin: 0; color: var(--text); font-size: 1rem; }
 .progress-race-empty p { margin: 0; color: var(--muted); font-size: .86rem; }
 .progress-race-empty button { flex: 0 0 auto; min-height: 38px; padding: 7px 11px; border-color: var(--green); background: transparent; color: var(--green); font-size: .75rem; white-space: nowrap; }
-.progress-race-idle-copy { position: absolute; top: 25%; left: 50%; z-index: 4; width: max-content; max-width: calc(100% - 32px); margin: 0; transform: translateX(-50%); }
+.progress-race-idle-copy { position: absolute; top: 28%; left: 50%; z-index: 4; width: max-content; max-width: calc(100% - 32px); margin: 0; transform: translateX(-50%); }
 .progress-race-idle-copy h3 { color: #abb6b0; font-size: .86rem; font-weight: 650; white-space: nowrap; }
 .progress-race-idle-copy button { min-height: 32px; padding: 5px 10px; border-color: #46534e; background: rgba(16, 24, 21, .8); color: #c0c8c3; font-size: .7rem; font-weight: 700; box-shadow: none; }
 .progress-race-idle-copy button:hover:not(:disabled) { border-color: #66736d; background: rgba(31, 42, 37, .92); color: var(--text); }
