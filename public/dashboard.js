@@ -2697,7 +2697,7 @@ function renderProgressRace() {
     progressRaceContainer.appendChild(selector);
 
     summaryCard.className = "progress-goal-summary";
-    summaryCard.innerHTML = `<p>${getRequirementText(selectedType)}</p><strong>${value.completed.toLocaleString()} / ${value.target.toLocaleString()} ${requirementCopy(selectedType, value.target)}</strong><span>${remaining === 0 ? "Goal complete." : `${remaining.toLocaleString()} ${requirementCopy(selectedType, remaining)} to the finish.`}</span>`;
+    summaryCard.innerHTML = `<p>${getRequirementText(selectedType)}</p><strong>${value.completed.toLocaleString()} / ${value.target.toLocaleString()}</strong><span>${remaining === 0 ? "Goal complete." : `${remaining.toLocaleString()} ${requirementCopy(selectedType, remaining)} to the finish.`}</span>`;
     progressRaceContainer.appendChild(summaryCard);
 
     const race = getProgressRaceMotion(challenge, viewerId, selectedType, participants, selectedParticipant.userId);
