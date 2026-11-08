@@ -2343,14 +2343,12 @@ function renderProgressRace() {
 
     if (!challenge || !viewer || !challenge.requirements?.length) {
 
-        const empty = document.createElement("section");
         const copy = document.createElement("div");
         const title = document.createElement("h3");
         const action = document.createElement("button");
         const road = document.createElement("div");
 
-        empty.className = "progress-race-empty progress-race-idle";
-        copy.className = "progress-race-empty-copy";
+        copy.className = "progress-race-empty-copy progress-race-idle-copy";
         title.textContent = "No active weekly Pact";
         action.type = "button";
         action.textContent = "+ Create Pact";
@@ -2358,7 +2356,7 @@ function renderProgressRace() {
         copy.append(title, action);
         road.className = "progress-road is-empty";
         road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
-        progressRaceContainer.append(createProgressScene({ idle: true }), empty, road);
+        progressRaceContainer.append(createProgressScene({ idle: true }), copy, road);
         return;
 
     }

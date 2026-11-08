@@ -509,8 +509,7 @@ body.dashboard-page {
 .progress-race-empty h3 { margin: 0; color: var(--text); font-size: 1rem; }
 .progress-race-empty p { margin: 0; color: var(--muted); font-size: .86rem; }
 .progress-race-empty button { flex: 0 0 auto; min-height: 38px; padding: 7px 11px; border-color: var(--green); background: transparent; color: var(--green); font-size: .75rem; white-space: nowrap; }
-.progress-race-idle { position: relative !important; z-index: 4; width: min(100%, 330px); margin: auto 0; }
-.progress-race-idle > .progress-race-empty-copy { display: flex; gap: 12px; }
+.progress-race-idle-copy { position: relative; z-index: 4; align-self: center; width: min(100%, 330px); margin: auto 0; }
 @media (prefers-reduced-motion: reduce) { .progress-race-avatar { transition: none; } }
 .month-pact-card {
     padding: 18px;
