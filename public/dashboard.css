@@ -466,7 +466,7 @@ body.dashboard-page {
     flex-direction: column;
     gap: 17px;
     overflow: hidden;
-    padding: max(24px, calc(env(safe-area-inset-top) + 18px)) clamp(16px, 4vw, 40px) calc(112px + env(safe-area-inset-bottom));
+    padding: max(120px, calc(env(safe-area-inset-top) + 104px)) clamp(16px, 4vw, 40px) calc(112px + env(safe-area-inset-bottom));
     background: #09110f;
 }
 .progress-race > :not(.progress-scene) { position: relative; z-index: 2; }
