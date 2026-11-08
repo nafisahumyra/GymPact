@@ -2517,6 +2517,10 @@ function renderProgressRace() {
 
     if (challenge && !progressDayParticipantId && stripParticipant) progressDayParticipantId = stripParticipant.userId;
 
+    // The participant switch controls the complete individual view: workout days,
+    // headline totals, and the large scene runner. The road remains shared.
+    const selectedParticipant = stripParticipant;
+
     const days = challenge ? addProgressDays(challenge.startDate, challenge.endDate) : Array.from({ length: 7 }, (_, index) => {
 
         const date = new Date();
@@ -2637,7 +2641,7 @@ function renderProgressRace() {
     const selectedRequirement = challenge.requirements.find(requirement => requirement.type === selectedType);
     const selector = document.createElement("div");
     const summaryCard = document.createElement("section");
-    const value = requirementTotal(viewer, selectedType);
+    const value = requirementTotal(selectedParticipant, selectedType);
     const remaining = Math.max(0, value.target - value.completed);
 
     selector.className = "progress-goal-selector";
@@ -2690,11 +2694,11 @@ function renderProgressRace() {
 
     });
 
-    const scene = createProgressScene({ userId: viewer.userId });
+    const scene = createProgressScene({ userId: selectedParticipant.userId });
     const sceneRunner = scene.querySelector("canvas");
 
     progressRaceContainer.append(scene, road);
-    startProgressRaceMotion({ motion: race.motion, roadAvatars, sceneRunner, viewerId });
+    startProgressRaceMotion({ motion: race.motion, roadAvatars, sceneRunner, viewerId: selectedParticipant.userId });
 
 }
 
