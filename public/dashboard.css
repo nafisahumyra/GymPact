@@ -474,7 +474,7 @@ body.dashboard-page {
 .progress-race-heading p { margin: 0; color: var(--text); font-size: .95rem; font-weight: 760; }
 .progress-race-heading span { flex: 0 0 auto; color: var(--green); font-size: .72rem; font-weight: 760; text-align: right; }
 .progress-week-strip { display: grid; gap: 8px; }
-.progress-week-strip-header { display: flex; align-items: center; justify-content: flex-end; min-height: 29px; }
+.progress-week-strip-header { display: flex; align-items: center; justify-content: center; min-height: 29px; }
 .progress-person-switch { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--line-soft); border-radius: 999px; background: #0c1010; }
 .progress-person-switch button { min-height: 27px; padding: 4px 9px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: .68rem; font-weight: 750; white-space: nowrap; }
 .progress-person-switch button.is-active { background: rgba(145, 242, 100, .14); color: var(--green); }
