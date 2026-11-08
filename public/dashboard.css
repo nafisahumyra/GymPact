@@ -80,6 +80,7 @@ body.dashboard-page {
     object-fit: cover;
 }
 .profile-actions-menu { position: absolute; z-index: 12; top: calc(100% + 8px); right: 0; display: grid; min-width: 134px; padding: 5px; border: 1px solid var(--line); border-radius: 13px; background: #161b1a; box-shadow: 0 15px 28px rgba(0,0,0,.42); }
+.profile-actions-menu[hidden], .profile-page[hidden] { display: none; }
 .profile-actions-menu button { min-height: 36px; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--text); font-size: .82rem; font-weight: 750; text-align: left; box-shadow: none; }
 .profile-actions-menu button:hover:not(:disabled), .profile-actions-menu button:focus-visible { background: rgba(145,242,100,.12); color: var(--green); transform: none; }
 
