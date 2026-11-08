@@ -16,8 +16,14 @@ let currentChallengeLoadError = false;
 let progressSelectedRequirementType = null;
 let progressDayParticipantId = null;
 let progressSelectedDay = null;
-let progressShouldAnimate = false;
-let progressEntranceTimer = null;
+const PROGRESS_RUNNER_ASSETS_BY_ID = Object.freeze({
+    "4a1a21a1-0000-4000-8000-000000000001": "assets/progress-runners/nafisa-runner-sheet.png",
+    "4a1a21a1-0000-4000-8000-000000000002": "assets/progress-runners/mahfuzur-runner-sheet.png"
+});
+const PROGRESS_RACE_STATE_PREFIX = "gymPactProgressRace:";
+const progressRunnerSprites = new Map();
+const progressRunnerLoads = new Map();
+const progressRunnerAnimationFrames = new Set();
 const currentChallengeContainer =
     document.getElementById("current-challenge");
 const workoutCount =
@@ -1085,8 +1091,6 @@ function showDashboardTab(tab) {
 
     if (tab === "activity") loadActivityWorkouts();
     if (tab === "progress") {
-
-        progressShouldAnimate = true;
         renderProgressRace();
 
     }
@@ -2150,30 +2154,184 @@ function getRaceParticipants(challenge) {
 
 }
 
+function scanProgressRunnerFrame(canvas) {
+
+    const { width, height } = canvas;
+    const pixels = canvas.getContext("2d", { willReadFrequently: true }).getImageData(0, 0, width, height).data;
+    let left = width, top = height, right = -1, bottom = -1;
+
+    for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+            const alpha = pixels[(y * width + x) * 4 + 3];
+            if (alpha <= 12) continue;
+            left = Math.min(left, x);
+            top = Math.min(top, y);
+            right = Math.max(right, x);
+            bottom = Math.max(bottom, y);
+        }
+    }
+
+    return {
+        left,
+        top,
+        right,
+        bottom,
+        width: Math.max(0, right - left + 1),
+        height: Math.max(0, bottom - top + 1),
+        groundGap: Math.max(0, height - 1 - bottom)
+    };
+
+}
+
+function medianProgressValue(values) {
+
+    const sorted = [...values].sort((first, second) => first - second);
+    return sorted[Math.floor(sorted.length / 2)] || 0;
+
+}
+
+function loadProgressRunnerSprite(userId) {
+
+    const source = PROGRESS_RUNNER_ASSETS_BY_ID[userId];
+    if (!source) return Promise.resolve(null);
+    if (progressRunnerSprites.has(userId)) return Promise.resolve(progressRunnerSprites.get(userId));
+    if (progressRunnerLoads.has(userId)) return progressRunnerLoads.get(userId);
+
+    const load = new Promise(resolve => {
+        const image = new Image();
+        image.onload = () => {
+            const frames = [];
+
+            for (let row = 0; row < 3; row += 1) {
+                for (let column = 0; column < 3; column += 1) {
+                    const left = Math.round(column * image.naturalWidth / 3);
+                    const right = Math.round((column + 1) * image.naturalWidth / 3);
+                    const top = Math.round(row * image.naturalHeight / 3);
+                    const bottom = Math.round((row + 1) * image.naturalHeight / 3);
+                    const frame = document.createElement("canvas");
+
+                    frame.width = right - left;
+                    frame.height = bottom - top;
+                    frame.getContext("2d").drawImage(image, left, top, frame.width, frame.height, 0, 0, frame.width, frame.height);
+                    frames.push({ canvas: frame, bounds: scanProgressRunnerFrame(frame) });
+                }
+            }
+
+            const sprite = {
+                frames,
+                maxHeight: Math.max(...frames.map(frame => frame.bounds.height)),
+                referenceGap: medianProgressValue(frames.map(frame => frame.bounds.groundGap))
+            };
+
+            progressRunnerSprites.set(userId, sprite);
+            resolve(sprite);
+        };
+        image.onerror = () => resolve(null);
+        image.src = source;
+    });
+
+    progressRunnerLoads.set(userId, load);
+    return load;
+
+}
+
+function drawProgressRunner(canvas, sprite, frameIndex = 0) {
+
+    if (!canvas || !sprite) return;
+    const context = canvas.getContext("2d");
+    const frame = sprite.frames[frameIndex] || sprite.frames[0];
+    const { bounds } = frame;
+    const scale = Math.min((canvas.width * .76) / sprite.maxHeight, (canvas.height * .84) / sprite.maxHeight);
+    const width = bounds.width * scale;
+    const height = bounds.height * scale;
+    const bounce = Math.max(-5, Math.min(5, (sprite.referenceGap - bounds.groundGap) * scale));
+    const baseline = canvas.height * .9 + bounce;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(
+        frame.canvas,
+        bounds.left,
+        bounds.top,
+        bounds.width,
+        bounds.height,
+        (canvas.width - width) / 2,
+        baseline - height,
+        width,
+        height
+    );
+
+}
+
+function createProgressRunnerCanvas(userId, className) {
+
+    const canvas = document.createElement("canvas");
+
+    canvas.className = className;
+    canvas.width = className === "progress-scene-runner" ? 148 : 64;
+    canvas.height = className === "progress-scene-runner" ? 184 : 64;
+    canvas.setAttribute("aria-hidden", "true");
+    loadProgressRunnerSprite(userId).then(sprite => {
+
+        if (!sprite || !canvas.isConnected) return;
+        drawProgressRunner(canvas, sprite, 0);
+
+    });
+    return canvas;
+
+}
+
+function animateProgressRunner(canvas, userId, duration = 2400) {
+
+    if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    loadProgressRunnerSprite(userId).then(sprite => {
+
+        if (!sprite || !canvas.isConnected) return;
+        const startedAt = performance.now();
+        let frameId = null;
+
+        const tick = now => {
+
+            if (frameId) progressRunnerAnimationFrames.delete(frameId);
+
+            if (!canvas.isConnected || document.visibilityState === "hidden") {
+                return;
+            }
+
+            const elapsed = now - startedAt;
+            drawProgressRunner(canvas, sprite, 1 + Math.floor(elapsed / 100) % 8);
+            if (elapsed < duration) {
+                frameId = requestAnimationFrame(tick);
+                progressRunnerAnimationFrames.add(frameId);
+                return;
+            }
+
+            drawProgressRunner(canvas, sprite, 0);
+            if (frameId) progressRunnerAnimationFrames.delete(frameId);
+
+        };
+
+        frameId = requestAnimationFrame(tick);
+        progressRunnerAnimationFrames.add(frameId);
+
+    });
+
+}
+
+function stopProgressRunnerAnimations() {
+
+    progressRunnerAnimationFrames.forEach(frameId => cancelAnimationFrame(frameId));
+    progressRunnerAnimationFrames.clear();
+
+}
+
 function createRaceAvatar(participant, lane) {
 
     const avatar = document.createElement("span");
-    const image = document.createElement("img");
-    const initials = document.createElement("span");
 
-    avatar.className = `progress-race-avatar lane-${lane} is-at-start`;
+    avatar.className = `progress-race-avatar lane-${lane}`;
     avatar.setAttribute("aria-label", participant.displayName || "GymPact athlete");
-    initials.textContent = getActivityInitials(participant.displayName);
-    avatar.append(initials);
-
-    if (participant.profile?.profilePhotoUrl) {
-
-        image.src = participant.profile.profilePhotoUrl;
-        image.alt = "";
-        image.addEventListener("load", () => {
-
-            initials.hidden = true;
-            avatar.append(image);
-
-        }, { once: true });
-
-    }
-
+    avatar.appendChild(createProgressRunnerCanvas(participant.userId, "progress-road-runner"));
     return avatar;
 
 }
@@ -2198,7 +2356,7 @@ function requirementCopy(type, count) {
 
 }
 
-function createProgressScene({ idle = false } = {}) {
+function createProgressScene({ idle = false, userId = null } = {}) {
 
     const scene = document.createElement("div");
 
@@ -2213,50 +2371,106 @@ function createProgressScene({ idle = false } = {}) {
             <rect y="240" width="360" height="63" fill="#3b4b43"/>
             <rect y="303" width="360" height="57" fill="#293632"/>
         </svg>
-        <span class="progress-scene-runner">
-            <svg viewBox="0 0 76 112" aria-hidden="true">
-                <circle class="runner-head" cx="43" cy="15" r="10"/>
-                <path class="runner-body" d="M39 28L45 57 37 75"/>
-                <path class="runner-arm runner-arm-back" d="M40 37L24 49 14 65"/>
-                <path class="runner-arm runner-arm-front" d="M43 38L57 47 66 61"/>
-                <path class="runner-leg runner-leg-back" d="M38 74L24 101"/>
-                <path class="runner-leg runner-leg-front" d="M40 74L53 102"/>
-            </svg>
-        </span>`;
+        <span class="progress-scene-runner-slot"></span>`;
+
+    if (userId) scene.querySelector(".progress-scene-runner-slot").appendChild(createProgressRunnerCanvas(userId, "progress-scene-runner"));
 
     return scene;
 
 }
 
-function startProgressEntrance() {
+function progressRaceStateKey(challenge, viewerId) {
 
-    if (!progressShouldAnimate) return;
+    return `${PROGRESS_RACE_STATE_PREFIX}${viewerId}:${challenge.id}`;
 
-    progressShouldAnimate = false;
-    window.clearTimeout(progressEntranceTimer);
+}
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+function readProgressRaceState(challenge, viewerId) {
 
-    const runner = progressRaceContainer.querySelector(".progress-scene:not(.is-idle) .progress-scene-runner");
-    const avatars = progressRaceContainer.querySelectorAll(".progress-race-avatar.is-at-start");
+    try {
 
-    requestAnimationFrame(() => {
+        return JSON.parse(sessionStorage.getItem(progressRaceStateKey(challenge, viewerId)) || "null") || { requirements: {}, initialized: false };
 
-        requestAnimationFrame(() => {
+    } catch {
 
-            runner?.classList.add("is-running");
-            avatars.forEach(avatar => {
+        return { requirements: {}, initialized: false };
 
-                avatar.classList.remove("is-at-start");
-                avatar.classList.add("is-racing");
+    }
+
+}
+
+function getProgressRaceMotion(challenge, viewerId, requirementType, participants) {
+
+    const state = readProgressRaceState(challenge, viewerId);
+    const next = Object.fromEntries(participants.map(participant => {
+
+        const total = requirementTotal(participant, requirementType);
+        const position = total.target > 0 ? Math.min(1, Math.max(0, total.completed / total.target)) : 0;
+        return [participant.userId, position];
+
+    }));
+    const previous = state.requirements?.[requirementType];
+    const motion = {};
+
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+
+        if (!state.initialized) {
+
+            Object.entries(next).forEach(([userId, position]) => {
+
+                if (position > 0) motion[userId] = { from: 0, to: position };
 
             });
 
+        } else if (previous) {
+
+            Object.entries(next).forEach(([userId, position]) => {
+
+                const prior = Number(previous[userId] ?? position);
+                if (position > prior) motion[userId] = { from: prior, to: position };
+
+            });
+
+        }
+
+    }
+
+    const nextState = {
+        initialized: true,
+        requirements: { ...(state.requirements || {}), [requirementType]: next }
+    };
+
+    sessionStorage.setItem(progressRaceStateKey(challenge, viewerId), JSON.stringify(nextState));
+    return { next, motion };
+
+}
+
+function positionToRoadPercent(position) {
+
+    return 8 + Math.min(1, Math.max(0, position)) * 84;
+
+}
+
+function startProgressRaceMotion({ motion, roadAvatars, sceneRunner, viewerId }) {
+
+    const movingIds = Object.keys(motion);
+    if (!movingIds.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+
+        roadAvatars.forEach(({ participant, avatar }) => {
+
+            const movement = motion[participant.userId];
+            if (!movement) return;
+            avatar.classList.add("is-racing");
+            avatar.style.setProperty("--race-position", `${positionToRoadPercent(movement.to)}%`);
+            animateProgressRunner(avatar.querySelector("canvas"), participant.userId);
+
         });
 
-    });
+        if (motion[viewerId]) animateProgressRunner(sceneRunner, viewerId);
 
-    progressEntranceTimer = window.setTimeout(() => runner?.classList.remove("is-running"), 2600);
+    }));
 
 }
 
@@ -2405,7 +2619,7 @@ function renderProgressRace() {
         copy.append(title, action);
         road.className = "progress-road is-empty";
         road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
-        progressRaceContainer.append(createProgressScene({ idle: true }), copy, road);
+        progressRaceContainer.append(createProgressScene({ idle: true, userId: viewerId }), copy, road);
         return;
 
     }
@@ -2452,7 +2666,9 @@ function renderProgressRace() {
     summaryCard.innerHTML = `<p>${getRequirementText(selectedType)}</p><strong>${value.completed.toLocaleString()} / ${value.target.toLocaleString()} ${requirementCopy(selectedType, value.target)}</strong><span>${remaining === 0 ? "Goal complete." : `${remaining.toLocaleString()} ${requirementCopy(selectedType, remaining)} to the finish.`}</span>`;
     progressRaceContainer.appendChild(summaryCard);
 
+    const race = getProgressRaceMotion(challenge, viewerId, selectedType, participants);
     const road = document.createElement("div");
+    const roadAvatars = [];
 
     road.className = "progress-road";
     road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
@@ -2460,12 +2676,14 @@ function renderProgressRace() {
     participants.forEach((participant, index) => {
 
         const total = requirementTotal(participant, selectedType);
-        const percent = total.target > 0 ? Math.min(100, Math.max(0, total.completed / total.target * 100)) : 0;
+        const position = race.next[participant.userId] || 0;
         const avatar = createRaceAvatar(participant, index % 2);
+        const movement = race.motion[participant.userId];
 
         // Keep the whole avatar inside the rounded road at both endpoints.
-        avatar.style.setProperty("--race-position", `${8 + (percent * .84)}%`);
+        avatar.style.setProperty("--race-position", `${positionToRoadPercent(movement?.from ?? position)}%`);
         road.appendChild(avatar);
+        roadAvatars.push({ participant, avatar });
 
     });
 
@@ -2485,8 +2703,11 @@ function renderProgressRace() {
         totals.appendChild(item);
 
     });
-    progressRaceContainer.append(createProgressScene(), totals, road);
-    startProgressEntrance();
+    const scene = createProgressScene({ userId: viewer.userId });
+    const sceneRunner = scene.querySelector("canvas");
+
+    progressRaceContainer.append(scene, totals, road);
+    startProgressRaceMotion({ motion: race.motion, roadAvatars, sceneRunner, viewerId });
 
 }
 
@@ -2500,7 +2721,7 @@ function renderCurrentChallenge(challenge) {
     if (!challenge) {
 
         renderNextWeekPactCard();
-        renderProgressRace();
+        if (activeDashboardTab === "progress") renderProgressRace();
 
         return;
 
@@ -2561,7 +2782,7 @@ function renderCurrentChallenge(challenge) {
 
     }
 
-    renderProgressRace();
+    if (activeDashboardTab === "progress") renderProgressRace();
 
 }
 
@@ -3018,6 +3239,13 @@ if (dashboardRefreshButton) {
 }
 
 document.addEventListener("visibilitychange", () => {
+
+    if (document.visibilityState === "hidden") {
+
+        stopProgressRunnerAnimations();
+        return;
+
+    }
 
     if (document.visibilityState === "visible") {
 

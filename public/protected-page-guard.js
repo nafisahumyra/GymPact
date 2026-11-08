@@ -9,6 +9,9 @@
 
         sessionStorage.removeItem(SESSION_KEY);
         sessionStorage.removeItem(ATHLETE_KEY);
+        Object.keys(sessionStorage)
+            .filter(key => key.startsWith("gymPactProgressRace:"))
+            .forEach(key => sessionStorage.removeItem(key));
         localStorage.removeItem(DISPLAY_NAME_KEY);
 
     }
