@@ -187,18 +187,6 @@ userCards.forEach(card => {
 
             const athlete = await resolveAthlete(selectedUser);
 
-            const sessionToken = sessionStorage.getItem("gymPactSessionToken");
-            const { data: selection, error: selectionError } = await supabase.functions.invoke(
-                "select-gympact-athlete",
-                { body: { sessionToken, userId: athlete.id } }
-            );
-
-            if (selectionError || selection?.error) {
-
-                throw selectionError || new Error(selection.error);
-
-            }
-
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);
 
