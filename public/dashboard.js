@@ -2422,8 +2422,6 @@ function renderProgressRace() {
 
     });
 
-    progressRaceContainer.append(createProgressScene(), road);
-
     const totals = document.createElement("div");
 
     totals.className = "progress-race-totals";
@@ -2440,7 +2438,7 @@ function renderProgressRace() {
         totals.appendChild(item);
 
     });
-    progressRaceContainer.appendChild(totals);
+    progressRaceContainer.append(createProgressScene(), totals, road);
 
 }
 
