@@ -92,6 +92,27 @@ body.dashboard-page {
     padding: 32px clamp(16px, 4vw, 40px) calc(130px + env(safe-area-inset-bottom));
 }
 
+/* Progress is an immersive scene: keep only the compact profile control over it. */
+.dashboard-page.is-progress-tab .dashboard-app-header {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 8;
+    height: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    pointer-events: none;
+}
+.dashboard-page.is-progress-tab .dashboard-header-content {
+    padding: max(10px, env(safe-area-inset-top)) clamp(16px, 4vw, 40px) 0;
+}
+.dashboard-page.is-progress-tab .dashboard-header { margin: 0; }
+.dashboard-page.is-progress-tab .brand-lockup,
+.dashboard-page.is-progress-tab #welcome-message,
+.dashboard-page.is-progress-tab #dashboard-refresh-feedback { display: none; }
+.dashboard-page.is-progress-tab .profile-menu-button { pointer-events: auto; }
+
 .brand-lockup,
 .page-title {
     display: inline-flex;
@@ -445,7 +466,7 @@ body.dashboard-page {
     flex-direction: column;
     gap: 17px;
     overflow: hidden;
-    padding: 24px clamp(16px, 4vw, 40px) calc(112px + env(safe-area-inset-bottom));
+    padding: max(24px, calc(env(safe-area-inset-top) + 18px)) clamp(16px, 4vw, 40px) calc(112px + env(safe-area-inset-bottom));
     background: #09110f;
 }
 .progress-race > :not(.progress-scene) { position: relative; z-index: 2; }

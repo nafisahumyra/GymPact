@@ -1068,6 +1068,7 @@ function createPactProgressOverview(challenge) {
 function showDashboardTab(tab) {
 
     activeDashboardTab = tab;
+    document.body.classList.toggle("is-progress-tab", tab === "progress");
     const dashboardContent = document.getElementById("dashboard-content");
 
     if (dashboardContent) dashboardContent.scrollTop = 0;
