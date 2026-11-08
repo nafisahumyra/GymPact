@@ -88,14 +88,9 @@ let profilePhotoUrl = null;
 let profileDisplayName = currentUser;
 let monthlyCompletionBrandAssetsPromise = null;
 let activeDashboardTab = "overview";
-let activePactType = "weekly";
 let dashboardRefreshInFlight = null;
 const monthPactContent = document.getElementById("month-pact-content");
 const pactMonthPactContent = document.getElementById("pact-month-pact-content");
-const pactWeeklyPanel = document.getElementById("pact-weekly-panel");
-const pactMonthlyPanel = document.getElementById("pact-monthly-panel");
-const pactWeeklyTab = document.getElementById("pact-weekly-tab");
-const pactMonthlyTab = document.getElementById("pact-monthly-tab");
 const homeMonthPactContent = document.getElementById("home-month-pact");
 let monthlyPact = null;
 let monthlyCandidate = null;
@@ -294,7 +289,7 @@ function renderExerciseTrackers() {
 
     if (exerciseTrackers.length === 0) {
 
-        exerciseTrackingSection.hidden = activeDashboardTab !== "pact" || activePactType !== "weekly";
+        exerciseTrackingSection.hidden = activeDashboardTab !== "track";
 
         const emptyState = document.createElement("div");
         const message = document.createElement("p");
@@ -312,7 +307,7 @@ function renderExerciseTrackers() {
 
     }
 
-    exerciseTrackingSection.hidden = activeDashboardTab !== "pact" || activePactType !== "weekly";
+    exerciseTrackingSection.hidden = activeDashboardTab !== "track";
 
     exerciseTrackers.forEach(tracker => {
 
@@ -1106,28 +1101,12 @@ function showDashboardTab(tab) {
     if (tab === "activity") loadActivityWorkouts();
     if (tab === "progress") {
         renderProgressRace();
-
     }
+    if (tab === "pact") showPactType();
 
 }
 
-function showPactType(type) {
-
-    activePactType = type;
-    const isWeekly = type === "weekly";
-
-    pactWeeklyTab.classList.toggle("is-active", isWeekly);
-    pactWeeklyTab.setAttribute("aria-selected", String(isWeekly));
-    pactMonthlyTab.classList.toggle("is-active", !isWeekly);
-    pactMonthlyTab.setAttribute("aria-selected", String(!isWeekly));
-    pactWeeklyPanel.hidden = !isWeekly;
-    pactMonthlyPanel.hidden = isWeekly;
-
-    if (isWeekly) {
-        renderExerciseTrackers();
-        return;
-
-    }
+function showPactType() {
 
     if (pactMonthPactContent && monthPactContent.parentElement !== pactMonthPactContent) {
 
@@ -3361,8 +3340,8 @@ dashboardTabs.forEach(button => {
 });
 const requestedDashboardTab = new URLSearchParams(window.location.search).get("tab");
 
-showDashboardTab(["activity", "progress", "pact"].includes(requestedDashboardTab) ? requestedDashboardTab : requestedDashboardTab === "month" ? "pact" : "overview");
-if (requestedDashboardTab === "month") showPactType("monthly");
+showDashboardTab(["activity", "progress", "pact", "track"].includes(requestedDashboardTab) ? requestedDashboardTab : requestedDashboardTab === "month" ? "pact" : "overview");
+if (requestedDashboardTab === "month") showPactType();
 if (dashboardRefreshButton) {
 
     dashboardRefreshButton.addEventListener("click", refreshDashboard);
@@ -3731,9 +3710,6 @@ document.getElementById("choose-monthly-pact").addEventListener("click", async (
     await loadMonthlyPact();
     if (!monthlyPact) openMonthlyCreate();
 });
-
-pactWeeklyTab.addEventListener("click", () => showPactType("weekly"));
-pactMonthlyTab.addEventListener("click", () => showPactType("monthly"));
 
 openCancelChallengeModalButton.addEventListener("click", () => {
 

@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="dashboard.css?v=profile-menu-v1">
+    <link rel="stylesheet" href="dashboard.css?v=track-tab-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=profile-menu-v1">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=track-tab-v1">
 
     <div class="dashboard-shell">
 
@@ -87,26 +87,16 @@
         </section>
 
         <section class="dashboard-section pact-page-section" data-dashboard-tab-content="pact" hidden>
-
-            <div class="pact-page-toolbar">
-                <div class="pact-type-tabs" role="tablist" aria-label="Pact type">
-                    <button id="pact-weekly-tab" class="pact-type-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="pact-weekly-panel">Weekly</button>
-                    <button id="pact-monthly-tab" class="pact-type-tab" type="button" role="tab" aria-selected="false" aria-controls="pact-monthly-panel">Monthly</button>
-                </div>
+            <div id="pact-month-pact-content">
+                <div id="month-pact-content" aria-live="polite"></div>
             </div>
+        </section>
 
-            <div id="pact-weekly-panel" class="pact-type-panel" role="tabpanel" aria-labelledby="pact-weekly-tab">
-                <section class="exercise-tracking-section" aria-labelledby="exercise-progress-title">
-                    <h3 id="exercise-progress-title">Trackers</h3>
-                    <div id="exercise-trackers" class="exercise-trackers" aria-live="polite"></div>
-                </section>
-            </div>
-
-            <div id="pact-monthly-panel" class="pact-type-panel" role="tabpanel" aria-labelledby="pact-monthly-tab" hidden>
-                <div id="pact-month-pact-content">
-                    <div id="month-pact-content" aria-live="polite"></div>
-                </div>
-            </div>
+        <section class="dashboard-section track-page-section" data-dashboard-tab-content="track" hidden>
+            <section class="exercise-tracking-section" aria-labelledby="exercise-progress-title">
+                <h3 id="exercise-progress-title">Trackers</h3>
+                <div id="exercise-trackers" class="exercise-trackers" aria-live="polite"></div>
+            </section>
         </section>
 
         <section class="dashboard-section" data-dashboard-tab-content="overview">
@@ -212,6 +202,14 @@
                         </svg>
                     </span>
                     <span>Pact</span>
+                </button>
+                <button id="track-tab" class="dashboard-tab" type="button" role="tab" aria-selected="false">
+                    <span class="dashboard-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19V5M4 19h16M8 15l3-3 3 2 5-6"></path>
+                        </svg>
+                    </span>
+                    <span>Track</span>
                 </button>
             </div>
             <button id="quick-action-toggle" class="quick-action-toggle" type="button" aria-label="Open quick actions" aria-expanded="false" aria-controls="quick-action-menu">

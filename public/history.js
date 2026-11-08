@@ -74,7 +74,7 @@ document.querySelectorAll("[data-history-quick-action]").forEach(button => {
         const action = button.dataset.historyQuickAction;
         const destinations = {
             exercise: "dashboard.html?quickAction=exercise",
-            tracker: "dashboard.html?tab=progress&quickAction=tracker",
+            tracker: "dashboard.html?tab=track&quickAction=tracker",
             "week-pact": "dashboard.html?tab=pact&quickAction=week-pact",
             "month-pact": "dashboard.html?tab=pact&quickAction=month-pact",
             "dev-view": "preview-layout.html"
@@ -698,7 +698,7 @@ async function refreshHistory() {
 
 backToPactButton.addEventListener("click", () => {
 
-    window.location.href = "dashboard.html?tab=pact";
+    window.location.href = "dashboard.html";
 
 });
 
