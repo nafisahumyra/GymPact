@@ -2232,17 +2232,19 @@ function renderProgressRace() {
     }
 
     const challenge = currentChallenge?.status === "active" ? currentChallenge : null;
-    const heading = document.createElement("header");
-    const dateLine = document.createElement("p");
-    const timeRemaining = document.createElement("span");
+    if (challenge) {
 
-    heading.className = "progress-race-heading";
-    dateLine.textContent = challenge
-        ? `${formatChallengeDate(challenge.startDate)} → ${formatChallengeDate(challenge.endDate)}`
-        : "No active weekly Pact";
-    timeRemaining.textContent = challenge ? formatPactTimeRemaining(challenge) : "Create a Pact to start tracking";
-    heading.append(dateLine, timeRemaining);
-    progressRaceContainer.appendChild(heading);
+        const heading = document.createElement("header");
+        const dateLine = document.createElement("p");
+        const timeRemaining = document.createElement("span");
+
+        heading.className = "progress-race-heading";
+        dateLine.textContent = `${formatChallengeDate(challenge.startDate)} → ${formatChallengeDate(challenge.endDate)}`;
+        timeRemaining.textContent = formatPactTimeRemaining(challenge);
+        heading.append(dateLine, timeRemaining);
+        progressRaceContainer.appendChild(heading);
+
+    }
 
     const participants = challenge ? getRaceParticipants(challenge) : [];
     const viewerId = sessionStorage.getItem("gymPactSelectedAthleteId");
@@ -2355,9 +2357,10 @@ function renderProgressRace() {
         const road = document.createElement("div");
 
         empty.className = "progress-race-empty progress-race-idle";
+        copy.className = "progress-race-empty-copy";
         title.textContent = "No active weekly Pact";
         action.type = "button";
-        action.textContent = "+ Create Weekly Pact";
+        action.textContent = "+ Create Pact";
         action.addEventListener("click", startWeeklyPact);
         copy.append(title, action);
         road.className = "progress-road is-empty";

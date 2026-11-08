@@ -493,9 +493,10 @@ body.dashboard-page {
 .progress-race-totals strong { overflow: hidden; color: var(--text); font-size: .84rem; text-overflow: ellipsis; white-space: nowrap; }
 .progress-race-totals span { color: var(--muted); font-size: .76rem; font-variant-numeric: tabular-nums; }
 .progress-race-empty { display: grid; gap: 12px; padding: 22px 18px; border: 1px solid var(--line-soft); border-radius: 20px; background: linear-gradient(145deg, rgba(23,29,28,.9), rgba(12,16,16,.98)); }
+.progress-race-empty-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .progress-race-empty h3 { margin: 0; color: var(--text); font-size: 1rem; }
 .progress-race-empty p { margin: 0; color: var(--muted); font-size: .86rem; }
-.progress-race-empty button { justify-self: start; min-height: 38px; padding: 7px 12px; border-color: var(--green); background: transparent; color: var(--green); font-size: .78rem; }
+.progress-race-empty button { flex: 0 0 auto; min-height: 38px; padding: 7px 11px; border-color: var(--green); background: transparent; color: var(--green); font-size: .75rem; white-space: nowrap; }
 .progress-race-idle { overflow: hidden; }
 .progress-race-idle > div:first-child { display: grid; gap: 12px; }
 .progress-race-idle .progress-scene { min-height: 150px; margin: 0 -18px; }
