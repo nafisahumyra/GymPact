@@ -494,7 +494,15 @@ body.dashboard-page {
 .progress-goal-summary p { margin: 0; color: var(--muted); font-size: .76rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
 .progress-goal-summary strong { max-width: 100%; color: var(--text); font-size: clamp(2rem, 9vw, 3rem); font-variant-numeric: tabular-nums; letter-spacing: -.06em; line-height: 1; white-space: nowrap; }
 .progress-goal-summary span { color: var(--muted); font-size: .86rem; }
-.progress-scene { position: relative; z-index: 0; min-height: clamp(300px, 44svh, 440px); overflow: hidden; pointer-events: none; border-radius: 22px; }
+.progress-scene {
+    position: relative;
+    z-index: 0;
+    min-height: clamp(300px, 44svh, 440px);
+    /* The landscape is scenery, not a card: let it run cleanly to both screen edges. */
+    margin-inline: clamp(-40px, -4vw, -16px);
+    overflow: hidden;
+    pointer-events: none;
+}
 .progress-scene > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .progress-scene-runner-slot { position: absolute; z-index: 1; bottom: 14px; left: 50%; width: clamp(228px, 66vw, 290px); aspect-ratio: 296 / 368; transform: translateX(-50%); }
 .progress-scene-runner { display: block; width: 100%; height: 100%; }
