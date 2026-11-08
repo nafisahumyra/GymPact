@@ -16,6 +16,8 @@ let currentChallengeLoadError = false;
 let progressSelectedRequirementType = null;
 let progressDayParticipantId = null;
 let progressSelectedDay = null;
+let progressShouldAnimate = false;
+let progressEntranceTimer = null;
 const currentChallengeContainer =
     document.getElementById("current-challenge");
 const workoutCount =
@@ -1082,7 +1084,12 @@ function showDashboardTab(tab) {
     renderExerciseTrackers();
 
     if (tab === "activity") loadActivityWorkouts();
-    if (tab === "progress") renderProgressRace();
+    if (tab === "progress") {
+
+        progressShouldAnimate = true;
+        renderProgressRace();
+
+    }
 
 }
 
@@ -2149,7 +2156,7 @@ function createRaceAvatar(participant, lane) {
     const image = document.createElement("img");
     const initials = document.createElement("span");
 
-    avatar.className = `progress-race-avatar lane-${lane}`;
+    avatar.className = `progress-race-avatar lane-${lane} is-at-start`;
     avatar.setAttribute("aria-label", participant.displayName || "GymPact athlete");
     initials.textContent = getActivityInitials(participant.displayName);
     avatar.append(initials);
@@ -2206,9 +2213,50 @@ function createProgressScene({ idle = false } = {}) {
             <rect y="240" width="360" height="63" fill="#3b4b43"/>
             <rect y="303" width="360" height="57" fill="#293632"/>
         </svg>
-        <span class="progress-scene-runner"><i></i><b></b><em></em><strong></strong></span>`;
+        <span class="progress-scene-runner">
+            <svg viewBox="0 0 76 112" aria-hidden="true">
+                <circle class="runner-head" cx="43" cy="15" r="10"/>
+                <path class="runner-body" d="M39 28L45 57 37 75"/>
+                <path class="runner-arm runner-arm-back" d="M40 37L24 49 14 65"/>
+                <path class="runner-arm runner-arm-front" d="M43 38L57 47 66 61"/>
+                <path class="runner-leg runner-leg-back" d="M38 74L24 101"/>
+                <path class="runner-leg runner-leg-front" d="M40 74L53 102"/>
+            </svg>
+        </span>`;
 
     return scene;
+
+}
+
+function startProgressEntrance() {
+
+    if (!progressShouldAnimate) return;
+
+    progressShouldAnimate = false;
+    window.clearTimeout(progressEntranceTimer);
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const runner = progressRaceContainer.querySelector(".progress-scene:not(.is-idle) .progress-scene-runner");
+    const avatars = progressRaceContainer.querySelectorAll(".progress-race-avatar.is-at-start");
+
+    requestAnimationFrame(() => {
+
+        requestAnimationFrame(() => {
+
+            runner?.classList.add("is-running");
+            avatars.forEach(avatar => {
+
+                avatar.classList.remove("is-at-start");
+                avatar.classList.add("is-racing");
+
+            });
+
+        });
+
+    });
+
+    progressEntranceTimer = window.setTimeout(() => runner?.classList.remove("is-running"), 2600);
 
 }
 
@@ -2438,6 +2486,7 @@ function renderProgressRace() {
 
     });
     progressRaceContainer.append(createProgressScene(), totals, road);
+    startProgressEntrance();
 
 }
 
