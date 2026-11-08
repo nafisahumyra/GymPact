@@ -702,19 +702,17 @@ function getNextWeekPactRange() {
 
 function renderNextWeekPactCard() {
 
-    const kicker = document.createElement("p");
     const range = document.createElement("h4");
     const create = document.createElement("button");
 
-    currentChallengeContainer.classList.add("home-cycle-empty");
-    kicker.className = "home-cycle-kicker";
-    kicker.textContent = "No Active Week Pact";
+    currentChallengeContainer.classList.add("home-cycle-empty", "home-cycle-compact");
+    range.className = "home-cycle-date";
     range.textContent = getNextWeekPactRange();
     create.className = "home-cycle-action";
     create.type = "button";
     create.textContent = "+ Create Week Pact";
     create.addEventListener("click", startWeeklyPact);
-    currentChallengeContainer.append(kicker, range, create);
+    currentChallengeContainer.append(range, create);
 
 }
 
@@ -2757,7 +2755,6 @@ function renderHomeMonthPact() {
 
     homeMonthPactContent.innerHTML = "";
     const card = document.createElement("article");
-    const kicker = document.createElement("p");
     const title = document.createElement("h3");
     const action = document.createElement("button");
 
@@ -2775,15 +2772,14 @@ function renderHomeMonthPact() {
             month: "long"
         }).format(new Date(`${currentMonthDate().year}-${currentMonthDate().month}-01T12:00:00Z`));
 
-        card.classList.add("home-cycle-empty");
-        kicker.className = "home-cycle-kicker";
-        kicker.textContent = "No Active Month Pact";
+        card.classList.add("home-cycle-empty", "home-cycle-compact");
+        title.className = "home-cycle-date";
         title.textContent = label;
         action.className = "home-cycle-action";
         action.type = "button";
         action.textContent = `+ Create ${monthName} Pact`;
         action.addEventListener("click", openMonthlyCreate);
-        card.append(kicker, title, action);
+        card.append(title, action);
 
     } else {
 
@@ -2795,8 +2791,8 @@ function renderHomeMonthPact() {
             failed: "Pact Failed"
         };
 
-        kicker.className = "home-cycle-kicker";
-        kicker.textContent = "This Month";
+        card.classList.add("home-cycle-compact");
+        title.className = "home-cycle-date";
         title.textContent = monthlyPact.monthLabel;
         action.className = "home-cycle-secondary-action";
         action.type = "button";
@@ -2805,7 +2801,7 @@ function renderHomeMonthPact() {
             showDashboardTab("pact");
             showPactType("monthly");
         });
-        card.append(kicker, title, action);
+        card.append(title, action);
 
     }
 
