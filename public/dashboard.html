@@ -31,10 +31,16 @@
                 <img class="wordmark-image" src="assets/gp-images/gympact-wordmark.png" alt="">
             </h1>
 
-            <button id="profile-menu-button" class="profile-menu-button" type="button" aria-label="Edit profile photo" aria-haspopup="dialog">
-                <span id="profile-menu-initials" class="profile-menu-initials"></span>
-                <img id="profile-menu-image" alt="" hidden>
-            </button>
+            <div class="profile-menu-wrapper">
+                <button id="profile-menu-button" class="profile-menu-button" type="button" aria-label="Open profile menu" aria-haspopup="menu" aria-expanded="false" aria-controls="profile-actions-menu">
+                    <span id="profile-menu-initials" class="profile-menu-initials"></span>
+                    <img id="profile-menu-image" alt="" hidden>
+                </button>
+                <div id="profile-actions-menu" class="profile-actions-menu" role="menu" hidden>
+                    <button id="open-profile-page" type="button" role="menuitem">Profile</button>
+                    <button id="open-profile-history" type="button" role="menuitem">History</button>
+                </div>
+            </div>
 
                 </div>
 
@@ -87,9 +93,6 @@
                     <button id="pact-weekly-tab" class="pact-type-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="pact-weekly-panel">Weekly</button>
                     <button id="pact-monthly-tab" class="pact-type-tab" type="button" role="tab" aria-selected="false" aria-controls="pact-monthly-panel">Monthly</button>
                 </div>
-                <button id="open-pact-history" class="pact-history-icon-button" type="button" aria-label="Open Pact History">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.2-5.7"/><path d="M3.5 4.5v3.9h3.9"/><path d="M12 7.5V12l3.1 1.8"/></svg>
-                </button>
             </div>
 
             <div id="pact-weekly-panel" class="pact-type-panel" role="tabpanel" aria-labelledby="pact-weekly-tab">
@@ -604,6 +607,29 @@
         </div>
 
     </div>
+
+    <section id="profile-page" class="profile-page" aria-labelledby="profile-page-title" hidden>
+        <div class="profile-page-content">
+            <header class="profile-page-header">
+                <button id="close-profile-page" class="profile-page-back" type="button" aria-label="Back to GymPact">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg>
+                    <span>Back</span>
+                </button>
+                <h2 id="profile-page-title">Profile</h2>
+            </header>
+            <article class="profile-page-card">
+                <div class="profile-page-identity">
+                    <span id="profile-page-initials" class="profile-page-avatar">A</span>
+                    <img id="profile-page-image" class="profile-page-avatar" alt="" hidden>
+                </div>
+                <div class="profile-page-detail">
+                    <span>Name</span>
+                    <strong id="profile-page-name">Athlete</strong>
+                </div>
+                <button id="open-profile-photo" class="profile-page-photo-action" type="button">Update profile picture</button>
+            </article>
+        </div>
+    </section>
 
     <div id="profile-photo-modal" class="modal" aria-labelledby="profile-photo-title">
         <div class="modal-content exercise-modal-content profile-photo-modal-content">

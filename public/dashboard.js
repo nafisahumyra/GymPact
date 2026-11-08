@@ -59,6 +59,15 @@ const saveEditWorkoutButton = document.getElementById("save-edit-workout");
 const profileMenuButton = document.getElementById("profile-menu-button");
 const profileMenuInitials = document.getElementById("profile-menu-initials");
 const profileMenuImage = document.getElementById("profile-menu-image");
+const profileActionsMenu = document.getElementById("profile-actions-menu");
+const openProfilePageButton = document.getElementById("open-profile-page");
+const openProfileHistoryButton = document.getElementById("open-profile-history");
+const profilePage = document.getElementById("profile-page");
+const closeProfilePageButton = document.getElementById("close-profile-page");
+const profilePageName = document.getElementById("profile-page-name");
+const profilePageInitials = document.getElementById("profile-page-initials");
+const profilePageImage = document.getElementById("profile-page-image");
+const openProfilePhotoButton = document.getElementById("open-profile-photo");
 const profilePhotoModal = document.getElementById("profile-photo-modal");
 const profilePhotoInput = document.getElementById("profile-photo-input");
 const profilePhotoError = document.getElementById("profile-photo-error");
@@ -76,6 +85,7 @@ let activityLoadError = false;
 let activityLoadObserver = null;
 let editingWorkout = null;
 let profilePhotoUrl = null;
+let profileDisplayName = currentUser;
 let monthlyCompletionBrandAssetsPromise = null;
 let activeDashboardTab = "overview";
 let activePactType = "weekly";
@@ -1254,13 +1264,52 @@ function getActivityInitials(name) {
 
 function renderProfileAvatar({ displayName = currentUser, photoUrl = null } = {}) {
 
+    profileDisplayName = displayName;
     profilePhotoUrl = photoUrl;
-    profileMenuInitials.textContent = getActivityInitials(displayName);
-    profileMenuImage.hidden = !photoUrl;
+    const initials = getActivityInitials(displayName);
+    profileMenuInitials.textContent = initials;
+    profilePageInitials.textContent = initials;
+    profilePageName.textContent = displayName;
+    [profileMenuImage, profilePageImage].forEach(image => {
+        image.hidden = !photoUrl;
+        image.removeAttribute("src");
+        if (photoUrl) image.src = photoUrl;
+    });
     profileMenuInitials.hidden = Boolean(photoUrl);
-    profileMenuImage.removeAttribute("src");
+    profilePageInitials.hidden = Boolean(photoUrl);
 
-    if (photoUrl) profileMenuImage.src = photoUrl;
+}
+
+function closeProfileMenu({ restoreFocus = false } = {}) {
+
+    if (profileActionsMenu.hidden) return;
+    profileActionsMenu.hidden = true;
+    profileMenuButton.setAttribute("aria-expanded", "false");
+    if (restoreFocus) profileMenuButton.focus();
+
+}
+
+function openProfileMenu() {
+
+    profileActionsMenu.hidden = false;
+    profileMenuButton.setAttribute("aria-expanded", "true");
+
+}
+
+function openProfilePage() {
+
+    closeProfileMenu();
+    profilePage.hidden = false;
+    profilePageName.textContent = profileDisplayName;
+    closeProfilePageButton.focus();
+
+}
+
+function closeProfilePage() {
+
+    profilePage.hidden = true;
+    profileMenuButton.focus();
+
 
 }
 
@@ -3341,7 +3390,25 @@ refreshDashboard();
 renderProfileAvatar();
 loadProfilePhoto();
 
-profileMenuButton.addEventListener("click", openProfilePhotoModal);
+profileMenuButton.addEventListener("click", () => {
+    if (profileActionsMenu.hidden) openProfileMenu();
+    else closeProfileMenu({ restoreFocus: true });
+});
+openProfilePageButton.addEventListener("click", openProfilePage);
+openProfileHistoryButton.addEventListener("click", () => {
+    window.location.href = "history.html?view=pacts";
+});
+closeProfilePageButton.addEventListener("click", closeProfilePage);
+openProfilePhotoButton.addEventListener("click", openProfilePhotoModal);
+document.addEventListener("pointerdown", event => {
+    if (!profileActionsMenu.hidden && !event.target.closest(".profile-menu-wrapper")) closeProfileMenu();
+});
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        if (!profileActionsMenu.hidden) closeProfileMenu({ restoreFocus: true });
+        else if (!profilePage.hidden) closeProfilePage();
+    }
+});
 cancelProfilePhotoButton.addEventListener("click", closeProfilePhotoModal);
 saveProfilePhotoButton.addEventListener("click", saveProfilePhoto);
 removeProfilePhotoButton.addEventListener("click", removeProfilePhoto);
@@ -3350,8 +3417,6 @@ profilePhotoModal.addEventListener("click", event => {
     if (event.target === profilePhotoModal) closeProfilePhotoModal();
 
 });
-
-const pactHistoryButton = document.getElementById("open-pact-history");
 
 const challengeActiveModal =
     document.getElementById("challenge-active-modal");
@@ -3669,13 +3734,6 @@ document.getElementById("choose-monthly-pact").addEventListener("click", async (
 
 pactWeeklyTab.addEventListener("click", () => showPactType("weekly"));
 pactMonthlyTab.addEventListener("click", () => showPactType("monthly"));
-
-pactHistoryButton.addEventListener("click", () => {
-
-    window.location.href = "history.html?view=pacts";
-
-});
-
 
 openCancelChallengeModalButton.addEventListener("click", () => {
 
