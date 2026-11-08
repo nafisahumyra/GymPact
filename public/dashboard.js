@@ -2201,9 +2201,10 @@ function createProgressScene({ idle = false } = {}) {
         <svg viewBox="0 0 360 156" preserveAspectRatio="none">
             <defs><linearGradient id="progress-sky" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#10251e"/><stop offset="1" stop-color="#0a1110"/></linearGradient></defs>
             <rect width="360" height="156" fill="url(#progress-sky)"/>
-            <path d="M0 89L58 84l56 5 57-8 57 7 65-5 67 7v66H0z" fill="#102e22" opacity=".86"/>
-            <path d="M0 106l60-7 62 5 62-8 58 8 63-6 55 6v52H0z" fill="#17201e"/>
-            <path d="M0 124l67-11 65 6 67-9 63 10 55-7 43 5v38H0z" fill="#34453f" opacity=".9"/>
+            <path d="M0 89c42-14 82-12 121 2 39-16 79-15 119 0 42-13 82-12 120 2v63H0z" fill="#102e22" opacity=".84"/>
+            <path d="M0 110c49-10 93-6 133 9 37-12 76-13 115-2 43-13 80-13 112 0v39H0z" fill="#17201e"/>
+            <path d="M168 83c5 18-18 36-72 73h227c-52-38-109-55-121-73z" fill="#3d4b46"/>
+            <path d="M186 88c5 19 12 43 22 68" fill="none" stroke="#84918b" stroke-width="3" stroke-dasharray="7 8" opacity=".72"/>
         </svg>
         <span class="progress-scene-runner"><i></i><b></b><em></em><strong></strong></span>`;
 
