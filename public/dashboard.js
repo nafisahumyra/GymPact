@@ -2198,13 +2198,13 @@ function createProgressScene({ idle = false } = {}) {
     scene.className = `progress-scene${idle ? " is-idle" : ""}`;
     scene.setAttribute("aria-hidden", "true");
     scene.innerHTML = `
-        <svg viewBox="0 0 360 156" preserveAspectRatio="none">
+        <svg viewBox="0 0 360 360" preserveAspectRatio="none">
             <defs><linearGradient id="progress-sky" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#10251e"/><stop offset="1" stop-color="#0a1110"/></linearGradient></defs>
-            <rect width="360" height="156" fill="url(#progress-sky)"/>
-            <path d="M0 94c58-9 111-8 164 2 65-12 129-11 196 1v59H0z" fill="#102e22" opacity=".84"/>
-            <path d="M0 110c65-7 123-5 180 5 58-9 117-8 180 2v39H0z" fill="#17201e"/>
-            <path d="M0 121c73-8 132-6 184 3 59-8 117-7 176 3v29H0z" fill="#3d4b46"/>
-            <path d="M0 134c77-5 136-3 184 4 59-7 118-6 176 2" fill="none" stroke="#718078" stroke-width="3" stroke-dasharray="12 11" opacity=".58"/>
+            <rect width="360" height="360" fill="url(#progress-sky)"/>
+            <path d="M0 190c45-28 79-20 116-3 43-42 88-36 126-11 44-27 76-20 118 1v183H0z" fill="#102e22" opacity=".86"/>
+            <path d="M0 226c58-8 99-2 138 15 41-20 98-23 150-2 27-4 50-2 72 5v116H0z" fill="#17201e"/>
+            <rect y="240" width="360" height="63" fill="#3b4b43"/>
+            <rect y="303" width="360" height="57" fill="#293632"/>
         </svg>
         <span class="progress-scene-runner"><i></i><b></b><em></em><strong></strong></span>`;
 
