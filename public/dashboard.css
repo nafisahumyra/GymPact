@@ -92,8 +92,9 @@ body.dashboard-page {
     padding: 32px clamp(16px, 4vw, 40px) calc(130px + env(safe-area-inset-bottom));
 }
 
-/* Progress is an immersive scene: keep only the compact profile control over it. */
-.dashboard-page.is-progress-tab .dashboard-app-header {
+/* Progress and Pact use their content as the top-level screen header. */
+.dashboard-page.is-progress-tab .dashboard-app-header,
+.dashboard-page.is-pact-tab .dashboard-app-header {
     position: absolute;
     inset: 0 0 auto;
     z-index: 8;
@@ -104,14 +105,20 @@ body.dashboard-page {
     box-shadow: none;
     pointer-events: none;
 }
-.dashboard-page.is-progress-tab .dashboard-header-content {
+.dashboard-page.is-progress-tab .dashboard-header-content,
+.dashboard-page.is-pact-tab .dashboard-header-content {
     padding: max(10px, env(safe-area-inset-top)) clamp(16px, 4vw, 40px) 0;
 }
-.dashboard-page.is-progress-tab .dashboard-header { margin: 0; }
+.dashboard-page.is-progress-tab .dashboard-header,
+.dashboard-page.is-pact-tab .dashboard-header { margin: 0; }
 .dashboard-page.is-progress-tab .brand-lockup,
+.dashboard-page.is-pact-tab .brand-lockup,
 .dashboard-page.is-progress-tab #welcome-message,
-.dashboard-page.is-progress-tab #dashboard-refresh-feedback { display: none; }
-.dashboard-page.is-progress-tab .profile-menu-button { display: none; }
+.dashboard-page.is-pact-tab #welcome-message,
+.dashboard-page.is-progress-tab #dashboard-refresh-feedback,
+.dashboard-page.is-pact-tab #dashboard-refresh-feedback,
+.dashboard-page.is-progress-tab .profile-menu-button,
+.dashboard-page.is-pact-tab .profile-menu-button { display: none; }
 
 .brand-lockup,
 .page-title {
@@ -403,6 +410,7 @@ body.dashboard-page {
     gap: 10px;
     margin-bottom: 18px;
 }
+.dashboard-page.is-pact-tab .pact-page-section { margin-top: max(16px, env(safe-area-inset-top)); }
 .pact-type-tabs {
     display: grid;
     flex: 1;

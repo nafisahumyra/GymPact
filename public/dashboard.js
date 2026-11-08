@@ -1069,6 +1069,7 @@ function showDashboardTab(tab) {
 
     activeDashboardTab = tab;
     document.body.classList.toggle("is-progress-tab", tab === "progress");
+    document.body.classList.toggle("is-pact-tab", tab === "pact");
     const dashboardContent = document.getElementById("dashboard-content");
 
     if (dashboardContent) dashboardContent.scrollTop = 0;
