@@ -111,7 +111,7 @@ body.dashboard-page {
 .dashboard-page.is-progress-tab .brand-lockup,
 .dashboard-page.is-progress-tab #welcome-message,
 .dashboard-page.is-progress-tab #dashboard-refresh-feedback { display: none; }
-.dashboard-page.is-progress-tab .profile-menu-button { pointer-events: auto; }
+.dashboard-page.is-progress-tab .profile-menu-button { display: none; }
 
 .brand-lockup,
 .page-title {
