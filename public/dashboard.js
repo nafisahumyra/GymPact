@@ -2690,26 +2690,10 @@ function renderProgressRace() {
 
     });
 
-    const totals = document.createElement("div");
-
-    totals.className = "progress-race-totals";
-    participants.forEach(participant => {
-
-        const total = requirementTotal(participant, selectedType);
-        const item = document.createElement("div");
-        const name = document.createElement("strong");
-        const score = document.createElement("span");
-
-        name.textContent = participant.userId === viewerId ? "You" : participant.displayName;
-        score.textContent = `${total.completed.toLocaleString()} / ${total.target.toLocaleString()} ${requirementCopy(selectedType, total.target)}`;
-        item.append(name, score);
-        totals.appendChild(item);
-
-    });
     const scene = createProgressScene({ userId: viewer.userId });
     const sceneRunner = scene.querySelector("canvas");
 
-    progressRaceContainer.append(scene, totals, road);
+    progressRaceContainer.append(scene, road);
     startProgressRaceMotion({ motion: race.motion, roadAvatars, sceneRunner, viewerId });
 
 }
