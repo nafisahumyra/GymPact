@@ -482,7 +482,7 @@ body.dashboard-page {
 .progress-goal-summary span { color: var(--muted); font-size: .86rem; }
 .progress-scene { position: absolute; z-index: 0; inset: 0; overflow: hidden; pointer-events: none; }
 .progress-scene > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.progress-scene-runner-slot { position: absolute; z-index: 1; bottom: calc(208px + env(safe-area-inset-bottom)); left: 50%; width: 132px; height: 176px; transform: translateX(-50%); }
+.progress-scene-runner-slot { position: absolute; z-index: 1; bottom: calc(208px + env(safe-area-inset-bottom)); left: 50%; width: clamp(228px, 66vw, 290px); aspect-ratio: 296 / 368; transform: translateX(-50%); }
 .progress-scene-runner { display: block; width: 100%; height: 100%; }
 .progress-road { position: relative; z-index: 3; min-height: 104px; margin: 0; border: 1px solid #3d4a45; border-radius: 999px; background: linear-gradient(180deg, #252d2b, #181e1d); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 9px 22px rgba(0,0,0,.24); }
 .progress-road.is-empty { margin-top: auto; }
@@ -511,6 +511,9 @@ body.dashboard-page {
 @media (prefers-reduced-motion: reduce) {
     .progress-race-avatar,
     .progress-race-avatar.is-racing { transition: none; }
+}
+@media (max-height: 700px) {
+    .progress-scene-runner-slot { width: clamp(172px, 48vw, 216px); }
 }
 .month-pact-card {
     padding: 18px;

@@ -2266,9 +2266,11 @@ function createProgressRunnerCanvas(userId, className) {
 
     const canvas = document.createElement("canvas");
 
+    const isSceneRunner = className === "progress-scene-runner";
+
     canvas.className = className;
-    canvas.width = className === "progress-scene-runner" ? 148 : 64;
-    canvas.height = className === "progress-scene-runner" ? 184 : 64;
+    canvas.width = isSceneRunner ? 296 : 64;
+    canvas.height = isSceneRunner ? 368 : 64;
     canvas.setAttribute("aria-hidden", "true");
     loadProgressRunnerSprite(userId).then(sprite => {
 
