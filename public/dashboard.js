@@ -2402,7 +2402,7 @@ function readProgressRaceState(challenge, viewerId) {
 
 }
 
-function getProgressRaceMotion(challenge, viewerId, requirementType, participants) {
+function getProgressRaceMotion(challenge, viewerId, requirementType, participants, sceneParticipantId = null) {
 
     const state = readProgressRaceState(challenge, viewerId);
     const next = Object.fromEntries(participants.map(participant => {
@@ -2440,13 +2440,23 @@ function getProgressRaceMotion(challenge, viewerId, requirementType, participant
 
     }
 
+    const sceneViews = state.sceneViews?.[requirementType] || {};
+    const scenePosition = sceneParticipantId ? Number(next[sceneParticipantId] || 0) : 0;
+    const sceneMotion = Boolean(
+        sceneParticipantId && scenePosition > 0 &&
+        (!sceneViews[sceneParticipantId] || motion[sceneParticipantId])
+    );
     const nextState = {
         initialized: true,
-        requirements: { ...(state.requirements || {}), [requirementType]: next }
+        requirements: { ...(state.requirements || {}), [requirementType]: next },
+        sceneViews: {
+            ...(state.sceneViews || {}),
+            [requirementType]: { ...sceneViews, ...(sceneParticipantId ? { [sceneParticipantId]: true } : {}) }
+        }
     };
 
     sessionStorage.setItem(progressRaceStateKey(challenge, viewerId), JSON.stringify(nextState));
-    return { next, motion };
+    return { next, motion, sceneMotion };
 
 }
 
@@ -2456,10 +2466,10 @@ function positionToRoadPercent(position) {
 
 }
 
-function startProgressRaceMotion({ motion, roadAvatars, sceneRunner, viewerId }) {
+function startProgressRaceMotion({ motion, roadAvatars, sceneRunner, viewerId, sceneMotion = false }) {
 
     const movingIds = Object.keys(motion);
-    if (!movingIds.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if ((!movingIds.length && !sceneMotion) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     requestAnimationFrame(() => requestAnimationFrame(() => {
 
@@ -2473,7 +2483,7 @@ function startProgressRaceMotion({ motion, roadAvatars, sceneRunner, viewerId })
 
         });
 
-        if (motion[viewerId]) animateProgressRunner(sceneRunner, viewerId);
+        if (sceneMotion) animateProgressRunner(sceneRunner, viewerId);
 
     }));
 
@@ -2675,7 +2685,7 @@ function renderProgressRace() {
     summaryCard.innerHTML = `<p>${getRequirementText(selectedType)}</p><strong>${value.completed.toLocaleString()} / ${value.target.toLocaleString()} ${requirementCopy(selectedType, value.target)}</strong><span>${remaining === 0 ? "Goal complete." : `${remaining.toLocaleString()} ${requirementCopy(selectedType, remaining)} to the finish.`}</span>`;
     progressRaceContainer.appendChild(summaryCard);
 
-    const race = getProgressRaceMotion(challenge, viewerId, selectedType, participants);
+    const race = getProgressRaceMotion(challenge, viewerId, selectedType, participants, selectedParticipant.userId);
     const road = document.createElement("div");
     const roadAvatars = [];
 
@@ -2700,7 +2710,13 @@ function renderProgressRace() {
     const sceneRunner = scene.querySelector("canvas");
 
     progressRaceContainer.append(scene, road);
-    startProgressRaceMotion({ motion: race.motion, roadAvatars, sceneRunner, viewerId: selectedParticipant.userId });
+    startProgressRaceMotion({
+        motion: race.motion,
+        roadAvatars,
+        sceneRunner,
+        viewerId: selectedParticipant.userId,
+        sceneMotion: race.sceneMotion
+    });
 
 }
 
