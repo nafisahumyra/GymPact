@@ -1254,20 +1254,21 @@ body.dashboard-page {
 .activity-page-heading { margin-bottom: 18px; }
 .activity-page-heading h3 { margin: 0; }
 .activity-page-heading p { margin: 4px 0 0; color: var(--muted); font-size: .88rem; }
-.activity-month-group { margin-bottom: 26px; }
+.activity-month-group { margin-bottom: 34px; }
+.activity-month-group + .activity-month-group { padding-top: 10px; }
 .activity-month-group > h4 {
     display: flex;
     align-items: center;
-    gap: 9px;
-    margin: 0 0 14px;
+    gap: 10px;
+    margin: 0 0 18px;
     color: #bcc4c2;
-    font-size: .9rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: .06em;
     text-transform: uppercase;
 }
 .activity-month-group > h4::after { height: 1px; flex: 1; margin-left: 4px; background: var(--line-soft); content: ""; }
-.activity-month-group > h4 svg { width: 21px; height: 21px; color: var(--muted); }
+.activity-month-group > h4 svg { width: 23px; height: 23px; color: var(--muted); }
 .activity-card {
     position: relative;
     margin-bottom: 14px;
