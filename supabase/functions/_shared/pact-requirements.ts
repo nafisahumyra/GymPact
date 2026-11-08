@@ -121,7 +121,11 @@ export async function getPactRequirementProgress(
     const totalsForAthlete = totals.get(participant.userId) ?? { workouts: 0, hiit: 0, steps: 0 };
     const progress = requirements.map(requirement => {
       const raw = totalsForAthlete[requirement.type as "workouts" | "hiit" | "steps"] ?? 0;
-      return { ...requirement, completed: Math.min(raw, requirement.targetAmount) };
+      return {
+        ...requirement,
+        completed: Math.min(raw, requirement.targetAmount),
+        rawCompleted: raw,
+      };
     });
     return { ...participant, requirements: progress, isComplete: progress.every(item => item.completed >= item.targetAmount) };
   });

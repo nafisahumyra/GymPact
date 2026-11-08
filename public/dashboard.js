@@ -12,6 +12,10 @@ welcomeMessage.textContent =
 
 let currentChallenge = null;
 let currentChallengeLoaded = false;
+let currentChallengeLoadError = false;
+let progressSelectedRequirementType = null;
+let progressDayParticipantId = null;
+let progressSelectedDay = null;
 const currentChallengeContainer =
     document.getElementById("current-challenge");
 const workoutCount =
@@ -32,6 +36,7 @@ const quickExerciseTitle = document.getElementById("quick-exercise-title");
 const quickExerciseOptions = document.getElementById("quick-exercise-options");
 const cancelQuickExerciseButton = document.getElementById("cancel-quick-exercise");
 const activityWorkoutsContainer = document.getElementById("activity-workouts");
+const progressRaceContainer = document.getElementById("progress-race");
 const activityPhotoDialog = document.getElementById("activity-photo-dialog");
 const activityPhotoFull = document.getElementById("activity-photo-full");
 const closeActivityPhotoButton = document.getElementById("close-activity-photo");
@@ -1079,6 +1084,7 @@ function showDashboardTab(tab) {
     renderExerciseTrackers();
 
     if (tab === "activity") loadActivityWorkouts();
+    if (tab === "progress") renderProgressRace();
 
 }
 
@@ -2076,6 +2082,377 @@ document.addEventListener("click", event => {
 });
 
 
+function addProgressDays(startDate, endDate) {
+
+    const days = [];
+    const cursor = new Date(`${startDate}T12:00:00Z`);
+    const end = new Date(`${endDate}T12:00:00Z`);
+
+    while (cursor <= end && days.length < 7) {
+
+        days.push(cursor.toISOString().slice(0, 10));
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+
+    }
+
+    return days;
+
+}
+
+function formatProgressDay(date, style = "short") {
+
+    return new Intl.DateTimeFormat(undefined, {
+        timeZone: "America/New_York",
+        weekday: style === "narrow" ? "narrow" : "short",
+        month: "short",
+        day: "numeric"
+    }).format(new Date(`${date}T12:00:00Z`));
+
+}
+
+function formatProgressDayInitial(date) {
+
+    return new Intl.DateTimeFormat(undefined, {
+        timeZone: "America/New_York",
+        weekday: "narrow"
+    }).format(new Date(`${date}T12:00:00Z`));
+
+}
+
+function formatPactTimeRemaining(challenge) {
+
+    const endsAt = challenge.endsAt ? new Date(challenge.endsAt) : null;
+    const milliseconds = endsAt ? endsAt.getTime() - Date.now() : 0;
+
+    if (!Number.isFinite(milliseconds) || milliseconds <= 0) return "Deadline reached";
+
+    const hours = Math.ceil(milliseconds / (60 * 60 * 1000));
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+
+    if (days > 0) return `${days}d ${remainingHours}h remaining`;
+    return `${Math.max(hours, 1)}h remaining`;
+
+}
+
+function getRaceParticipants(challenge) {
+
+    return (challenge.progress || []).map(participant => ({
+        ...participant,
+        profile: (challenge.participantDetails || []).find(detail => detail.userId === participant.userId) || null,
+        workoutDays: challenge.workoutDays?.[participant.userId] || []
+    }));
+
+}
+
+function createRaceAvatar(participant, lane) {
+
+    const avatar = document.createElement("span");
+    const image = document.createElement("img");
+    const initials = document.createElement("span");
+
+    avatar.className = `progress-race-avatar lane-${lane}`;
+    avatar.setAttribute("aria-label", participant.displayName || "GymPact athlete");
+    initials.textContent = getActivityInitials(participant.displayName);
+    avatar.append(initials);
+
+    if (participant.profile?.profilePhotoUrl) {
+
+        image.src = participant.profile.profilePhotoUrl;
+        image.alt = "";
+        image.addEventListener("load", () => {
+
+            initials.hidden = true;
+            avatar.append(image);
+
+        }, { once: true });
+
+    }
+
+    return avatar;
+
+}
+
+function requirementTotal(participant, type) {
+
+    const requirement = participant.requirements?.find(item => item.type === type);
+
+    return {
+        completed: Math.max(0, Number(requirement?.rawCompleted ?? requirement?.completed ?? 0)),
+        target: Math.max(0, Number(requirement?.targetAmount ?? 0))
+    };
+
+}
+
+function requirementCopy(type, count) {
+
+    const unit = type === "steps" ? "steps" : type === "hiit" ? "HIIT session" : "workout";
+
+    if (type === "steps") return unit;
+    return `${unit}${count === 1 ? "" : "s"}`;
+
+}
+
+function createProgressScene({ idle = false } = {}) {
+
+    const scene = document.createElement("div");
+
+    scene.className = `progress-scene${idle ? " is-idle" : ""}`;
+    scene.setAttribute("aria-hidden", "true");
+    scene.innerHTML = `
+        <svg viewBox="0 0 360 156" preserveAspectRatio="none">
+            <defs><linearGradient id="progress-sky" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#10251e"/><stop offset="1" stop-color="#0a1110"/></linearGradient></defs>
+            <rect width="360" height="156" fill="url(#progress-sky)"/>
+            <path d="M0 102c45-28 79-20 116-3 43-42 88-36 126-11 44-27 76-20 118 1v67H0z" fill="#102e22" opacity=".86"/>
+            <path d="M0 119c58-8 99-2 138 15 41-20 98-23 150-2 27-4 50-2 72 5v19H0z" fill="#17201e"/>
+            <path d="M0 146c69-19 135-20 201-9 68 12 113 9 159-5" fill="none" stroke="#3b4b43" stroke-width="15" stroke-linecap="round"/>
+        </svg>
+        <span class="progress-scene-runner"><i></i><b></b><em></em><strong></strong></span>`;
+
+    return scene;
+
+}
+
+function renderProgressRace() {
+
+    if (!progressRaceContainer) return;
+
+    progressRaceContainer.innerHTML = "";
+
+    if (currentChallengeLoadError) {
+
+        progressRaceContainer.innerHTML = '<section class="progress-race-empty"><h3>Progress is unavailable</h3><p>We couldn’t load the active weekly Pact.</p></section>';
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.textContent = "Retry";
+        retry.addEventListener("click", () => loadCurrentChallenge());
+        progressRaceContainer.querySelector(".progress-race-empty").appendChild(retry);
+        return;
+
+    }
+
+    const challenge = currentChallenge?.status === "active" ? currentChallenge : null;
+    const heading = document.createElement("header");
+    const dateLine = document.createElement("p");
+    const timeRemaining = document.createElement("span");
+
+    heading.className = "progress-race-heading";
+    dateLine.textContent = challenge
+        ? `${formatChallengeDate(challenge.startDate)} → ${formatChallengeDate(challenge.endDate)}`
+        : "No active weekly Pact";
+    timeRemaining.textContent = challenge ? formatPactTimeRemaining(challenge) : "Create a Pact to start tracking";
+    heading.append(dateLine, timeRemaining);
+    progressRaceContainer.appendChild(heading);
+
+    const participants = challenge ? getRaceParticipants(challenge) : [];
+    const viewerId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const viewer = participants.find(participant => participant.userId === viewerId) || participants[0] || null;
+    const stripParticipant = participants.find(participant => participant.userId === progressDayParticipantId) || viewer || participants[0] || null;
+
+    if (challenge && !progressDayParticipantId && stripParticipant) progressDayParticipantId = stripParticipant.userId;
+
+    const days = challenge ? addProgressDays(challenge.startDate, challenge.endDate) : Array.from({ length: 7 }, (_, index) => {
+
+        const date = new Date();
+        date.setDate(date.getDate() + index);
+        return date.toISOString().slice(0, 10);
+
+    });
+    const strip = document.createElement("section");
+    const stripHeader = document.createElement("div");
+    const stripTitle = document.createElement("h3");
+    const switcher = document.createElement("div");
+    const dayButtons = document.createElement("div");
+    const summary = document.createElement("div");
+
+    strip.className = `progress-week-strip${challenge ? "" : " is-empty"}`;
+    stripHeader.className = "progress-week-strip-header";
+    stripTitle.textContent = "Workout days";
+    switcher.className = "progress-person-switch";
+    dayButtons.className = "progress-day-buttons";
+    summary.className = "progress-day-summary";
+    summary.setAttribute("role", "status");
+
+    participants.forEach(participant => {
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.textContent = participant.userId === viewerId ? "You" : participant.displayName;
+        button.classList.toggle("is-active", participant.userId === stripParticipant?.userId);
+        button.setAttribute("aria-pressed", String(participant.userId === stripParticipant?.userId));
+        button.addEventListener("click", () => {
+
+            progressDayParticipantId = participant.userId;
+            progressSelectedDay = null;
+            renderProgressRace();
+
+        });
+        switcher.appendChild(button);
+
+    });
+
+    days.forEach(date => {
+
+        const button = document.createElement("button");
+        const initial = document.createElement("span");
+        const ring = document.createElement("span");
+        const today = getCalendarDayInGymPactTimeZone() === date;
+        const future = date > getCalendarDayInGymPactTimeZone();
+        const workouts = stripParticipant?.workoutDays?.filter(workout => workout.date === date) || [];
+
+        button.type = "button";
+        button.className = "progress-day";
+        button.classList.toggle("is-complete", workouts.length > 0);
+        button.classList.toggle("is-today", today);
+        button.classList.toggle("is-future", future);
+        button.classList.toggle("is-selected", progressSelectedDay === date);
+        button.disabled = !challenge;
+        button.setAttribute("aria-label", `${formatProgressDay(date)}: ${workouts.length ? `${workouts.length} qualifying workout${workouts.length === 1 ? "" : "s"}` : "No qualifying workouts"}`);
+        initial.textContent = formatProgressDayInitial(date);
+        ring.setAttribute("aria-hidden", "true");
+        button.append(initial, ring);
+        button.addEventListener("click", () => {
+
+            progressSelectedDay = date;
+            renderProgressRace();
+
+        });
+        dayButtons.appendChild(button);
+
+    });
+
+    if (challenge && progressSelectedDay) {
+
+        const workouts = stripParticipant?.workoutDays?.filter(workout => workout.date === progressSelectedDay) || [];
+        const label = stripParticipant?.userId === viewerId ? "You" : stripParticipant?.displayName || "Your partner";
+
+        summary.innerHTML = "";
+        const title = document.createElement("strong");
+        title.textContent = `${label} · ${formatProgressDay(progressSelectedDay)}`;
+        const text = document.createElement("p");
+        text.textContent = workouts.length
+            ? workouts.map(workout => workout.activityName).join(" · ")
+            : "No qualifying workout recorded for this day.";
+        summary.append(title, text);
+
+    } else {
+
+        summary.textContent = challenge ? "Tap a day to view workouts." : "Workout days will appear with your Pact.";
+
+    }
+
+    stripHeader.append(stripTitle, switcher);
+    strip.append(stripHeader, dayButtons, summary);
+    progressRaceContainer.appendChild(strip);
+
+    if (!challenge || !viewer || !challenge.requirements?.length) {
+
+        const empty = document.createElement("section");
+        const copy = document.createElement("div");
+        const title = document.createElement("h3");
+        const action = document.createElement("button");
+        const road = document.createElement("div");
+
+        empty.className = "progress-race-empty progress-race-idle";
+        title.textContent = "No active weekly Pact";
+        action.type = "button";
+        action.textContent = "+ Create Weekly Pact";
+        action.addEventListener("click", startWeeklyPact);
+        copy.append(title, action);
+        road.className = "progress-road is-empty";
+        road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
+        empty.append(copy, createProgressScene({ idle: true }), road);
+        progressRaceContainer.appendChild(empty);
+        return;
+
+    }
+
+    if (!challenge.requirements.some(requirement => requirement.type === progressSelectedRequirementType)) {
+
+        progressSelectedRequirementType = challenge.requirements[0].type;
+
+    }
+
+    const selectedType = progressSelectedRequirementType;
+    const selectedRequirement = challenge.requirements.find(requirement => requirement.type === selectedType);
+    const selector = document.createElement("div");
+    const summaryCard = document.createElement("section");
+    const value = requirementTotal(viewer, selectedType);
+    const remaining = Math.max(0, value.target - value.completed);
+
+    selector.className = "progress-goal-selector";
+    selector.setAttribute("role", "tablist");
+    challenge.requirements.forEach(requirement => {
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.setAttribute("role", "tab");
+        button.setAttribute("aria-selected", String(requirement.type === selectedType));
+        button.classList.toggle("is-active", requirement.type === selectedType);
+        const icon = document.createElement("img");
+        icon.src = getRequirementIconPath(requirement.type);
+        icon.alt = "";
+        button.append(icon, document.createTextNode(getRequirementText(requirement.type)));
+        button.addEventListener("click", () => {
+
+            progressSelectedRequirementType = requirement.type;
+            renderProgressRace();
+
+        });
+        selector.appendChild(button);
+
+    });
+    progressRaceContainer.appendChild(selector);
+
+    summaryCard.className = "progress-goal-summary";
+    summaryCard.innerHTML = `<p>${getRequirementText(selectedType)}</p><strong>${value.completed.toLocaleString()} / ${value.target.toLocaleString()} ${requirementCopy(selectedType, value.target)}</strong><span>${remaining === 0 ? "Goal complete." : `${remaining.toLocaleString()} ${requirementCopy(selectedType, remaining)} to the finish.`}</span>`;
+    progressRaceContainer.appendChild(summaryCard);
+
+    const course = document.createElement("section");
+    const road = document.createElement("div");
+
+    course.className = "progress-race-course";
+    road.className = "progress-road";
+    road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
+
+    participants.forEach((participant, index) => {
+
+        const total = requirementTotal(participant, selectedType);
+        const percent = total.target > 0 ? Math.min(100, Math.max(0, total.completed / total.target * 100)) : 0;
+        const avatar = createRaceAvatar(participant, index % 2);
+
+        // Keep the whole avatar inside the rounded road at both endpoints.
+        avatar.style.setProperty("--race-position", `${8 + (percent * .84)}%`);
+        road.appendChild(avatar);
+
+    });
+
+    course.append(createProgressScene(), road);
+    progressRaceContainer.appendChild(course);
+
+    const totals = document.createElement("div");
+
+    totals.className = "progress-race-totals";
+    participants.forEach(participant => {
+
+        const total = requirementTotal(participant, selectedType);
+        const item = document.createElement("div");
+        const name = document.createElement("strong");
+        const score = document.createElement("span");
+
+        name.textContent = participant.userId === viewerId ? "You" : participant.displayName;
+        score.textContent = `${total.completed.toLocaleString()} / ${total.target.toLocaleString()} ${requirementCopy(selectedType, total.target)}`;
+        item.append(name, score);
+        totals.appendChild(item);
+
+    });
+    progressRaceContainer.appendChild(totals);
+
+}
+
+
 function renderCurrentChallenge(challenge) {
 
     currentChallengeContainer.innerHTML = "";
@@ -2085,6 +2462,7 @@ function renderCurrentChallenge(challenge) {
     if (!challenge) {
 
         renderNextWeekPactCard();
+        renderProgressRace();
 
         return;
 
@@ -2145,6 +2523,8 @@ function renderCurrentChallenge(challenge) {
 
     }
 
+    renderProgressRace();
+
 }
 
 
@@ -2156,6 +2536,7 @@ async function loadCurrentChallenge({ preserveOnError = false } = {}) {
 
         currentChallenge = null;
         currentChallengeLoaded = true;
+        currentChallengeLoadError = false;
         renderCurrentChallenge(currentChallenge);
 
         return;
@@ -2172,6 +2553,8 @@ async function loadCurrentChallenge({ preserveOnError = false } = {}) {
 
         console.error("Unable to load the current Pact.", error);
 
+        currentChallengeLoadError = true;
+
         if (preserveOnError) {
 
             throw error;
@@ -2183,6 +2566,7 @@ async function loadCurrentChallenge({ preserveOnError = false } = {}) {
     } else {
 
         currentChallenge = data?.pact || null;
+        currentChallengeLoadError = false;
 
     }
 

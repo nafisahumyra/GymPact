@@ -2,9 +2,11 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 import {
+  getPactWindow,
   getPactRequirementProgress,
   getPactRequirements,
 } from "../_shared/pact-requirements.ts";
+import { classifyWorkoutForPact } from "../_shared/pact-workout-classification.ts";
 import { getDataEnvironment } from "../_shared/data-environment.ts";
 
 const allowedOrigins = new Set([
@@ -38,12 +40,13 @@ async function mapPact(
       .map(participant => {
         const { user_id: userId, users } = participant as {
           user_id?: string;
-          users?: { display_name?: string } | null;
+          users?: { display_name?: string; profile_photo_path?: string | null } | null;
         };
 
         return {
           userId,
           displayName: users?.display_name,
+          profilePhotoPath: users?.profile_photo_path ?? null,
         };
       })
       .filter((participant): participant is { userId: string; displayName?: string } =>
@@ -52,7 +55,15 @@ async function mapPact(
     : [];
 
   const participants = participantDetails.map(participant => participant.userId);
+  const dataEnvironment = typeof pact.data_environment === "string"
+    ? pact.data_environment
+    : "production";
   const requirements = await getPactRequirements(admin, String(pact.id));
+  const pactWindow = getPactWindow(pact as {
+    start_date: string;
+    end_date: string;
+    active_at: string | null;
+  });
   const requirementProgress = await getPactRequirementProgress(
     admin,
     pact as { id: string; start_date: string; end_date: string; active_at: string | null },
@@ -71,11 +82,51 @@ async function mapPact(
     };
   });
 
+  const participantDetailsWithPhotos = await Promise.all(participantDetails.map(async participant => {
+    if (!participant.profilePhotoPath) return { userId: participant.userId, displayName: participant.displayName, profilePhotoUrl: null };
+    const { data, error } = await admin.storage.from("profile-photos").createSignedUrl(participant.profilePhotoPath, 60 * 60);
+    if (error) return { userId: participant.userId, displayName: participant.displayName, profilePhotoUrl: null };
+    return { userId: participant.userId, displayName: participant.displayName, profilePhotoUrl: data.signedUrl };
+  }));
+
+  const workoutDays = Object.fromEntries(participants.map(userId => [userId, [] as Array<{ date: string; activityName: string; loggedAt: string }>])) as Record<string, Array<{ date: string; activityName: string; loggedAt: string }>>;
+
+  if (pact.active_at && participants.length) {
+    const { start, endExclusive } = pactWindow;
+    const { data: workouts, error: workoutsError } = await admin
+      .from("workouts")
+      .select("user_id, activity_name, muscles, logged_at")
+      .in("user_id", participants)
+      .eq("data_environment", dataEnvironment)
+      .gte("logged_at", start)
+      .lt("logged_at", endExclusive.toISOString())
+      .order("logged_at", { ascending: true });
+    if (workoutsError) throw workoutsError;
+
+    const pactHasWorkoutRequirement = requirements.some(requirement => requirement.type === "workouts" || requirement.type === "hiit");
+    (workouts ?? []).forEach(workout => {
+      const classified = classifyWorkoutForPact(workout.muscles, requirements);
+      const isQualifying = pactHasWorkoutRequirement
+        ? classified.workouts > 0 || classified.hiit > 0
+        : true;
+      if (!isQualifying || !workoutDays[workout.user_id]) return;
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit",
+      }).formatToParts(new Date(workout.logged_at));
+      const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      workoutDays[workout.user_id].push({
+        date: `${values.year}-${values.month}-${values.day}`,
+        activityName: workout.activity_name || "Workout",
+        loggedAt: workout.logged_at,
+      });
+    });
+  }
+
   return {
     id: pact.id,
     createdBy: pact.created_by,
     participants,
-    participantDetails,
+    participantDetails: participantDetailsWithPhotos,
     goalType: pact.goal_type,
     targetAmount: pact.target_amount,
     requirements,
@@ -87,8 +138,10 @@ async function mapPact(
     activeAt: pact.active_at,
     startDate: pact.start_date,
     endDate: pact.end_date,
+    endsAt: pactWindow.endExclusive.toISOString(),
     cancelledAt: pact.cancelled_at,
     progress,
+    workoutDays,
   };
 }
 
@@ -119,7 +172,7 @@ serve(async (request) => {
     await finalizeDueActivePacts(admin);
     const { data: pact, error } = await admin
       .from("pacts")
-      .select("id, created_by, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, active_at, start_date, end_date, cancelled_at, data_environment, pact_participants(user_id, users(display_name))")
+      .select("id, created_by, goal_type, target_amount, timeframe, wager_type, wager_description, status, created_at, active_at, start_date, end_date, cancelled_at, data_environment, pact_participants(user_id, users(display_name, profile_photo_path))")
       .in("status", ["pending", "active"])
       .eq("data_environment", environment)
       .order("created_at", { ascending: false })

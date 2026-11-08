@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="dashboard.css?v=profile-avatar-v1">
+    <link rel="stylesheet" href="dashboard.css?v=progress-race-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=monthly-host-v1">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=progress-race-v1">
 
     <div class="dashboard-shell">
 
@@ -77,6 +77,10 @@
                 <p>Shared workouts</p>
             </header>
             <div id="activity-workouts" class="activity-workouts" aria-live="polite"></div>
+        </section>
+
+        <section class="dashboard-section progress-race-section" data-dashboard-tab-content="progress" hidden>
+            <div id="progress-race" class="progress-race" aria-live="polite"></div>
         </section>
 
         <section class="dashboard-section pact-page-section" data-dashboard-tab-content="pact" hidden>
