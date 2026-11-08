@@ -24,7 +24,6 @@ const PROGRESS_RACE_STATE_PREFIX = "gymPactProgressRace:";
 const progressRunnerSprites = new Map();
 const progressRunnerLoads = new Map();
 const progressRunnerAnimationFrames = new Set();
-let progressRoadResizeObserver = null;
 const currentChallengeContainer =
     document.getElementById("current-challenge");
 const workoutCount =
@@ -1069,7 +1068,6 @@ function createPactProgressOverview(challenge) {
 function showDashboardTab(tab) {
 
     activeDashboardTab = tab;
-    document.body.classList.toggle("is-progress-tab", tab === "progress");
     const dashboardContent = document.getElementById("dashboard-content");
 
     if (dashboardContent) dashboardContent.scrollTop = 0;
@@ -2329,12 +2327,12 @@ function stopProgressRunnerAnimations() {
 
 }
 
-function createRaceAvatar(participant, lane, progressDescription) {
+function createRaceAvatar(participant, lane) {
 
     const avatar = document.createElement("span");
 
     avatar.className = `progress-race-avatar lane-${lane}`;
-    avatar.setAttribute("aria-label", `${participant.displayName || "GymPact athlete"}: ${progressDescription}`);
+    avatar.setAttribute("aria-label", participant.displayName || "GymPact athlete");
     avatar.appendChild(createProgressRunnerCanvas(participant.userId, "progress-road-runner"));
     return avatar;
 
@@ -2449,55 +2447,13 @@ function getProgressRaceMotion(challenge, viewerId, requirementType, participant
 
 }
 
-function setProgressRoadPosition(road, avatar, position) {
+function positionToRoadPercent(position) {
 
-    const halfAvatar = (avatar.offsetWidth || 48) / 2;
-    const edge = 18 + halfAvatar;
-    const width = road.clientWidth;
-    const clamped = Math.min(1, Math.max(0, position));
-    const left = edge + Math.max(0, width - edge * 2) * clamped;
-
-    avatar.dataset.racePosition = String(clamped);
-    avatar.style.left = `${left}px`;
+    return 8 + Math.min(1, Math.max(0, position)) * 84;
 
 }
 
-function observeProgressRoad(road, roadAvatars) {
-
-    progressRoadResizeObserver?.disconnect();
-    const layout = () => roadAvatars.forEach(({ avatar }) => {
-
-        setProgressRoadPosition(road, avatar, Number(avatar.dataset.racePosition || 0));
-
-    });
-
-    progressRoadResizeObserver = new ResizeObserver(layout);
-    progressRoadResizeObserver.observe(road);
-    requestAnimationFrame(layout);
-
-}
-
-function createProgressRoad() {
-
-    const area = document.createElement("section");
-    const labels = document.createElement("div");
-    const start = document.createElement("span");
-    const finish = document.createElement("span");
-    const road = document.createElement("div");
-
-    area.className = "progress-road-area";
-    labels.className = "progress-road-labels";
-    start.textContent = "Start";
-    finish.textContent = "Finish";
-    labels.append(start, finish);
-    road.className = "progress-road";
-    road.innerHTML = '<span class="progress-road-dashes" aria-hidden="true"></span>';
-    area.append(labels, road);
-    return { area, road };
-
-}
-
-function startProgressRaceMotion({ motion, road, roadAvatars, sceneRunner, viewerId }) {
+function startProgressRaceMotion({ motion, roadAvatars, sceneRunner, viewerId }) {
 
     const movingIds = Object.keys(motion);
     if (!movingIds.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -2509,7 +2465,7 @@ function startProgressRaceMotion({ motion, road, roadAvatars, sceneRunner, viewe
             const movement = motion[participant.userId];
             if (!movement) return;
             avatar.classList.add("is-racing");
-            setProgressRoadPosition(road, avatar, movement.to);
+            avatar.style.setProperty("--race-position", `${positionToRoadPercent(movement.to)}%`);
             animateProgressRunner(avatar.querySelector("canvas"), participant.userId);
 
         });
@@ -2655,7 +2611,7 @@ function renderProgressRace() {
         const copy = document.createElement("div");
         const title = document.createElement("h3");
         const action = document.createElement("button");
-        const { area, road } = createProgressRoad();
+        const road = document.createElement("div");
 
         copy.className = "progress-race-empty-copy progress-race-idle-copy";
         title.textContent = "No active weekly Pact";
@@ -2663,8 +2619,9 @@ function renderProgressRace() {
         action.textContent = "+ Create Pact";
         action.addEventListener("click", startWeeklyPact);
         copy.append(title, action);
-        area.classList.add("is-empty");
-        progressRaceContainer.append(createProgressScene({ idle: true, userId: viewerId }), copy, area);
+        road.className = "progress-road is-empty";
+        road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
+        progressRaceContainer.append(createProgressScene({ idle: true, userId: viewerId }), copy, road);
         return;
 
     }
@@ -2708,34 +2665,51 @@ function renderProgressRace() {
     progressRaceContainer.appendChild(selector);
 
     summaryCard.className = "progress-goal-summary";
-    summaryCard.innerHTML = `<p>${getRequirementText(selectedType)}</p><strong>${value.completed.toLocaleString()} / ${value.target.toLocaleString()}</strong><span>${remaining === 0 ? "Goal complete." : `${remaining.toLocaleString()} ${requirementCopy(selectedType, remaining)} to the finish.`}</span>`;
+    summaryCard.innerHTML = `<p>${getRequirementText(selectedType)}</p><strong>${value.completed.toLocaleString()} / ${value.target.toLocaleString()} ${requirementCopy(selectedType, value.target)}</strong><span>${remaining === 0 ? "Goal complete." : `${remaining.toLocaleString()} ${requirementCopy(selectedType, remaining)} to the finish.`}</span>`;
     progressRaceContainer.appendChild(summaryCard);
 
     const race = getProgressRaceMotion(challenge, viewerId, selectedType, participants);
-    const { area, road } = createProgressRoad();
+    const road = document.createElement("div");
     const roadAvatars = [];
+
+    road.className = "progress-road";
+    road.innerHTML = '<span class="progress-road-start">Start</span><span class="progress-road-dashes" aria-hidden="true"></span><span class="progress-road-finish">Finish</span>';
 
     participants.forEach((participant, index) => {
 
         const total = requirementTotal(participant, selectedType);
         const position = race.next[participant.userId] || 0;
-        const progressDescription = `${total.completed.toLocaleString()} of ${total.target.toLocaleString()} ${requirementCopy(selectedType, total.target)}`;
-        const avatar = createRaceAvatar(participant, index % 2, progressDescription);
+        const avatar = createRaceAvatar(participant, index % 2);
         const movement = race.motion[participant.userId];
 
-        // The resize-aware layout keeps the whole avatar inside the rounded track.
-        avatar.dataset.racePosition = String(movement?.from ?? position);
+        // Keep the whole avatar inside the rounded road at both endpoints.
+        avatar.style.setProperty("--race-position", `${positionToRoadPercent(movement?.from ?? position)}%`);
         road.appendChild(avatar);
         roadAvatars.push({ participant, avatar });
 
     });
 
+    const totals = document.createElement("div");
+
+    totals.className = "progress-race-totals";
+    participants.forEach(participant => {
+
+        const total = requirementTotal(participant, selectedType);
+        const item = document.createElement("div");
+        const name = document.createElement("strong");
+        const score = document.createElement("span");
+
+        name.textContent = participant.userId === viewerId ? "You" : participant.displayName;
+        score.textContent = `${total.completed.toLocaleString()} / ${total.target.toLocaleString()} ${requirementCopy(selectedType, total.target)}`;
+        item.append(name, score);
+        totals.appendChild(item);
+
+    });
     const scene = createProgressScene({ userId: viewer.userId });
     const sceneRunner = scene.querySelector("canvas");
 
-    progressRaceContainer.append(scene, area);
-    observeProgressRoad(road, roadAvatars);
-    startProgressRaceMotion({ motion: race.motion, road, roadAvatars, sceneRunner, viewerId });
+    progressRaceContainer.append(scene, totals, road);
+    startProgressRaceMotion({ motion: race.motion, roadAvatars, sceneRunner, viewerId });
 
 }
 

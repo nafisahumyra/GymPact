@@ -46,22 +46,6 @@ body.dashboard-page {
 
 .dashboard-header { min-width: 0; margin-bottom: 9px; }
 .dashboard-header .brand-lockup { min-width: 0; }
-.dashboard-page.is-progress-tab .dashboard-app-header {
-    position: absolute;
-    inset: 0 0 auto;
-    z-index: 8;
-    width: 100%;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    pointer-events: none;
-}
-.dashboard-page.is-progress-tab .dashboard-header-content { padding: max(10px, env(safe-area-inset-top)) 16px 0; }
-.dashboard-page.is-progress-tab .dashboard-header { margin: 0; }
-.dashboard-page.is-progress-tab .brand-lockup,
-.dashboard-page.is-progress-tab #welcome-message,
-.dashboard-page.is-progress-tab .refresh-feedback { display: none; }
-.dashboard-page.is-progress-tab .profile-menu-button { pointer-events: auto; }
 .profile-menu-button {
     display: grid;
     flex: 0 0 42px;
@@ -457,17 +441,19 @@ body.dashboard-page {
     position: relative;
     isolation: isolate;
     display: flex;
+    min-height: calc(100svh - 80px);
     flex-direction: column;
-    gap: 18px;
-    overflow: visible;
-    padding: max(20px, calc(env(safe-area-inset-top) + 12px)) clamp(16px, 4vw, 40px) calc(128px + env(safe-area-inset-bottom));
+    gap: 17px;
+    overflow: hidden;
+    padding: 24px clamp(16px, 4vw, 40px) calc(112px + env(safe-area-inset-bottom));
     background: #09110f;
 }
-.progress-race-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-right: 50px; }
+.progress-race > :not(.progress-scene) { position: relative; z-index: 2; }
+.progress-race-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .progress-race-heading p { margin: 0; color: var(--text); font-size: .95rem; font-weight: 760; }
 .progress-race-heading span { flex: 0 0 auto; color: var(--green); font-size: .72rem; font-weight: 760; text-align: right; }
 .progress-week-strip { display: grid; gap: 8px; }
-.progress-week-strip-header { display: flex; align-items: center; justify-content: center; min-height: 29px; }
+.progress-week-strip-header { display: flex; align-items: center; justify-content: flex-end; min-height: 29px; }
 .progress-person-switch { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--line-soft); border-radius: 999px; background: #0c1010; }
 .progress-person-switch button { min-height: 27px; padding: 4px 9px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: .68rem; font-weight: 750; white-space: nowrap; }
 .progress-person-switch button.is-active { background: rgba(145, 242, 100, .14); color: var(--green); }
@@ -490,30 +476,35 @@ body.dashboard-page {
 .progress-goal-selector button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 7px; min-height: 37px; padding: 7px 11px; border-color: var(--line); border-radius: 999px; background: var(--panel-elevated); color: var(--muted); font-size: .76rem; font-weight: 760; }
 .progress-goal-selector button.is-active { border-color: rgba(145,242,100,.48); background: rgba(145,242,100,.12); color: var(--green); }
 .progress-goal-selector img { width: 19px; height: 19px; object-fit: contain; }
-.progress-goal-summary { display: grid; justify-items: center; gap: 7px; padding: 7px 0 14px; text-align: center; }
+.progress-goal-summary { display: grid; justify-items: center; gap: 3px; padding: 4px 0 2px; text-align: center; }
 .progress-goal-summary p { margin: 0; color: var(--muted); font-size: .76rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
-.progress-goal-summary strong { max-width: 100%; color: var(--text); font-size: clamp(2rem, 9vw, 3rem); font-variant-numeric: tabular-nums; letter-spacing: -.06em; line-height: 1; white-space: nowrap; }
+.progress-goal-summary strong { color: var(--text); font-size: clamp(2rem, 10vw, 3.1rem); font-variant-numeric: tabular-nums; letter-spacing: -.06em; line-height: 1; }
 .progress-goal-summary span { color: var(--muted); font-size: .86rem; }
-.progress-scene { position: relative; z-index: 0; min-height: clamp(300px, 44svh, 440px); overflow: hidden; pointer-events: none; border-radius: 22px; }
+.progress-scene { position: absolute; z-index: 0; inset: 0; overflow: hidden; pointer-events: none; }
 .progress-scene > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.progress-scene-runner-slot { position: absolute; z-index: 1; bottom: 14px; left: 50%; width: clamp(228px, 66vw, 290px); aspect-ratio: 296 / 368; transform: translateX(-50%); }
+.progress-scene-runner-slot { position: absolute; z-index: 1; bottom: calc(208px + env(safe-area-inset-bottom)); left: 50%; width: clamp(228px, 66vw, 290px); aspect-ratio: 296 / 368; transform: translateX(-50%); }
 .progress-scene-runner { display: block; width: 100%; height: 100%; }
-.progress-road-area { display: grid; gap: 8px; }
-.progress-road-labels { display: flex; align-items: center; justify-content: space-between; padding-inline: 18px; color: #dbe3dd; font-size: .64rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
-.progress-road-labels span:last-child { color: var(--green); }
-.progress-road { position: relative; min-height: 112px; margin: 0; border: 1px solid #3d4a45; border-radius: 999px; background: linear-gradient(180deg, #252d2b, #181e1d); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 9px 22px rgba(0,0,0,.24); }
-.progress-road-dashes { position: absolute; top: 50%; right: 18px; left: 18px; height: 2px; background: repeating-linear-gradient(90deg, #8a9790 0 12px, transparent 12px 23px); opacity: .55; transform: translateY(-50%); }
-.progress-race-avatar { position: absolute; z-index: 2; left: 50%; display: grid; place-items: center; width: 48px; height: 48px; overflow: hidden; border: 2px solid var(--green); border-radius: 50%; background: #183222; color: var(--green); font-size: .68rem; font-weight: 850; box-shadow: 0 3px 12px rgba(0,0,0,.38); transform: translateX(-50%); }
-.progress-race-avatar.is-racing { transition: left 2.4s cubic-bezier(.2, .7, .2, 1); }
+.progress-road { position: relative; z-index: 3; min-height: 104px; margin: 0; border: 1px solid #3d4a45; border-radius: 999px; background: linear-gradient(180deg, #252d2b, #181e1d); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 9px 22px rgba(0,0,0,.24); }
+.progress-road.is-empty { margin-top: auto; }
+.progress-road-dashes { position: absolute; top: 50%; right: 36px; left: 36px; height: 2px; background: repeating-linear-gradient(90deg, #8a9790 0 12px, transparent 12px 23px); opacity: .55; transform: translateY(-50%); }
+.progress-road-start, .progress-road-finish { position: absolute; top: 50%; z-index: 1; color: #dbe3dd; font-size: .61rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; transform: translateY(-50%); }
+.progress-road-start { left: 11px; }
+.progress-road-finish { right: 9px; color: var(--green); }
+.progress-race-avatar { position: absolute; z-index: 2; left: var(--race-position); display: grid; place-items: center; width: 48px; height: 48px; overflow: hidden; border: 2px solid var(--green); border-radius: 50%; background: #183222; color: var(--green); font-size: .68rem; font-weight: 850; box-shadow: 0 3px 12px rgba(0,0,0,.38); transform: translateX(-50%); }
+.progress-race-avatar.is-racing { left: var(--race-position) !important; transition: left 2.4s cubic-bezier(.2, .7, .2, 1); }
 .progress-road-runner { display: block; width: 100%; height: 100%; }
-.progress-race-avatar.lane-0 { top: 8px; }
-.progress-race-avatar.lane-1 { bottom: 8px; border-color: #b6c1bd; background: #26302d; color: #f0f4f1; }
+.progress-race-avatar.lane-0 { top: 5px; }
+.progress-race-avatar.lane-1 { bottom: 5px; border-color: #b6c1bd; background: #26302d; color: #f0f4f1; }
+.progress-race-totals { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: auto; padding-bottom: 11px; }
+.progress-race-totals > div { display: grid; gap: 3px; min-width: 0; padding: 0 2px; }
+.progress-race-totals strong { overflow: hidden; color: var(--text); font-size: .84rem; text-overflow: ellipsis; white-space: nowrap; }
+.progress-race-totals span { color: var(--muted); font-size: .76rem; font-variant-numeric: tabular-nums; }
 .progress-race-empty { align-self: center; display: grid; gap: 12px; margin: auto 0; }
 .progress-race-empty-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .progress-race-empty h3 { margin: 0; color: var(--text); font-size: 1rem; }
 .progress-race-empty p { margin: 0; color: var(--muted); font-size: .86rem; }
 .progress-race-empty button { flex: 0 0 auto; min-height: 38px; padding: 7px 11px; border-color: var(--green); background: transparent; color: var(--green); font-size: .75rem; white-space: nowrap; }
-.progress-race-idle-copy { align-self: center; width: max-content; max-width: calc(100% - 32px); margin: -170px auto 12px; }
+.progress-race-idle-copy { position: absolute; top: 36%; left: 50%; z-index: 4; width: max-content; max-width: calc(100% - 32px); margin: 0; transform: translateX(-50%); }
 .progress-race-idle-copy h3 { color: #abb6b0; font-size: .86rem; font-weight: 650; white-space: nowrap; }
 .progress-race-idle-copy button { min-height: 32px; padding: 5px 10px; border-color: #46534e; background: rgba(16, 24, 21, .8); color: #c0c8c3; font-size: .7rem; font-weight: 700; box-shadow: none; }
 .progress-race-idle-copy button:hover:not(:disabled) { border-color: #66736d; background: rgba(31, 42, 37, .92); color: var(--text); }
@@ -522,8 +513,7 @@ body.dashboard-page {
     .progress-race-avatar.is-racing { transition: none; }
 }
 @media (max-height: 700px) {
-    .progress-scene { min-height: 270px; }
-    .progress-scene-runner-slot { width: clamp(172px, 52vw, 228px); }
+    .progress-scene-runner-slot { width: clamp(172px, 48vw, 216px); }
 }
 .month-pact-card {
     padding: 18px;
