@@ -3118,8 +3118,18 @@ function renderMonthPact() {
         : monthlyPact.status === "upcoming" ? "Both athletes have signed the Pact."
             : monthlyPact.status === "completed" ? ""
                 : monthlyPact.status === "failed" ? "The month ended before both individual goals were achieved."
-                    : "Check in throughout the month, then submit proof when your goal is achieved.";
-    card.innerHTML = `<p class="month-pact-kicker ${isFinalized ? "month-pact-final-status" : ""}">${statusLabel}</p><h3>${monthlyPact.monthLabel}</h3>${statusCopy ? `<p class="month-pact-copy">${statusCopy}</p>` : ""}`;
+                    : "";
+    if (monthlyPact.status === "active") {
+        const heading = document.createElement("div");
+        const title = document.createElement("h3");
+
+        heading.className = "month-pact-active-heading";
+        title.textContent = monthlyPact.monthLabel;
+        heading.append(title, createChallengeStatusPill("active"));
+        card.appendChild(heading);
+    } else {
+        card.innerHTML = `<p class="month-pact-kicker ${isFinalized ? "month-pact-final-status" : ""}">${statusLabel}</p><h3>${monthlyPact.monthLabel}</h3>${statusCopy ? `<p class="month-pact-copy">${statusCopy}</p>` : ""}`;
+    }
     const people = document.createElement("div"); people.className = "month-pact-people";
     monthlyPact.commitments.forEach(item => {
         const person = document.createElement("div"); person.className = "month-pact-person";

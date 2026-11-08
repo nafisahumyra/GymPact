@@ -543,6 +543,9 @@ body.dashboard-page {
     box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
 }
 .month-pact-card h3 { margin-bottom: 5px; color: var(--text); font-size: 1.15rem; }
+.month-pact-active-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.month-pact-active-heading h3 { margin: 0; }
+.month-pact-active-heading .challenge-status-pill { position: static; display: inline-block; flex: 0 0 auto; margin: 0; white-space: nowrap; }
 .month-pact-kicker { margin-bottom: 16px; color: var(--green); font-size: .72rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
 .month-pact-copy { color: var(--muted); line-height: 1.55; }
 .month-pact-detail { margin-top: 17px; padding-top: 15px; border-top: 1px solid var(--line-soft); }
