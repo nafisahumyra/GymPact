@@ -2417,7 +2417,9 @@ function getProgressRaceMotion(challenge, viewerId, requirementType, participant
 
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 
-        if (!state.initialized) {
+        // Each requirement earns its own first-view entrance. This lets Steps and
+        // HIIT race to their actual positions too, without replaying on every tab switch.
+        if (!previous) {
 
             Object.entries(next).forEach(([userId, position]) => {
 
