@@ -1009,7 +1009,7 @@ function appendChallengeDetail(container, title, value) {
 
 function getRequirementLabel(type) {
 
-    return { workouts: "🏋️ Workouts", hiit: "⚡ HIIT", steps: "👟 Steps" }[type] || type;
+    return { workouts: "Workouts", hiit: "HIIT", steps: "Steps" }[type] || type;
 
 }
 
