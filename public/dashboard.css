@@ -1176,15 +1176,13 @@ body.dashboard-page {
 .profile-page-photo-action { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; margin-top: 13px; padding: 7px 4px; border: 0; border-radius: 0; background: transparent; color: var(--green); font-size: .86rem; font-weight: 760; box-shadow: none; }
 .profile-page-photo-action svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .profile-page-photo-action:hover:not(:disabled) { color: #b8ff91; background: transparent; transform: none; }
-.profile-page-clear-photo { min-height: 28px; margin-top: 1px; padding: 3px 5px; border: 0; border-radius: 0; background: transparent; color: #d28d8f; font-size: .74rem; font-weight: 700; box-shadow: none; }
-.profile-page-clear-photo:hover:not(:disabled) { color: #ffb2b4; background: transparent; transform: none; }
-.profile-page-field { display: grid; gap: 8px; width: 100%; margin-top: 31px; }
-.profile-page-field label { color: var(--muted); font-size: .74rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
-.profile-page-field input { width: 100%; min-height: 48px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 13px; background: rgba(21,25,24,.76); color: var(--text); font: inherit; font-size: 1rem; font-weight: 650; outline: none; }
-.profile-page-field input:focus { border-color: rgba(145,242,100,.68); box-shadow: 0 0 0 3px rgba(145,242,100,.12); }
-.profile-page-error { width: 100%; margin: 10px 0 0; color: #ff9a9c; font-size: .82rem; line-height: 1.4; }
-.profile-page-save { width: 100%; min-height: 48px; margin-top: 22px; }
-.profile-page-save:disabled { opacity: .48; cursor: default; }
+.profile-page-detail { display: grid; justify-items: center; gap: 5px; margin-top: 29px; }
+.profile-page-detail span { color: var(--muted); font-size: .74rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.profile-page-detail strong { font-size: 1.1rem; }
+.profile-photo-modal-content > p { color: var(--muted); line-height: 1.5; }
+.profile-photo-modal-content .modal-buttons { flex-wrap: wrap; }
+.profile-photo-modal-content .modal-buttons button { min-width: 112px; }
+.profile-photo-modal-content #remove-profile-photo { border-color: rgba(255, 138, 140, .48); color: #ff9a9c; }
 .pact-form { margin: 24px auto 0; }
 .pact-weekly-summary { margin: -8px 0 18px 54px; color: var(--muted); font-size: .84rem; font-weight: 700; }
 .pact-requirements { margin: 0; padding: 0; border: 0; }

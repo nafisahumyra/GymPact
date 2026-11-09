@@ -2,6 +2,7 @@
     const SESSION_KEY = "gymPactSessionToken";
     const ATHLETE_KEY = "gymPactSelectedAthleteId";
     const DISPLAY_NAME_KEY = "currentUser";
+    const ATHLETE_NAMES = new Set(["Nafisa", "Mahfuzur"]);
     let redirecting = false;
 
     function clearIdentity() {
@@ -76,14 +77,16 @@
 
         }
 
-        const { data: profile, error: profileError } = await supabase.functions.invoke(
-            "profile",
-            { body: { action: "get", sessionToken } }
-        );
+        const { data: athlete, error: athleteError } = await supabase
+            .from("users")
+            .select("id, display_name")
+            .eq("id", athleteId)
+            .maybeSingle();
 
         if (
-            profileError ||
-            !profile?.displayName
+            athleteError ||
+            !athlete ||
+            !ATHLETE_NAMES.has(athlete.display_name)
         ) {
 
             sessionStorage.removeItem(ATHLETE_KEY);
@@ -95,7 +98,7 @@
         }
 
         // This is display-only convenience state. It never controls access.
-        localStorage.setItem(DISPLAY_NAME_KEY, profile.displayName);
+        localStorage.setItem(DISPLAY_NAME_KEY, athlete.display_name);
 
         const pageScript = document.body.dataset.protectedScript;
 

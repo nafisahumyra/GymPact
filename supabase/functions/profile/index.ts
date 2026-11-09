@@ -62,58 +62,33 @@ serve(async request => {
       return json({ displayName: athlete.display_name, photoUrl: await signedPhotoUrl(admin, athlete.profile_photo_path) }, request);
     }
 
-    if (action !== "save" && action !== "update" && action !== "remove") {
-      return json({ error: "Unsupported profile action." }, request, 400);
-    }
-
-    const displayName = action === "save" && typeof get("displayName") === "string"
-      ? get("displayName").trim()
-      : athlete.display_name;
-    if (!displayName || displayName.length > 60) {
-      return json({ error: "Enter a display name of up to 60 characters." }, request, 400);
+    if (action === "remove") {
+      const { error } = await admin.from("users").update({ profile_photo_path: null }).eq("id", athlete.id);
+      if (error) throw error;
+      if (athlete.profile_photo_path) await admin.storage.from("profile-photos").remove([athlete.profile_photo_path]);
+      return json({ displayName: athlete.display_name, photoUrl: null }, request);
     }
 
     const photo = get("photo");
-    const removePhoto = action === "remove" || get("removePhoto") === "true";
-    if (photo && (!(photo instanceof File) || photo.size === 0 || photo.size > 5 * 1024 * 1024 || !supportedTypes.has(photo.type))) {
+    if (action !== "update" || !(photo instanceof File) || photo.size === 0 || photo.size > 5 * 1024 * 1024 || !supportedTypes.has(photo.type)) {
       return json({ error: "Choose a JPEG, PNG, or WebP photo smaller than 5 MB." }, request, 400);
     }
 
-    let nextPhotoPath: string | null = athlete.profile_photo_path;
-    let uploadedPath: string | null = null;
+    const path = `${athlete.id}/${crypto.randomUUID()}.${fileExtension(photo.type)}`;
+    const { error: uploadError } = await admin.storage.from("profile-photos").upload(path, photo, { contentType: photo.type, upsert: false });
+    if (uploadError) throw uploadError;
 
-    if (photo instanceof File) {
-      uploadedPath = `${athlete.id}/${crypto.randomUUID()}.${fileExtension(photo.type)}`;
-      const { error: uploadError } = await admin.storage.from("profile-photos").upload(uploadedPath, photo, { contentType: photo.type, upsert: false });
-      if (uploadError) throw uploadError;
-      nextPhotoPath = uploadedPath;
-    } else if (removePhoto) {
-      nextPhotoPath = null;
-    }
-
-    const { data: updatedAthlete, error: updateError } = await admin
-      .from("users")
-      .update({ display_name: displayName, profile_photo_path: nextPhotoPath })
-      .eq("id", athlete.id)
-      .select("display_name, profile_photo_path")
-      .single();
+    const { error: updateError } = await admin.from("users").update({ profile_photo_path: path }).eq("id", athlete.id);
 
     if (updateError) {
-      if (uploadedPath) await admin.storage.from("profile-photos").remove([uploadedPath]);
-      if (updateError.code === "23505") return json({ error: "That display name is already in use." }, request, 409);
+      await admin.storage.from("profile-photos").remove([path]);
       throw updateError;
     }
 
-    if (athlete.profile_photo_path && athlete.profile_photo_path !== nextPhotoPath) {
-      await admin.storage.from("profile-photos").remove([athlete.profile_photo_path]);
-    }
-
-    return json({
-      displayName: updatedAthlete.display_name,
-      photoUrl: await signedPhotoUrl(admin, updatedAthlete.profile_photo_path),
-    }, request);
+    if (athlete.profile_photo_path) await admin.storage.from("profile-photos").remove([athlete.profile_photo_path]);
+    return json({ displayName: athlete.display_name, photoUrl: await signedPhotoUrl(admin, path) }, request);
   } catch (error) {
-    console.error("Unable to save profile changes.", error);
-    return json({ error: "Unable to save profile changes. Please try again." }, request, 500);
+    console.error("Unable to update profile photo.", error);
+    return json({ error: "Unable to update profile photo. Please try again." }, request, 500);
   }
 });
