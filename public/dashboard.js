@@ -3556,7 +3556,7 @@ closeProfilePageButton.addEventListener("click", closeProfilePage);
 openProfilePhotoButton.addEventListener("click", () => profilePhotoInput.click());
 profilePhotoInput.addEventListener("change", handleProfilePhotoSelection);
 profileDisplayNameInput.addEventListener("input", () => {
-    setProfilePageError();
+    setProfilePageError(profileDisplayNameInput.value.trim() ? "" : "Enter a display name.");
     renderProfileDraftAvatar();
     updateProfileSaveState();
 });
