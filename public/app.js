@@ -144,23 +144,6 @@ pinForm.addEventListener("submit", async event => {
 const userCards = document.querySelectorAll(".user-card");
 
 
-async function resolveAthlete(selectedUserId) {
-
-    const supabase = GymPactSupabase.getClient();
-    const { data, error } = await supabase
-        .from("users")
-        .select("id, display_name")
-        .eq("id", selectedUserId)
-        .single();
-
-    if (error || !data) {
-        throw error || new Error("Athlete was not found.");
-    }
-
-    return data;
-
-}
-
 async function resolveAthleteById(id) {
 
     const supabase = GymPactSupabase.getClient();
@@ -182,10 +165,23 @@ userCards.forEach(card => {
     card.addEventListener("click", async () => {
 
         const selectedUserId = card.dataset.userId;
+        const sessionToken = sessionStorage.getItem("gymPactSessionToken");
 
         try {
 
-            const athlete = await resolveAthlete(selectedUserId);
+            if (!sessionToken || !selectedUserId) throw new Error("Unlock GymPact before choosing an athlete.");
+
+            const { data, error } = await GymPactSupabase.getClient().functions.invoke(
+                "select-gympact-athlete",
+                { body: { sessionToken, userId: selectedUserId } }
+            );
+            if (error || data?.error || !data?.athlete) {
+
+                throw error || new Error(data?.error || "Unable to select athlete.");
+
+            }
+
+            const athlete = data.athlete;
 
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);
