@@ -3363,12 +3363,10 @@ function renderMonthPact() {
     if (["active", "completed", "failed"].includes(monthlyPact.status)) renderMonthlyCalendar(monthlyPact, card);
 
     const goalSection = document.createElement("section");
-    const goalHeading = document.createElement("h4");
     const people = document.createElement("div");
     goalSection.className = "month-pact-goals";
-    goalHeading.textContent = "Individual goals";
     people.className = "month-pact-people";
-    goalSection.append(goalHeading, people);
+    goalSection.appendChild(people);
     const sortedCommitments = [...monthlyPact.commitments].sort((first, second) => {
         if (first.userId === athleteId) return -1;
         if (second.userId === athleteId) return 1;
