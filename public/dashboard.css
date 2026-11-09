@@ -409,7 +409,7 @@ body.dashboard-page {
 @media (prefers-reduced-motion: reduce) {
     .quick-action-toggle-icon { transition: none; }
 }
-.dashboard-page.is-pact-tab .pact-page-section { margin-top: calc(env(safe-area-inset-top) - 16px); }
+.dashboard-page.is-pact-tab .pact-page-section { margin-top: calc(env(safe-area-inset-top) + 4px); }
 .track-page-section .exercise-tracking-section { margin: 0; }
 .exercise-tracking-section > h3 { margin-bottom: 16px; }
 .progress-race-section {
