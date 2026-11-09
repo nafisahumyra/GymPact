@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="dashboard.css?v=week-month-nav-v1">
+    <link rel="stylesheet" href="dashboard.css?v=profile-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=week-month-nav-v1">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=profile-v1">
 
     <div class="dashboard-shell">
 
@@ -615,40 +615,32 @@
                 </button>
                 <h2 id="profile-page-title">Profile</h2>
             </header>
-            <article class="profile-page-card">
+            <form id="profile-page-form" class="profile-page-form" novalidate>
                 <div class="profile-page-identity">
                     <span id="profile-page-initials" class="profile-page-avatar">A</span>
                     <img id="profile-page-image" class="profile-page-avatar" alt="" hidden>
                 </div>
-                <div class="profile-page-detail">
-                    <span>Name</span>
-                    <strong id="profile-page-name">Athlete</strong>
+                <button id="open-profile-photo" class="profile-page-photo-action" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h3l1.2-2h7.6l1.2 2h3A1.8 1.8 0 0 1 21.8 9.3v8.9A1.8 1.8 0 0 1 20 20H4a1.8 1.8 0 0 1-1.8-1.8V9.3A1.8 1.8 0 0 1 4 7.5Z"/><circle cx="12" cy="13.5" r="3.2"/></svg>
+                    <span>Change photo</span>
+                </button>
+                <input id="profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+                <button id="clear-profile-photo" class="profile-page-clear-photo" type="button" hidden>Remove photo</button>
+                <div class="profile-page-field">
+                    <label for="profile-display-name">Display name</label>
+                    <input id="profile-display-name" type="text" maxlength="60" autocomplete="name" required>
                 </div>
-                <button id="open-profile-photo" class="profile-page-photo-action" type="button">Update profile picture</button>
-            </article>
+                <p id="profile-page-error" class="profile-page-error" role="alert" hidden></p>
+                <button id="save-profile-changes" class="profile-page-save" type="submit" disabled>Save changes</button>
+            </form>
         </div>
     </section>
-
-    <div id="profile-photo-modal" class="modal" aria-labelledby="profile-photo-title">
-        <div class="modal-content exercise-modal-content profile-photo-modal-content">
-            <h2 id="profile-photo-title">Profile photo</h2>
-            <p>Choose a photo to show in your GymPact header.</p>
-            <label for="profile-photo-input">Photo</label>
-            <input id="profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp">
-            <p id="profile-photo-error" class="exercise-form-error" hidden></p>
-            <div class="modal-buttons">
-                <button id="cancel-profile-photo" type="button">Cancel</button>
-                <button id="remove-profile-photo" type="button" hidden>Remove photo</button>
-                <button id="save-profile-photo" type="button">Save photo</button>
-            </div>
-        </div>
-    </div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="supabase-client.js"></script>
-<script src="protected-page-guard.js"></script>
+<script src="protected-page-guard.js?v=profile-v1"></script>
 
 </body>
 

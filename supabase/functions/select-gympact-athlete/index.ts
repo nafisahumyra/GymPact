@@ -6,6 +6,10 @@ const allowedOrigins = new Set([
   "http://127.0.0.1:3000",
   "https://nafisahumyra.github.io",
 ]);
+const athleteIds = new Set([
+  "4a1a21a1-0000-4000-8000-000000000001",
+  "4a1a21a1-0000-4000-8000-000000000002",
+]);
 
 function corsHeaders(request: Request) {
   const origin = request.headers.get("origin") ?? "";
@@ -33,7 +37,7 @@ serve(async request => {
   try {
     const { sessionToken, userId } = await request.json();
     const session = await verifyGymPactSession(sessionToken);
-    if (!session || typeof userId !== "string") return json({ error: "Invalid athlete selection." }, request, 401);
+    if (!session || typeof userId !== "string" || !athleteIds.has(userId)) return json({ error: "Invalid athlete selection." }, request, 401);
 
     const admin = getAdminClient();
     const { data: athlete, error: athleteError } = await admin

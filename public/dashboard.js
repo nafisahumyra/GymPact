@@ -64,16 +64,15 @@ const openProfilePageButton = document.getElementById("open-profile-page");
 const openProfileHistoryButton = document.getElementById("open-profile-history");
 const profilePage = document.getElementById("profile-page");
 const closeProfilePageButton = document.getElementById("close-profile-page");
-const profilePageName = document.getElementById("profile-page-name");
 const profilePageInitials = document.getElementById("profile-page-initials");
 const profilePageImage = document.getElementById("profile-page-image");
+const profilePageForm = document.getElementById("profile-page-form");
+const profileDisplayNameInput = document.getElementById("profile-display-name");
+const profilePageError = document.getElementById("profile-page-error");
 const openProfilePhotoButton = document.getElementById("open-profile-photo");
-const profilePhotoModal = document.getElementById("profile-photo-modal");
 const profilePhotoInput = document.getElementById("profile-photo-input");
-const profilePhotoError = document.getElementById("profile-photo-error");
-const cancelProfilePhotoButton = document.getElementById("cancel-profile-photo");
-const removeProfilePhotoButton = document.getElementById("remove-profile-photo");
-const saveProfilePhotoButton = document.getElementById("save-profile-photo");
+const clearProfilePhotoButton = document.getElementById("clear-profile-photo");
+const saveProfileChangesButton = document.getElementById("save-profile-changes");
 const ACTIVITY_MUSCLES = ["Abs", "Back", "Biceps", "Boxing", "Cardio", "Chest", "HIIT", "Legs", "Pullups", "Pushups", "Shoulders", "Triceps"];
 const ACTIVITY_PAGE_SIZE = 10;
 let activityWorkouts = [];
@@ -86,6 +85,9 @@ let activityLoadObserver = null;
 let editingWorkout = null;
 let profilePhotoUrl = null;
 let profileDisplayName = currentUser;
+let profileDraftPhoto = null;
+let profileDraftPhotoUrl = "";
+let profileDraftPhotoRemoved = false;
 let monthlyCompletionBrandAssetsPromise = null;
 let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
@@ -1353,21 +1355,59 @@ function getActivityInitials(name) {
 
 }
 
+function renderAvatarImage(image, initialsElement, displayName, photoUrl = null) {
+
+    const initials = getActivityInitials(displayName);
+
+    initialsElement.textContent = initials;
+    initialsElement.hidden = false;
+    image.hidden = true;
+    image.removeAttribute("src");
+    delete image.dataset.photoUrl;
+
+    if (!photoUrl) return;
+
+    image.dataset.photoUrl = photoUrl;
+    image.onload = () => {
+
+        if (image.dataset.photoUrl !== photoUrl) return;
+        image.hidden = false;
+        initialsElement.hidden = true;
+
+    };
+    image.onerror = () => {
+
+        if (image.dataset.photoUrl !== photoUrl) return;
+        image.hidden = true;
+        initialsElement.hidden = false;
+
+    };
+    image.src = photoUrl;
+
+}
+
 function renderProfileAvatar({ displayName = currentUser, photoUrl = null } = {}) {
 
     profileDisplayName = displayName;
     profilePhotoUrl = photoUrl;
-    const initials = getActivityInitials(displayName);
-    profileMenuInitials.textContent = initials;
-    profilePageInitials.textContent = initials;
-    profilePageName.textContent = displayName;
-    [profileMenuImage, profilePageImage].forEach(image => {
-        image.hidden = !photoUrl;
-        image.removeAttribute("src");
-        if (photoUrl) image.src = photoUrl;
-    });
-    profileMenuInitials.hidden = Boolean(photoUrl);
-    profilePageInitials.hidden = Boolean(photoUrl);
+    localStorage.setItem("currentUser", displayName);
+    welcomeMessage.textContent = `Welcome back, ${displayName}!`;
+    renderAvatarImage(profileMenuImage, profileMenuInitials, displayName, photoUrl);
+    renderProfileDraftAvatar();
+
+}
+
+function renderProfileDraftAvatar() {
+
+    const draftPhotoUrl = profileDraftPhotoRemoved
+        ? null
+        : profileDraftPhotoUrl || profilePhotoUrl;
+    renderAvatarImage(
+        profilePageImage,
+        profilePageInitials,
+        profileDisplayNameInput?.value?.trim() || profileDisplayName,
+        draftPhotoUrl
+    );
 
 }
 
@@ -1390,41 +1430,85 @@ function openProfileMenu() {
 function openProfilePage() {
 
     closeProfileMenu();
+    resetProfileDraft();
     profilePage.hidden = false;
-    profilePageName.textContent = profileDisplayName;
     closeProfilePageButton.focus();
 
 }
 
 function closeProfilePage() {
 
+    resetProfileDraft();
     profilePage.hidden = true;
     profileMenuButton.focus();
 
 
 }
 
-function setProfilePhotoError(message = "") {
+function setProfilePageError(message = "") {
 
-    profilePhotoError.textContent = message;
-    profilePhotoError.hidden = !message;
-
-}
-
-function closeProfilePhotoModal() {
-
-    profilePhotoModal.style.display = "none";
-    profilePhotoInput.value = "";
-    setProfilePhotoError();
+    profilePageError.textContent = message;
+    profilePageError.hidden = !message;
 
 }
 
-function openProfilePhotoModal() {
+function discardProfileDraftPhoto() {
 
+    if (profileDraftPhotoUrl) URL.revokeObjectURL(profileDraftPhotoUrl);
+    profileDraftPhoto = null;
+    profileDraftPhotoUrl = "";
+    profileDraftPhotoRemoved = false;
+
+}
+
+function profileHasChanges() {
+
+    return profileDisplayNameInput.value.trim() !== profileDisplayName ||
+        Boolean(profileDraftPhoto) || profileDraftPhotoRemoved;
+
+}
+
+function updateProfileSaveState() {
+
+    const hasName = Boolean(profileDisplayNameInput.value.trim());
+    saveProfileChangesButton.disabled = !hasName || !profileHasChanges() || saveProfileChangesButton.dataset.saving === "true";
+
+}
+
+function resetProfileDraft() {
+
+    discardProfileDraftPhoto();
     profilePhotoInput.value = "";
-    setProfilePhotoError();
-    removeProfilePhotoButton.hidden = !profilePhotoUrl;
-    profilePhotoModal.style.display = "flex";
+    profileDisplayNameInput.value = profileDisplayName;
+    clearProfilePhotoButton.hidden = !profilePhotoUrl;
+    setProfilePageError();
+    renderProfileDraftAvatar();
+    updateProfileSaveState();
+
+}
+
+function handleProfilePhotoSelection() {
+
+    const photo = profilePhotoInput.files?.[0];
+
+    if (!photo) return;
+
+    if (!new Set(["image/jpeg", "image/png", "image/webp"]).has(photo.type) || photo.size > 5 * 1024 * 1024) {
+
+        setProfilePageError("Choose a JPEG, PNG, or WebP photo smaller than 5 MB.");
+        profilePhotoInput.value = "";
+        return;
+
+    }
+
+    if (profileDraftPhotoUrl) URL.revokeObjectURL(profileDraftPhotoUrl);
+    profileDraftPhoto = photo;
+    profileDraftPhotoUrl = URL.createObjectURL(photo);
+    profileDraftPhotoRemoved = false;
+    clearProfilePhotoButton.hidden = false;
+    setProfilePageError();
+    renderProfileDraftAvatar();
+    updateProfileSaveState();
 
 }
 
@@ -1463,75 +1547,54 @@ async function loadProfilePhoto() {
 
 }
 
-async function saveProfilePhoto() {
+async function saveProfileChanges(event) {
 
-    const photo = profilePhotoInput.files?.[0];
+    event.preventDefault();
+    const displayName = profileDisplayNameInput.value.trim();
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
     const userId = sessionStorage.getItem("gymPactSelectedAthleteId");
 
-    if (!photo) {
+    if (!displayName) {
 
-        setProfilePhotoError("Choose a photo first.");
+        setProfilePageError("Enter a display name.");
+        updateProfileSaveState();
         return;
 
     }
 
     if (!sessionToken || !userId) return;
 
-    saveProfilePhotoButton.disabled = true;
-    setProfilePhotoError();
+    saveProfileChangesButton.dataset.saving = "true";
+    saveProfileChangesButton.textContent = "Saving…";
+    updateProfileSaveState();
+    setProfilePageError();
 
     try {
 
         const form = new FormData();
-        form.append("action", "update");
+        form.append("action", "save");
         form.append("sessionToken", sessionToken);
-        form.append("photo", photo);
+        form.append("displayName", displayName);
+        if (profileDraftPhoto) form.append("photo", profileDraftPhoto);
+        if (profileDraftPhotoRemoved) form.append("removePhoto", "true");
         const { data, error } = await GymPactSupabase.getClient().functions.invoke("profile", { body: form });
 
         if (error || data?.error) throw error || new Error(data.error);
         renderProfileAvatar({ displayName: data.displayName || currentUser, photoUrl: data.photoUrl || null });
-        closeProfilePhotoModal();
+        resetProfileDraft();
+        if (currentChallengeLoaded) loadCurrentChallenge({ preserveOnError: true });
+        if (monthlyPact) loadMonthlyPact();
+        if (activityWorkoutsLoaded) loadActivityWorkouts({ reset: true });
 
     } catch (error) {
 
-        setProfilePhotoError(error?.message || "Unable to save your profile photo.");
+        setProfilePageError(error?.message || "Unable to save your profile changes.");
 
     } finally {
 
-        saveProfilePhotoButton.disabled = false;
-
-    }
-
-}
-
-async function removeProfilePhoto() {
-
-    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
-    const userId = sessionStorage.getItem("gymPactSelectedAthleteId");
-
-    if (!sessionToken || !userId) return;
-
-    removeProfilePhotoButton.disabled = true;
-    setProfilePhotoError();
-
-    try {
-
-        const { data, error } = await GymPactSupabase.getClient().functions.invoke("profile", {
-            body: { action: "remove", sessionToken }
-        });
-
-        if (error || data?.error) throw error || new Error(data.error);
-        renderProfileAvatar({ displayName: data.displayName || currentUser, photoUrl: null });
-        closeProfilePhotoModal();
-
-    } catch (error) {
-
-        setProfilePhotoError(error?.message || "Unable to remove your profile photo.");
-
-    } finally {
-
-        removeProfilePhotoButton.disabled = false;
+        delete saveProfileChangesButton.dataset.saving;
+        saveProfileChangesButton.textContent = "Save changes";
+        updateProfileSaveState();
 
     }
 
@@ -3375,7 +3438,7 @@ modal("next-monthly-create").addEventListener("click", () => {
     const goal = modal("monthly-goal").value.trim(), consequence = modal("monthly-consequence").value.trim();
     if (!goal || !consequence) return setMonthlyError("monthly-create-error", "Add your goal and shared consequence.");
     const deadline = monthPactDeadline({ monthEnd: monthEndForStart(monthlyCandidate.candidateMonth) });
-    modal("monthly-create-pledge").textContent = `I, ${currentUser}, commit to achieving ${goal} by ${deadline}.`;
+    modal("monthly-create-pledge").textContent = `I, ${profileDisplayName}, commit to achieving ${goal} by ${deadline}.`;
     modal("monthly-create-pledge-consequence").textContent = consequence;
     showMonthlyStep("monthly-create-details-step", "monthly-create-pledge-step", true); setMonthlyError("monthly-create-pledge-error");
 });
@@ -3389,7 +3452,7 @@ modal("decline-monthly-pact").addEventListener("click", async () => { const butt
 modal("next-monthly-sign").addEventListener("click", () => {
     const goal = modal("monthly-sign-goal").value.trim();
     if (!goal) return setMonthlyError("monthly-sign-error", "Add your individual goal.");
-    modal("monthly-sign-pledge").textContent = `I, ${currentUser}, commit to achieving ${goal} by ${monthPactDeadline(monthlyPact)}.`;
+    modal("monthly-sign-pledge").textContent = `I, ${profileDisplayName}, commit to achieving ${goal} by ${monthPactDeadline(monthlyPact)}.`;
     modal("monthly-sign-pledge-consequence").textContent = monthlyPact.consequence;
     showMonthlyStep("monthly-sign-goal-step", "monthly-sign-pledge-step", true); setMonthlyError("monthly-sign-pledge-error");
 });
@@ -3490,7 +3553,25 @@ openProfileHistoryButton.addEventListener("click", () => {
     window.location.href = "history.html?view=pacts";
 });
 closeProfilePageButton.addEventListener("click", closeProfilePage);
-openProfilePhotoButton.addEventListener("click", openProfilePhotoModal);
+openProfilePhotoButton.addEventListener("click", () => profilePhotoInput.click());
+profilePhotoInput.addEventListener("change", handleProfilePhotoSelection);
+profileDisplayNameInput.addEventListener("input", () => {
+    setProfilePageError();
+    renderProfileDraftAvatar();
+    updateProfileSaveState();
+});
+clearProfilePhotoButton.addEventListener("click", () => {
+    if (profileDraftPhotoUrl) URL.revokeObjectURL(profileDraftPhotoUrl);
+    profileDraftPhoto = null;
+    profileDraftPhotoUrl = "";
+    profileDraftPhotoRemoved = true;
+    profilePhotoInput.value = "";
+    clearProfilePhotoButton.hidden = true;
+    setProfilePageError();
+    renderProfileDraftAvatar();
+    updateProfileSaveState();
+});
+profilePageForm.addEventListener("submit", saveProfileChanges);
 document.addEventListener("pointerdown", event => {
     if (!profileActionsMenu.hidden && !event.target.closest(".profile-menu-wrapper")) closeProfileMenu();
 });
@@ -3499,14 +3580,6 @@ document.addEventListener("keydown", event => {
         if (!profileActionsMenu.hidden) closeProfileMenu({ restoreFocus: true });
         else if (!profilePage.hidden) closeProfilePage();
     }
-});
-cancelProfilePhotoButton.addEventListener("click", closeProfilePhotoModal);
-saveProfilePhotoButton.addEventListener("click", saveProfilePhoto);
-removeProfilePhotoButton.addEventListener("click", removeProfilePhoto);
-profilePhotoModal.addEventListener("click", event => {
-
-    if (event.target === profilePhotoModal) closeProfilePhotoModal();
-
 });
 
 const challengeActiveModal =

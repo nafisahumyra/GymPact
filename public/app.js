@@ -144,13 +144,13 @@ pinForm.addEventListener("submit", async event => {
 const userCards = document.querySelectorAll(".user-card");
 
 
-async function resolveAthlete(selectedUser) {
+async function resolveAthlete(selectedUserId) {
 
     const supabase = GymPactSupabase.getClient();
     const { data, error } = await supabase
         .from("users")
         .select("id, display_name")
-        .eq("display_name", selectedUser)
+        .eq("id", selectedUserId)
         .single();
 
     if (error || !data) {
@@ -181,11 +181,11 @@ userCards.forEach(card => {
 
     card.addEventListener("click", async () => {
 
-        const selectedUser = card.dataset.user;
+        const selectedUserId = card.dataset.userId;
 
         try {
 
-            const athlete = await resolveAthlete(selectedUser);
+            const athlete = await resolveAthlete(selectedUserId);
 
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);
