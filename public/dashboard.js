@@ -278,6 +278,75 @@ function closeExerciseTrackerMenus() {
 
 }
 
+function getTrackerOrderStorageKey() {
+
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    return athleteId ? `gymPactTrackerOrder:production:${athleteId}` : null;
+
+}
+
+function getSavedTrackerOrder() {
+
+    const key = getTrackerOrderStorageKey();
+
+    if (!key) return [];
+
+    try {
+
+        const order = JSON.parse(localStorage.getItem(key) || "[]");
+
+        return Array.isArray(order) ? order.filter(name => typeof name === "string") : [];
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+function sortExerciseTrackers(trackers) {
+
+    const order = getSavedTrackerOrder();
+
+    return [...trackers].sort((first, second) => {
+
+        const firstPosition = order.indexOf(first.exerciseName);
+        const secondPosition = order.indexOf(second.exerciseName);
+        const normalizedFirst = firstPosition === -1 ? order.length : firstPosition;
+        const normalizedSecond = secondPosition === -1 ? order.length : secondPosition;
+
+        if (normalizedFirst !== normalizedSecond) return normalizedFirst - normalizedSecond;
+        return first.exerciseName.localeCompare(second.exerciseName);
+
+    });
+
+}
+
+function saveTrackerOrder(trackers = exerciseTrackers) {
+
+    const key = getTrackerOrderStorageKey();
+
+    if (!key) return;
+
+    localStorage.setItem(key, JSON.stringify(trackers.map(tracker => tracker.exerciseName)));
+
+}
+
+function moveExerciseTracker(exerciseName, direction) {
+
+    const index = exerciseTrackers.findIndex(tracker => tracker.exerciseName === exerciseName);
+    const nextIndex = index + direction;
+
+    if (index < 0 || nextIndex < 0 || nextIndex >= exerciseTrackers.length) return;
+
+    [exerciseTrackers[index], exerciseTrackers[nextIndex]] = [exerciseTrackers[nextIndex], exerciseTrackers[index]];
+    saveTrackerOrder();
+    renderExerciseTrackers();
+
+}
+
 
 function renderExerciseTrackers() {
 
@@ -293,14 +362,35 @@ function renderExerciseTrackers() {
 
         const emptyState = document.createElement("div");
         const message = document.createElement("p");
-        const createButton = document.createElement("button");
+        const choices = document.createElement("div");
 
         emptyState.className = "exercise-tracker-empty";
-        message.textContent = "No active trackers";
-        createButton.type = "button";
-        createButton.textContent = "+ Create tracker";
-        createButton.addEventListener("click", openQuickExercise);
-        emptyState.append(message, createButton);
+        message.textContent = "Choose a tracker to get started.";
+        choices.className = "exercise-tracker-setup-options";
+
+        ["Steps", "Pullups", "Pushups"].forEach(exerciseName => {
+
+            const choice = document.createElement("button");
+            const identity = document.createElement("span");
+            const copy = document.createElement("span");
+            const label = document.createElement("strong");
+            const detail = document.createElement("small");
+
+            choice.type = "button";
+            choice.className = "exercise-tracker-setup-option";
+            identity.className = "exercise-tracker-setup-identity";
+            copy.className = "exercise-tracker-setup-copy";
+            label.textContent = `Add ${exerciseName} tracker`;
+            detail.textContent = "Set a target to begin";
+            identity.append(createExerciseIcon(exerciseName), copy);
+            copy.append(label, detail);
+            choice.append(identity);
+            choice.addEventListener("click", () => openExerciseTargetModal(exerciseName));
+            choices.appendChild(choice);
+
+        });
+
+        emptyState.append(message, choices);
         exerciseTrackersContainer.appendChild(emptyState);
 
         return;
@@ -309,7 +399,7 @@ function renderExerciseTrackers() {
 
     exerciseTrackingSection.hidden = activeDashboardTab !== "track";
 
-    exerciseTrackers.forEach(tracker => {
+    exerciseTrackers.forEach((tracker, trackerIndex) => {
 
         const isStepsTracker = tracker.exerciseName === "Steps";
         const target = isStepsTracker ? tracker.targetSteps : tracker.targetReps;
@@ -376,6 +466,8 @@ function renderExerciseTrackers() {
 
         const changeTarget = document.createElement("button");
         const reset = document.createElement("button");
+        const moveUp = document.createElement("button");
+        const moveDown = document.createElement("button");
         const remove = document.createElement("button");
 
         changeTarget.type = "button";
@@ -396,6 +488,26 @@ function renderExerciseTrackers() {
 
         });
 
+        moveUp.type = "button";
+        moveUp.textContent = "Move up";
+        moveUp.disabled = trackerIndex === 0;
+        moveUp.addEventListener("click", () => {
+
+            closeExerciseTrackerMenus();
+            moveExerciseTracker(tracker.exerciseName, -1);
+
+        });
+
+        moveDown.type = "button";
+        moveDown.textContent = "Move down";
+        moveDown.disabled = trackerIndex === exerciseTrackers.length - 1;
+        moveDown.addEventListener("click", () => {
+
+            closeExerciseTrackerMenus();
+            moveExerciseTracker(tracker.exerciseName, 1);
+
+        });
+
         remove.type = "button";
         remove.classList.add("is-destructive");
         remove.textContent = "Remove tracker";
@@ -406,7 +518,7 @@ function renderExerciseTrackers() {
 
         });
 
-        overflowMenu.append(changeTarget, reset, remove);
+        overflowMenu.append(changeTarget, reset, moveUp, moveDown, remove);
         overflow.append(overflowButton, overflowMenu);
         header.appendChild(overflow);
 
@@ -587,10 +699,10 @@ async function loadExerciseTrackers({ preserveOnError = false } = {}) {
 
         }
 
-        exerciseTrackers = [
+        exerciseTrackers = sortExerciseTrackers([
             ...data.trackers,
             ...(data.stepTracker ? [data.stepTracker] : [])
-        ];
+        ]);
         exerciseTrackersLoaded = true;
         renderExerciseTrackers();
 
@@ -3958,18 +4070,14 @@ async function saveExerciseGoal(exerciseName, targetReps, reset = false) {
 
     }
 
-    exerciseTrackers = [
+    exerciseTrackers = sortExerciseTrackers([
         ...exerciseTrackers.filter(tracker => {
 
             return tracker.exerciseName !== data.tracker.exerciseName;
 
         }),
         data.tracker
-    ].sort((first, second) => {
-
-        return first.exerciseName.localeCompare(second.exerciseName);
-
-    });
+    ]);
     exerciseTrackersLoaded = true;
     renderExerciseTrackers();
 
