@@ -493,26 +493,34 @@ body.dashboard-page {
     .progress-scene-runner-slot { width: clamp(172px, 48vw, 216px); }
 }
 .month-pact-card {
-    padding: 18px;
-    border: 1px solid rgba(145, 242, 100, .28);
-    border-radius: 20px;
-    background: linear-gradient(145deg, rgba(25, 29, 30, .94), rgba(13, 16, 17, .98));
-    box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
-.month-pact-card h3 { margin-bottom: 5px; color: var(--text); font-size: 1.15rem; }
-.month-pact-active-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.month-pact-active-heading h3 { margin: 0; }
-.month-pact-active-heading .challenge-status-pill { position: static; display: inline-block; flex: 0 0 auto; margin: 0 0 0 auto; white-space: nowrap; }
-.month-pact-kicker { margin-bottom: 16px; color: var(--green); font-size: .72rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.month-pact-header { position: relative; display: grid; gap: 4px; min-height: 58px; margin-bottom: 18px; padding-right: 88px; }
+.month-pact-kicker { margin: 0; color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.month-pact-title { margin: 0; color: var(--text); font-size: clamp(1.55rem, 7vw, 2rem); letter-spacing: -.045em; line-height: 1.05; }
+.month-pact-title span { color: var(--muted); font-weight: 500; }
+.month-pact-status-badge { position: absolute; top: 12px; right: 0; display: inline-flex; align-items: center; min-height: 29px; padding: 5px 10px; border: 1px solid rgba(145,242,100,.2); border-radius: 999px; background: rgba(145,242,100,.14); color: var(--green); font-size: .72rem; font-weight: 780; white-space: nowrap; }
+.month-pact-status-badge.is-pending, .month-pact-status-badge.is-upcoming { border-color: rgba(193,201,198,.18); background: rgba(193,201,198,.1); color: #c0c8c3; }
+.month-pact-status-badge.is-failed { border-color: rgba(255,154,154,.24); background: rgba(255,154,154,.11); color: #ffacac; }
 .month-pact-copy { color: var(--muted); line-height: 1.55; }
-.month-pact-detail { margin-top: 17px; padding-top: 15px; border-top: 1px solid var(--line-soft); }
-.month-pact-detail h4 { margin-bottom: 5px; color: var(--muted); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
-.month-pact-detail p { color: #e1e6e2; line-height: 1.55; }
+.month-pact-goals { margin-top: 28px; }
+.month-pact-goals > h4 { margin: 0 0 14px; color: var(--text); font-size: 1rem; }
+.month-pact-detail { display: grid; gap: 7px; margin-top: 24px; padding: 15px 16px; border: 1px solid rgba(255,255,255,.05); border-radius: 16px; background: #1a2420; }
+.month-pact-detail h4 { margin: 0; color: var(--text); font-size: .88rem; }
+.month-pact-detail p { margin: 0; color: #d4ddda; line-height: 1.55; }
 .month-pact-action { width: 100%; margin-top: 20px; }
-.month-pact-people { display: grid; gap: 10px; margin-top: 16px; }
-.month-pact-person { padding: 12px; border: 1px solid var(--line-soft); border-radius: 13px; background: rgba(0,0,0,.16); }
-.month-pact-person strong { display: block; color: var(--text); font-size: .88rem; }
-.month-pact-person span { display: block; margin-top: 4px; color: var(--muted); font-size: .84rem; line-height: 1.45; }
+.month-pact-people { display: grid; }
+.month-pact-person { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: start; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line-soft); }
+.month-pact-person:first-child { border-top: 0; padding-top: 0; }
+.month-pact-person-avatar { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(145,242,100,.13); color: var(--green); font-size: .88rem; font-weight: 800; }
+.month-pact-person-content { min-width: 0; }
+.month-pact-person strong { display: block; color: var(--text); font-size: .9rem; }
+.month-pact-person-goal { display: block; margin-top: 4px; color: var(--muted); font-size: .86rem; line-height: 1.45; }
+.month-pact-person-status { padding-top: 1px; color: var(--muted); font-size: .77rem; font-weight: 700; white-space: nowrap; }
 .month-pact-complete { color: var(--green) !important; font-weight: 750; }
 .month-pact-incomplete { color: #ff9a9a !important; font-weight: 750; }
 .month-pact-final-status { color: var(--green); }
@@ -537,12 +545,13 @@ body.dashboard-page {
     font-size: .78rem;
     white-space: nowrap;
 }
-.monthly-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-top: 19px; }
-.monthly-calendar-weekday { padding-bottom: 3px; color: var(--muted); font-size: .63rem; font-weight: 750; text-align: center; text-transform: uppercase; }
-.monthly-calendar-day { aspect-ratio: 1; min-height: 34px; padding: 3px; border: 1px solid var(--line-soft); border-radius: 9px; background: #101313; color: var(--text); font-size: .76rem; }
-.monthly-calendar-day.is-today { border-color: var(--green); box-shadow: 0 0 0 1px rgba(145,242,100,.12); }
-.monthly-calendar-day.is-selected { border-color: var(--green); background: rgba(145,242,100,.14); box-shadow: 0 0 0 1px rgba(145,242,100,.16); }
-.monthly-calendar-day.has-checkin::after { content: ""; display: block; width: 5px; height: 5px; margin: 3px auto 0; border-radius: 50%; background: var(--green); }
+.monthly-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px 4px; margin-top: 2px; }
+.monthly-calendar-weekday { padding-bottom: 5px; color: var(--muted); font-size: .66rem; font-weight: 750; text-align: center; text-transform: uppercase; }
+.monthly-calendar-day { position: relative; aspect-ratio: 1; min-height: 38px; padding: 3px; border: 0; border-radius: 11px; background: transparent; color: #d7ded9; font-size: .86rem; box-shadow: none; }
+.monthly-calendar-day.is-today { color: var(--green); box-shadow: inset 0 0 0 1px rgba(145,242,100,.62); }
+.monthly-calendar-day.is-selected { background: rgba(145,242,100,.16); color: var(--green); box-shadow: inset 0 0 0 1px rgba(145,242,100,.36); }
+.monthly-calendar-day.is-today.is-selected { box-shadow: inset 0 0 0 2px var(--green); }
+.monthly-calendar-day.has-checkin::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; transform: translateX(-50%); border-radius: 50%; background: var(--green); }
 .monthly-calendar-day:disabled { opacity: .48; cursor: default; }
 .monthly-checkin-popover { position: fixed; z-index: 12; display: grid; gap: 8px; padding: 12px; border: 1px solid rgba(145,242,100,.32); border-radius: 14px; background: #161b1a; box-shadow: 0 16px 34px rgba(0,0,0,.45); color: var(--text); }
 .monthly-checkin-popover > strong { color: var(--text); font-size: .86rem; }
