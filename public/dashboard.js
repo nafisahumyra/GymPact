@@ -3328,7 +3328,7 @@ function renderMonthPact() {
         title.append(document.createTextNode(monthName || label));
         if (year) {
             const yearNode = document.createElement("span");
-            yearNode.textContent = ` ${year}`;
+            yearNode.textContent = year;
             title.appendChild(yearNode);
         }
         header.append(eyebrow, title);

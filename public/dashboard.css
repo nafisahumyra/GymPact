@@ -502,7 +502,7 @@ body.dashboard-page {
 .month-pact-header { position: relative; display: grid; gap: 4px; min-height: 58px; margin-bottom: 18px; padding-right: 88px; }
 .month-pact-kicker { margin: 0; color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
 .month-pact-title { margin: 0; color: var(--text); font-size: clamp(1.55rem, 7vw, 2rem); letter-spacing: -.045em; line-height: 1.05; }
-.month-pact-title span { color: var(--muted); font-weight: 500; }
+.month-pact-title span { margin-left: .18em; color: var(--muted); font-weight: 500; }
 .month-pact-status-badge { position: absolute; top: 12px; right: 0; display: inline-flex; align-items: center; min-height: 29px; padding: 5px 10px; border: 1px solid rgba(145,242,100,.2); border-radius: 999px; background: rgba(145,242,100,.14); color: var(--green); font-size: .72rem; font-weight: 780; white-space: nowrap; }
 .month-pact-status-badge.is-pending, .month-pact-status-badge.is-upcoming { border-color: rgba(193,201,198,.18); background: rgba(193,201,198,.1); color: #c0c8c3; }
 .month-pact-status-badge.is-failed { border-color: rgba(255,154,154,.24); background: rgba(255,154,154,.11); color: #ffacac; }
