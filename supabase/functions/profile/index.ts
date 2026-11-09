@@ -62,17 +62,19 @@ serve(async request => {
       return json({ displayName: athlete.display_name, photoUrl: await signedPhotoUrl(admin, athlete.profile_photo_path) }, request);
     }
 
-    if (action !== "save") {
+    if (action !== "save" && action !== "update" && action !== "remove") {
       return json({ error: "Unsupported profile action." }, request, 400);
     }
 
-    const displayName = typeof get("displayName") === "string" ? get("displayName").trim() : "";
+    const displayName = action === "save" && typeof get("displayName") === "string"
+      ? get("displayName").trim()
+      : athlete.display_name;
     if (!displayName || displayName.length > 60) {
       return json({ error: "Enter a display name of up to 60 characters." }, request, 400);
     }
 
     const photo = get("photo");
-    const removePhoto = get("removePhoto") === "true";
+    const removePhoto = action === "remove" || get("removePhoto") === "true";
     if (photo && (!(photo instanceof File) || photo.size === 0 || photo.size > 5 * 1024 * 1024 || !supportedTypes.has(photo.type))) {
       return json({ error: "Choose a JPEG, PNG, or WebP photo smaller than 5 MB." }, request, 400);
     }
@@ -111,7 +113,7 @@ serve(async request => {
       photoUrl: await signedPhotoUrl(admin, updatedAthlete.profile_photo_path),
     }, request);
   } catch (error) {
-    console.error("Unable to update profile photo.", error);
-    return json({ error: "Unable to update profile photo." }, request, 500);
+    console.error("Unable to save profile changes.", error);
+    return json({ error: "Unable to save profile changes. Please try again." }, request, 500);
   }
 });

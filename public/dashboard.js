@@ -1579,7 +1579,12 @@ async function saveProfileChanges(event) {
         if (profileDraftPhotoRemoved) form.append("removePhoto", "true");
         const { data, error } = await GymPactSupabase.getClient().functions.invoke("profile", { body: form });
 
-        if (error || data?.error) throw error || new Error(data.error);
+        if (error || data?.error) {
+
+            const details = await error?.context?.json?.().catch(() => null);
+            throw new Error(data?.error || details?.error || error?.message || "Unable to save your profile changes.");
+
+        }
         renderProfileAvatar({ displayName: data.displayName || currentUser, photoUrl: data.photoUrl || null });
         resetProfileDraft();
         if (currentChallengeLoaded) loadCurrentChallenge({ preserveOnError: true });
