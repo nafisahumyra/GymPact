@@ -186,6 +186,13 @@ body {
     border-radius: 0;
     background: var(--bg);
     box-shadow: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 270ms ease;
+}
+
+.welcome-container.is-reveal-fading .athlete-selection-screen {
+    opacity: 1;
 }
 
 .welcome-container.is-revealing .athlete-selection-screen > * {
