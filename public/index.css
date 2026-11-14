@@ -25,7 +25,7 @@ body {
 }
 
 .lock-icon {
-    display: inline-grid;
+    display: grid;
     place-items: center;
     width: 76px;
     height: 76px;
@@ -37,6 +37,11 @@ body {
     display: block;
     width: 100%;
     height: 100%;
+}
+
+.gympact-lock-shackle {
+    transform-box: fill-box;
+    transform-origin: left bottom;
 }
 
 .logo {
@@ -168,35 +173,29 @@ body {
     border: 0;
 }
 
-.unlock-reveal {
+.welcome-container.is-revealing .athlete-selection-screen {
     position: fixed;
-    z-index: 1000;
+    z-index: 0;
     inset: 0;
     display: grid;
-    place-items: center;
-    overflow: hidden;
-    background: #0b100d;
-    color: var(--green);
+    place-content: center;
+    width: 100%;
+    margin: 0;
+    padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+    background: var(--bg);
+    box-shadow: none;
 }
 
-.unlock-reveal[hidden] {
-    display: none;
+.welcome-container.is-revealing .athlete-selection-screen > * {
+    width: min(100%, 720px);
+    margin-inline: auto;
 }
 
-.unlock-reveal-lock {
-    display: block;
-    width: clamp(140px, 42vw, 220px);
-    height: auto;
-    overflow: visible;
-    transform-origin: center;
-}
-
-.unlock-reveal-shell {
-    transform-origin: 64px 78px;
-}
-
-.unlock-reveal-shackle {
-    transform-origin: 48px 69px;
+.welcome-container.is-revealing .pin-lock {
+    position: relative;
+    z-index: 1;
 }
 
 @media (max-width: 420px) {

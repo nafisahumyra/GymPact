@@ -4,9 +4,9 @@ const pinInput = document.getElementById("gympact-pin");
 const pinError = document.getElementById("pin-error");
 const unlockButton = document.getElementById("unlock-button");
 const athleteSelection = document.getElementById("athlete-selection");
-const unlockReveal = document.getElementById("unlock-reveal");
-const unlockRevealLock = unlockReveal?.querySelector(".unlock-reveal-lock");
-const unlockRevealShackle = unlockReveal?.querySelector(".unlock-reveal-shackle");
+const welcomeContainer = document.querySelector(".welcome-container");
+const lockIcon = pinLock.querySelector(".lock-icon");
+const lockShackle = pinLock.querySelector(".gympact-lock-shackle");
 let unlockRevealPlaying = false;
 let unlockRevealAnimations = [];
 
@@ -15,6 +15,7 @@ function showAthleteSelection({ focus = false } = {}) {
 
     pinLock.hidden = true;
     athleteSelection.hidden = false;
+    welcomeContainer.classList.remove("is-revealing");
 
     if (focus) {
         athleteSelection.focus({ preventScroll: true });
@@ -28,12 +29,6 @@ function dismissUnlockReveal() {
     unlockRevealAnimations.forEach(animation => animation.cancel());
     unlockRevealAnimations = [];
     unlockRevealPlaying = false;
-
-    if (unlockReveal) {
-        unlockReveal.hidden = true;
-        unlockReveal.inert = true;
-        unlockReveal.setAttribute("aria-hidden", "true");
-    }
 
     showAthleteSelection({ focus: true });
 
@@ -53,16 +48,15 @@ async function playUnlockReveal() {
 
     if (unlockRevealPlaying) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !unlockReveal || !unlockRevealLock || !unlockRevealShackle) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !lockIcon || !lockShackle) {
         dismissUnlockReveal();
         return;
     }
 
     unlockRevealPlaying = true;
-    unlockReveal.hidden = false;
-    unlockReveal.inert = false;
-    unlockReveal.setAttribute("aria-hidden", "false");
-    unlockRevealShackle.style.transform = "none";
+    athleteSelection.hidden = false;
+    welcomeContainer.classList.add("is-revealing");
+    lockShackle.style.transform = "none";
 
     const finishOnInterruption = () => {
         if (document.hidden && unlockRevealPlaying) dismissUnlockReveal();
@@ -72,7 +66,7 @@ async function playUnlockReveal() {
 
     try {
         await animateUnlock(
-            unlockRevealLock,
+            lockIcon,
             [0, -6, 5, -3, 1, 0].map(rotation => ({ transform: `rotate(${rotation}deg)` })),
             { duration: 480, easing: "ease-in-out" }
         );
@@ -80,7 +74,7 @@ async function playUnlockReveal() {
 
         const openShackle = "translateY(-13px) rotate(-23deg)";
         await animateUnlock(
-            unlockRevealShackle,
+            lockShackle,
             [
                 { transform: "none" },
                 { transform: openShackle, offset: .78 },
@@ -89,21 +83,21 @@ async function playUnlockReveal() {
             { duration: 450, easing: "ease-out", fill: "forwards" }
         );
         if (!unlockRevealPlaying) return;
-        unlockRevealShackle.style.transform = openShackle;
+        lockShackle.style.transform = openShackle;
 
         await animateUnlock(
-            unlockRevealLock,
+            lockIcon,
             [
                 { transform: "scale(1)", opacity: 1 },
                 { transform: "scale(1.12)", opacity: 1, offset: .28 },
-                { transform: "scale(5)", opacity: 0 }
+                { transform: "scale(8)", opacity: 1 }
             ],
             { duration: 660, easing: "ease-in", fill: "forwards" }
         );
         if (!unlockRevealPlaying) return;
 
         await animateUnlock(
-            unlockReveal,
+            pinLock,
             [{ opacity: 1 }, { opacity: 0 }],
             { duration: 270, fill: "forwards" }
         );
