@@ -177,38 +177,6 @@ body {
     border: 0;
 }
 
-.welcome-container.is-revealing .athlete-selection-screen {
-    position: fixed;
-    z-index: 0;
-    inset: 0;
-    display: grid;
-    place-content: center;
-    width: 100%;
-    margin: 0;
-    padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
-    border: 0;
-    border-radius: 0;
-    background: var(--bg);
-    box-shadow: none;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 270ms ease;
-}
-
-.welcome-container.is-reveal-fading .athlete-selection-screen {
-    opacity: 1;
-}
-
-.welcome-container.is-revealing .athlete-selection-screen > * {
-    width: min(100%, 720px);
-    margin-inline: auto;
-}
-
-.welcome-container.is-revealing .pin-lock {
-    position: relative;
-    z-index: 1;
-}
-
 @media (max-width: 420px) {
     .pin-lock,
     .athlete-selection-screen { padding: 30px 18px; border-radius: 24px; }

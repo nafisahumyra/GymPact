@@ -15,7 +15,6 @@ function showAthleteSelection({ focus = false } = {}) {
 
     pinLock.hidden = true;
     athleteSelection.hidden = false;
-    welcomeContainer.classList.remove("is-revealing", "is-reveal-fading");
 
     if (focus) {
         athleteSelection.focus({ preventScroll: true });
@@ -54,8 +53,6 @@ async function playUnlockReveal() {
     }
 
     unlockRevealPlaying = true;
-    athleteSelection.hidden = false;
-    welcomeContainer.classList.add("is-revealing");
     lockShackle.style.transform = "none";
 
     const finishOnInterruption = () => {
@@ -96,7 +93,6 @@ async function playUnlockReveal() {
         );
         if (!unlockRevealPlaying) return;
 
-        welcomeContainer.classList.add("is-reveal-fading");
         await animateUnlock(
             pinLock,
             [{ opacity: 1 }, { opacity: 0 }],
