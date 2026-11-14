@@ -29,7 +29,7 @@ body {
     place-items: center;
     width: 76px;
     height: 76px;
-    margin-bottom: 18px;
+    margin: 0 auto 18px;
     color: var(--green);
 }
 
