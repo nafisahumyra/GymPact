@@ -25,59 +25,18 @@ body {
 }
 
 .lock-icon {
-    position: relative;
     display: inline-grid;
     place-items: center;
     width: 76px;
     height: 76px;
     margin-bottom: 18px;
     color: var(--green);
-    font-size: 2.3rem;
-    isolation: isolate;
-    background: transparent;
-    transform-origin: center;
 }
 
-.lock-image,
-.lock-shackle-image {
-    position: absolute;
+.gympact-lock {
     display: block;
-    background: transparent;
-    object-fit: contain;
-}
-
-.lock-image--closed {
-    top: 0;
-    left: 8px;
-    width: 60px;
-    height: 76px;
-}
-
-.lock-image--open {
-    top: 31px;
-    left: 10px;
-    width: 55px;
-    height: 44px;
-    opacity: 0;
-}
-
-.lock-shackle-image {
-    top: 0;
-    left: 16px;
-    width: 43px;
-    height: 33px;
-    opacity: 0;
-    transform-origin: 2px 32px;
-}
-
-.unlock-status {
-    min-height: 22px;
-    margin: -8px 0 12px;
-    color: var(--green);
-    font-size: .78rem;
-    font-weight: 800;
-    letter-spacing: .12em;
-    opacity: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .logo {
@@ -209,55 +168,35 @@ body {
     border: 0;
 }
 
-.pin-lock.is-unlocking .lock-icon { animation: unlock-lock 3s ease forwards; }
-.pin-lock.is-unlocking { animation: unlock-screen 3s ease forwards; }
-.pin-lock.is-unlocking .lock-image--closed { animation: lock-closed-hide 3s steps(1, end) forwards; }
-.pin-lock.is-unlocking .lock-image--open { animation: lock-base-reveal 3s steps(1, end) forwards; }
-.pin-lock.is-unlocking .lock-shackle-image { animation: shackle-open 3s ease forwards; }
-.pin-lock.is-unlocking .unlock-status { animation: unlock-status 3s ease forwards; }
-
-@keyframes unlock-lock {
-    0%, 8% { transform: translateX(0) scale(1); box-shadow: none; }
-    12% { transform: translateX(-8px) rotate(-8deg) scale(1.04); }
-    18% { transform: translateX(8px) rotate(8deg) scale(1.04); box-shadow: 0 0 22px var(--green-shadow); }
-    32%, 58% { transform: scale(1.08); box-shadow: 0 0 28px rgba(145, 242, 100, .35); }
-    100% { opacity: 0; transform: translateY(-12px) scale(.82); }
+.unlock-reveal {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: #0b100d;
+    color: var(--green);
 }
 
-@keyframes unlock-screen {
-    0%, 76% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-12px); }
+.unlock-reveal[hidden] {
+    display: none;
 }
 
-@keyframes shackle-open {
-    0%, 24% { opacity: 0; transform: rotate(0); }
-    32%, 70% { opacity: 1; transform: rotate(-36deg); }
-    100% { opacity: 0; transform: rotate(-36deg); }
+.unlock-reveal-lock {
+    display: block;
+    width: clamp(140px, 42vw, 220px);
+    height: auto;
+    overflow: visible;
+    transform-origin: center;
 }
 
-@keyframes lock-closed-hide {
-    0%, 31% { opacity: 1; }
-    32%, 100% { opacity: 0; }
+.unlock-reveal-shell {
+    transform-origin: 64px 78px;
 }
 
-@keyframes lock-base-reveal {
-    0%, 31% { opacity: 0; }
-    32%, 100% { opacity: 1; }
-}
-
-@keyframes unlock-status {
-    0%, 48% { opacity: 0; transform: translateY(-4px) scale(.95); }
-    58%, 76% { opacity: 1; transform: translateY(0) scale(1.08); }
-    100% { opacity: 0; transform: translateY(-4px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .pin-lock.is-unlocking,
-    .pin-lock.is-unlocking .lock-icon,
-    .pin-lock.is-unlocking .lock-image--closed,
-    .pin-lock.is-unlocking .lock-image--open,
-    .pin-lock.is-unlocking .lock-shackle-image,
-    .pin-lock.is-unlocking .unlock-status { animation-duration: .45s; }
+.unlock-reveal-shackle {
+    transform-origin: 48px 69px;
 }
 
 @media (max-width: 420px) {

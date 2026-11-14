@@ -4,15 +4,115 @@ const pinInput = document.getElementById("gympact-pin");
 const pinError = document.getElementById("pin-error");
 const unlockButton = document.getElementById("unlock-button");
 const athleteSelection = document.getElementById("athlete-selection");
-const UNLOCK_ANIMATION_DURATION = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-).matches ? 500 : 3000;
+const unlockReveal = document.getElementById("unlock-reveal");
+const unlockRevealLock = unlockReveal?.querySelector(".unlock-reveal-lock");
+const unlockRevealShackle = unlockReveal?.querySelector(".unlock-reveal-shackle");
+let unlockRevealPlaying = false;
+let unlockRevealAnimations = [];
 
 
-function showAthleteSelection() {
+function showAthleteSelection({ focus = false } = {}) {
 
     pinLock.hidden = true;
     athleteSelection.hidden = false;
+
+    if (focus) {
+        athleteSelection.focus({ preventScroll: true });
+    }
+
+}
+
+
+function dismissUnlockReveal() {
+
+    unlockRevealAnimations.forEach(animation => animation.cancel());
+    unlockRevealAnimations = [];
+    unlockRevealPlaying = false;
+
+    if (unlockReveal) {
+        unlockReveal.hidden = true;
+        unlockReveal.inert = true;
+        unlockReveal.setAttribute("aria-hidden", "true");
+    }
+
+    showAthleteSelection({ focus: true });
+
+}
+
+
+function animateUnlock(element, keyframes, options) {
+
+    const animation = element.animate(keyframes, options);
+    unlockRevealAnimations.push(animation);
+    return animation.finished;
+
+}
+
+
+async function playUnlockReveal() {
+
+    if (unlockRevealPlaying) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !unlockReveal || !unlockRevealLock || !unlockRevealShackle) {
+        dismissUnlockReveal();
+        return;
+    }
+
+    unlockRevealPlaying = true;
+    unlockReveal.hidden = false;
+    unlockReveal.inert = false;
+    unlockReveal.setAttribute("aria-hidden", "false");
+    unlockRevealShackle.style.transform = "none";
+
+    const finishOnInterruption = () => {
+        if (document.hidden && unlockRevealPlaying) dismissUnlockReveal();
+    };
+
+    document.addEventListener("visibilitychange", finishOnInterruption);
+
+    try {
+        await animateUnlock(
+            unlockRevealLock,
+            [0, -6, 5, -3, 1, 0].map(rotation => ({ transform: `rotate(${rotation}deg)` })),
+            { duration: 480, easing: "ease-in-out" }
+        );
+        if (!unlockRevealPlaying) return;
+
+        const openShackle = "translateY(-13px) rotate(-23deg)";
+        await animateUnlock(
+            unlockRevealShackle,
+            [
+                { transform: "none" },
+                { transform: openShackle, offset: .78 },
+                { transform: openShackle }
+            ],
+            { duration: 450, easing: "ease-out", fill: "forwards" }
+        );
+        if (!unlockRevealPlaying) return;
+        unlockRevealShackle.style.transform = openShackle;
+
+        await animateUnlock(
+            unlockRevealLock,
+            [
+                { transform: "scale(1)", opacity: 1 },
+                { transform: "scale(1.12)", opacity: 1, offset: .28 },
+                { transform: "scale(5)", opacity: 0 }
+            ],
+            { duration: 660, easing: "ease-in", fill: "forwards" }
+        );
+        if (!unlockRevealPlaying) return;
+
+        await animateUnlock(
+            unlockReveal,
+            [{ opacity: 1 }, { opacity: 0 }],
+            { duration: 270, fill: "forwards" }
+        );
+    } catch (error) {
+        console.warn("GymPact unlock reveal did not complete.", error);
+    } finally {
+        document.removeEventListener("visibilitychange", finishOnInterruption);
+        if (unlockRevealPlaying) dismissUnlockReveal();
+    }
 
 }
 
@@ -123,8 +223,7 @@ pinForm.addEventListener("submit", async event => {
         sessionStorage.setItem("gymPactSessionToken", data.sessionToken);
         verified = true;
         pinInput.disabled = true;
-        pinLock.classList.add("is-unlocking");
-        window.setTimeout(showAthleteSelection, UNLOCK_ANIMATION_DURATION);
+        await playUnlockReveal();
 
     } catch {
 
