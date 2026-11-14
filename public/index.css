@@ -24,6 +24,10 @@ body {
     width: min(100%, 720px);
 }
 
+.athlete-selection-screen:focus {
+    outline: none;
+}
+
 .lock-icon {
     display: grid;
     place-items: center;
