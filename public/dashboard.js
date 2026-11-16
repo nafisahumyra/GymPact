@@ -2226,7 +2226,13 @@ async function saveWorkoutEdit() {
                 dataEnvironment: "production"
             }
         });
-        if (error || data?.error) throw error || new Error(data?.error || "Unable to save workout.");
+        if (error) {
+
+            const details = await error.context?.json().catch(() => null);
+            throw new Error(details?.error || "Unable to save workout.");
+
+        }
+        if (data?.error) throw new Error(data.error);
 
         closeWorkoutEditor();
         await Promise.all([loadActivityWorkouts({ reset: true }), refreshDashboard()]);
@@ -2234,7 +2240,7 @@ async function saveWorkoutEdit() {
     } catch (error) {
 
         console.error("Unable to edit workout.", error);
-        setEditWorkoutError("We couldn’t save that workout. Please try again.");
+        setEditWorkoutError(error?.message || "We couldn’t save that workout. Please try again.");
 
     } finally {
 
