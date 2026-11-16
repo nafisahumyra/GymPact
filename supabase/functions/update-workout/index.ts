@@ -79,7 +79,7 @@ serve(async request => {
     // trusting the UI to decide which menu actions to display.
     if (existing.user_id !== userId) return json({ error: "You can only edit your own workouts." }, request, 403);
 
-    const { data: workout, error: updateError } = await admin
+    const { error: updateError } = await admin
       .from("workouts")
       .update({
         activity_name: activityName,
@@ -90,12 +90,10 @@ serve(async request => {
       })
       .eq("id", workoutId)
       .eq("user_id", userId)
-      .eq("data_environment", environment)
-      .select("id, user_id, activity_name, muscles, measurements, duration_minutes, notes, photo_path, logged_at")
-      .single();
+      .eq("data_environment", environment);
     if (updateError) throw updateError;
 
-    return json({ workout }, request);
+    return json({ workoutId }, request);
   } catch (error) {
     console.error("Unable to update workout.", error);
     return json({ error: "Unable to update workout." }, request, 500);
