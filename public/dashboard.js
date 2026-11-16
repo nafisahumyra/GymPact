@@ -2214,6 +2214,7 @@ async function saveWorkoutEdit() {
     try {
 
         const { data, error } = await GymPactSupabase.getClient().functions.invoke("edit-workout", {
+            headers: { "x-gympact-edit-client": "v4" },
             body: {
                 sessionToken,
                 userId,
@@ -2228,7 +2229,7 @@ async function saveWorkoutEdit() {
         if (error) {
 
             const details = await error.context?.json().catch(() => null);
-            throw new Error(details?.error || "Unable to save workout.");
+            throw new Error(details?.error || "Couldn’t reach the workout save service. [EDIT-NETWORK]");
 
         }
         if (data?.error) throw new Error(data.error);
@@ -2239,7 +2240,7 @@ async function saveWorkoutEdit() {
     } catch (error) {
 
         console.error("Unable to edit workout.", error);
-        setEditWorkoutError(error?.message || "We couldn’t save that workout. Please try again.");
+        setEditWorkoutError(error?.message || "Unable to update workout. [EDIT-CLIENT]");
 
     } finally {
 

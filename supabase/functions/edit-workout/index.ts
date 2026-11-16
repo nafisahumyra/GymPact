@@ -14,7 +14,7 @@ type Measurement = { amount: number; unit: string };
 function corsHeaders(request: Request) {
   const origin = request.headers.get("origin") ?? "";
   const headers: Record<string, string> = {
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-gympact-edit-client",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
   };
@@ -29,15 +29,26 @@ function json(body: unknown, request: Request, status = 200) {
   });
 }
 
+function diagnosticSuffix(error: unknown, stage: string) {
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const code = (error as { code?: unknown }).code;
+    if (typeof code === "string" && /^[A-Z0-9]{2,12}$/.test(code)) return `EDIT-${stage}-${code}`;
+  }
+  return `EDIT-${stage}`;
+}
+
 serve(async request => {
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders(request) });
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders(request) });
+
+  let stage = "REQUEST";
 
   try {
     const body = await request.json();
     const userId = typeof body.userId === "string" ? body.userId : "";
     const workoutId = typeof body.workoutId === "string" ? body.workoutId : "";
     const environment = getDataEnvironment(body.dataEnvironment);
+    stage = "SESSION";
     const session = await verifyGymPactSession(body.sessionToken);
     const loggedAt = typeof body.loggedAt === "string" ? new Date(body.loggedAt) : null;
     const muscles = Array.isArray(body.muscles)
@@ -56,7 +67,7 @@ serve(async request => {
     const notes = typeof body.notes === "string" && body.notes.trim() ? body.notes : null;
 
     if (!session || !userId || session.athlete_id !== userId) {
-      return json({ error: "Your GymPact session expired. Please unlock GymPact and try again." }, request, 401);
+      return json({ error: "Your GymPact session expired. Please unlock GymPact and try again. [EDIT-SESSION]" }, request, 401);
     }
 
     if (
@@ -64,9 +75,10 @@ serve(async request => {
       !Array.isArray(body.measurements) || !measurements.length || measurements.length !== body.measurements.length ||
       !loggedAt || Number.isNaN(loggedAt.valueOf()) || loggedAt > new Date()
     ) {
-      return json({ error: "Check the workout date, muscle groups, and measurements, then try again." }, request, 400);
+      return json({ error: "Check the workout date, muscle groups, and measurements, then try again. [EDIT-VALIDATION]" }, request, 400);
     }
 
+    stage = "DATABASE";
     const admin = getAdminClient();
     const { data: updated, error: updateError } = await admin
       .from("workouts")
@@ -84,11 +96,11 @@ serve(async request => {
       .maybeSingle();
 
     if (updateError) throw updateError;
-    if (!updated) return json({ error: "That workout could not be found." }, request, 404);
+    if (!updated) return json({ error: "That workout could not be found. [EDIT-NOT-FOUND]" }, request, 404);
 
     return json({ workout: updated }, request);
   } catch (error) {
     console.error("Unable to edit workout.", error);
-    return json({ error: "Unable to update workout." }, request, 500);
+    return json({ error: `Unable to update workout. [${diagnosticSuffix(error, stage)}]` }, request, 500);
   }
 });
