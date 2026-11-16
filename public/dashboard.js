@@ -2218,7 +2218,7 @@ async function saveWorkoutEdit() {
             body: {
                 sessionToken,
                 userId,
-                workoutId: editingWorkout.id,
+                workoutId: String(editingWorkout.id).replace(/^workout:/, ""),
                 muscles,
                 measurements,
                 notes: editWorkoutNotes.value,

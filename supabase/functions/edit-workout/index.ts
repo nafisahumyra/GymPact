@@ -10,6 +10,7 @@ const allowedOrigins = new Set([
 ]);
 
 type Measurement = { amount: number; unit: string };
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function corsHeaders(request: Request) {
   const origin = request.headers.get("origin") ?? "";
@@ -46,7 +47,9 @@ serve(async request => {
   try {
     const body = await request.json();
     const userId = typeof body.userId === "string" ? body.userId : "";
-    const workoutId = typeof body.workoutId === "string" ? body.workoutId : "";
+    const workoutId = typeof body.workoutId === "string"
+      ? body.workoutId.replace(/^workout:/, "")
+      : "";
     const environment = getDataEnvironment(body.dataEnvironment);
     stage = "SESSION";
     const session = await verifyGymPactSession(body.sessionToken);
@@ -71,7 +74,7 @@ serve(async request => {
     }
 
     if (
-      !environment || !workoutId || !muscles.length ||
+      !environment || !uuidPattern.test(workoutId) || !muscles.length ||
       !Array.isArray(body.measurements) || !measurements.length || measurements.length !== body.measurements.length ||
       !loggedAt || Number.isNaN(loggedAt.valueOf()) || loggedAt > new Date()
     ) {
