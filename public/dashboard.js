@@ -2169,6 +2169,8 @@ async function saveWorkoutEdit() {
 
     if (!editingWorkout) return;
 
+    const editedWorkout = editingWorkout;
+
     const muscles = Array.from(editWorkoutMuscles.querySelectorAll("input:checked"))
         .map(input => input.value);
     const measurements = Array.from(editWorkoutMeasurements.querySelectorAll(".edit-workout-measurement"))
@@ -2218,7 +2220,7 @@ async function saveWorkoutEdit() {
             body: {
                 sessionToken,
                 userId,
-                workoutId: String(editingWorkout.id).replace(/^workout:/, ""),
+                workoutId: String(editedWorkout.id).replace(/^workout:/, ""),
                 muscles,
                 measurements,
                 notes: editWorkoutNotes.value,
@@ -2234,7 +2236,31 @@ async function saveWorkoutEdit() {
         }
         if (data?.error) throw new Error(data.error);
 
+        const savedWorkout = data?.workout;
+
+        if (savedWorkout?.id && savedWorkout?.logged_at) {
+
+            const activityId = String(editedWorkout.id);
+
+            activityWorkouts = activityWorkouts.map(workout => {
+
+                if (workout.id !== activityId && workout.id !== savedWorkout.id) return workout;
+
+                return {
+                    ...workout,
+                    activity_name: muscles.join(" · "),
+                    muscles: JSON.stringify(muscles),
+                    measurements,
+                    notes: editWorkoutNotes.value.trim() || null,
+                    logged_at: savedWorkout.logged_at
+                };
+
+            }).sort((a, b) => new Date(b.logged_at) - new Date(a.logged_at));
+
+        }
+
         closeWorkoutEditor();
+        renderActivityWorkouts();
         await Promise.all([loadActivityWorkouts({ reset: true }), refreshDashboard()]);
 
     } catch (error) {
