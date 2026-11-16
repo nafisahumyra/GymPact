@@ -10,6 +10,9 @@ verify_jwt = false
 [functions.update-workout]
 verify_jwt = false
 
+[functions.edit-workout]
+verify_jwt = false
+
 [functions.list-workouts]
 verify_jwt = false
 

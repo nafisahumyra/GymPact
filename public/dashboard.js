@@ -2213,12 +2213,11 @@ async function saveWorkoutEdit() {
 
     try {
 
-        const { data, error } = await GymPactSupabase.getClient().functions.invoke("update-workout", {
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("edit-workout", {
             body: {
                 sessionToken,
                 userId,
                 workoutId: editingWorkout.id,
-                activityName: muscles.join(" · "),
                 muscles,
                 measurements,
                 notes: editWorkoutNotes.value,
