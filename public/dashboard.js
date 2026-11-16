@@ -2270,14 +2270,19 @@ function addProgressDays(startDate, endDate) {
     const cursor = new Date(`${startDate}T12:00:00Z`);
     const end = new Date(`${endDate}T12:00:00Z`);
 
-    while (cursor <= end && days.length < 7) {
+    // A weekly Pact's deadline is inclusive. Some stored weekly ranges span
+    // eight calendar dates (for example, Sunday through the following Sunday),
+    // so build the full inclusive range first and display the seven dates that
+    // lead into the deadline. This keeps a workout logged on deadline Sunday
+    // visible instead of dropping it after the first seven dates.
+    while (cursor <= end) {
 
         days.push(cursor.toISOString().slice(0, 10));
         cursor.setUTCDate(cursor.getUTCDate() + 1);
 
     }
 
-    return days;
+    return days.slice(-7);
 
 }
 
