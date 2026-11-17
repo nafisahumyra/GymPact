@@ -14,11 +14,22 @@ let unlockRevealAnimations = [];
 function showAthleteSelection({ focus = false } = {}) {
 
     pinLock.hidden = true;
+    athleteSelection.classList.remove("unlock-reveal-target");
+    athleteSelection.style.opacity = "";
     athleteSelection.hidden = false;
 
     if (focus) {
         athleteSelection.focus({ preventScroll: true });
     }
+
+}
+
+
+function prepareAthleteSelectionForReveal() {
+
+    athleteSelection.hidden = false;
+    athleteSelection.classList.add("unlock-reveal-target");
+    athleteSelection.style.opacity = "0";
 
 }
 
@@ -93,11 +104,22 @@ async function playUnlockReveal() {
         );
         if (!unlockRevealPlaying) return;
 
-        await animateUnlock(
-            pinLock,
-            [{ opacity: 1 }, { opacity: 0 }],
-            { duration: 270, fill: "forwards" }
-        );
+        // Keep the athlete picker ready behind the original lock. It remains
+        // invisible until this final dissolve, so the sign-in page never cuts
+        // to a blank screen or leaks the picker during the unlock motion.
+        prepareAthleteSelectionForReveal();
+        await Promise.all([
+            animateUnlock(
+                pinLock,
+                [{ opacity: 1 }, { opacity: 0 }],
+                { duration: 270, easing: "ease-out", fill: "forwards" }
+            ),
+            animateUnlock(
+                athleteSelection,
+                [{ opacity: 0 }, { opacity: 1 }],
+                { duration: 270, easing: "ease-out", fill: "forwards" }
+            )
+        ]);
     } catch (error) {
         console.warn("GymPact unlock reveal did not complete.", error);
     } finally {
