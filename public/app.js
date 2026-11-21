@@ -5,8 +5,8 @@ const pinError = document.getElementById("pin-error");
 const unlockButton = document.getElementById("unlock-button");
 const athleteSelection = document.getElementById("athlete-selection");
 const welcomeContainer = document.querySelector(".welcome-container");
-const lockIcon = pinLock.querySelector(".lock-icon");
-const lockShackle = pinLock.querySelector(".gympact-lock-shackle");
+const lockActor = pinLock.querySelector(".lock-actor");
+const lockShackles = pinLock.querySelectorAll(".lock-shackle");
 let unlockRevealPlaying = false;
 let unlockRevealAnimations = [];
 
@@ -58,13 +58,15 @@ async function playUnlockReveal() {
 
     if (unlockRevealPlaying) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !lockIcon || !lockShackle) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !lockActor || !lockShackles.length) {
         dismissUnlockReveal();
         return;
     }
 
     unlockRevealPlaying = true;
-    lockShackle.style.transform = "none";
+    lockShackles.forEach(shackle => {
+        shackle.style.transform = "none";
+    });
 
     const finishOnInterruption = () => {
         if (document.hidden && unlockRevealPlaying) dismissUnlockReveal();
@@ -74,33 +76,41 @@ async function playUnlockReveal() {
 
     try {
         await animateUnlock(
-            lockIcon,
-            [0, -6, 5, -3, 1, 0].map(rotation => ({ transform: `rotate(${rotation}deg)` })),
-            { duration: 480, easing: "ease-in-out" }
+            lockActor,
+            [
+                { transform: "rotate(0deg)", offset: 0 },
+                { transform: "rotate(-4deg)", offset: .18 },
+                { transform: "rotate(4deg)", offset: .38 },
+                { transform: "rotate(-2.5deg)", offset: .58 },
+                { transform: "rotate(1deg)", offset: .78 },
+                { transform: "rotate(0deg)", offset: 1 }
+            ],
+            { duration: 650, easing: "ease-in-out", fill: "forwards" }
         );
         if (!unlockRevealPlaying) return;
 
-        const openShackle = "translateY(-13px) rotate(-23deg)";
-        await animateUnlock(
-            lockShackle,
+        await Promise.all([...lockShackles].map(shackle => animateUnlock(
+            shackle,
             [
-                { transform: "none" },
-                { transform: openShackle, offset: .78 },
-                { transform: openShackle }
+                { transform: "translateY(0) rotate(0deg)", offset: 0 },
+                { transform: "translateY(-20px) rotate(-4deg)", offset: .8 },
+                { transform: "translateY(-18px) rotate(-3deg)", offset: 1 }
             ],
-            { duration: 450, easing: "ease-out", fill: "forwards" }
-        );
+            { duration: 550, easing: "cubic-bezier(.22,.7,.25,1)", fill: "forwards" }
+        )));
         if (!unlockRevealPlaying) return;
-        lockShackle.style.transform = openShackle;
+        lockShackles.forEach(shackle => {
+            shackle.style.transform = "translateY(-18px) rotate(-3deg)";
+        });
 
         await animateUnlock(
-            lockIcon,
+            lockActor,
             [
-                { transform: "scale(1)", opacity: 1 },
-                { transform: "scale(1.12)", opacity: 1, offset: .28 },
-                { transform: "scale(8)", opacity: 1 }
+                { transform: "translateY(0)" },
+                { transform: "translateY(-2px)", offset: .45 },
+                { transform: "translateY(0)" }
             ],
-            { duration: 660, easing: "ease-in", fill: "forwards" }
+            { duration: 300, easing: "ease-in-out", fill: "forwards" }
         );
         if (!unlockRevealPlaying) return;
 
@@ -112,12 +122,12 @@ async function playUnlockReveal() {
             animateUnlock(
                 pinLock,
                 [{ opacity: 1 }, { opacity: 0 }],
-                { duration: 270, easing: "ease-out", fill: "forwards" }
+                { duration: 650, easing: "ease-in-out", fill: "forwards" }
             ),
             animateUnlock(
                 athleteSelection,
                 [{ opacity: 0 }, { opacity: 1 }],
-                { duration: 270, easing: "ease-out", fill: "forwards" }
+                { duration: 650, easing: "ease-in-out", fill: "forwards" }
             )
         ]);
     } catch (error) {
@@ -128,6 +138,15 @@ async function playUnlockReveal() {
     }
 
 }
+
+
+window.addEventListener("pagehide", () => {
+
+    unlockRevealAnimations.forEach(animation => animation.cancel());
+    unlockRevealAnimations = [];
+    unlockRevealPlaying = false;
+
+});
 
 
 async function restoreAthleteSelection() {
