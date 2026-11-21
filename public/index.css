@@ -43,7 +43,6 @@ body {
 .pin-lock {
     position: relative;
     z-index: 1;
-    perspective: 650px;
 }
 
 .lock-actor {
@@ -52,27 +51,12 @@ body {
     height: 144px;
     margin: 0 auto 6px;
     pointer-events: none;
-    transform-style: preserve-3d;
     will-change: transform, opacity;
 }
 
 .lock-face {
     position: absolute;
     inset: 0;
-    backface-visibility: hidden;
-}
-
-.lock-face-back { transform: rotateY(180deg); }
-
-.lock-edge {
-    position: absolute;
-    top: 69px;
-    left: 59px;
-    width: 32px;
-    height: 78px;
-    border-radius: 6px;
-    background: linear-gradient(90deg, #53752e, #b4ff71, #436824);
-    transform: rotateY(90deg);
 }
 
 .lock-actor svg {
