@@ -28,15 +28,19 @@ body {
     outline: none;
 }
 
-/* Used only for the successful-PIN cross-fade. The picker is layered beneath
-   the original lock screen until the lock has completed its zoom. */
-.athlete-selection-screen.unlock-reveal-target {
+/* The picker uses one centered presentation position both during and after
+   the reveal, preventing a post-animation reflow. */
+.athlete-selection-screen.athlete-selection-presented {
     position: fixed;
-    z-index: 0;
+    z-index: 1;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     margin: 0;
+}
+
+.athlete-selection-screen.unlock-reveal-target {
+    z-index: 0;
     pointer-events: none;
 }
 

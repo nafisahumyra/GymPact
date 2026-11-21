@@ -15,6 +15,7 @@ function showAthleteSelection({ focus = false } = {}) {
 
     pinLock.hidden = true;
     athleteSelection.classList.remove("unlock-reveal-target");
+    athleteSelection.classList.add("athlete-selection-presented");
     athleteSelection.style.opacity = "";
     athleteSelection.hidden = false;
 
@@ -28,6 +29,7 @@ function showAthleteSelection({ focus = false } = {}) {
 function prepareAthleteSelectionForReveal() {
 
     athleteSelection.hidden = false;
+    athleteSelection.classList.add("athlete-selection-presented");
     athleteSelection.classList.add("unlock-reveal-target");
     athleteSelection.style.opacity = "0";
 
@@ -114,9 +116,8 @@ async function playUnlockReveal() {
         );
         if (!unlockRevealPlaying) return;
 
-        // Keep the athlete picker ready behind the original lock. It remains
-        // invisible until this final dissolve, so the sign-in page never cuts
-        // to a blank screen or leaks the picker during the unlock motion.
+        // Keep the athlete picker in its final position behind the original
+        // lock, avoiding a layout jump when the final dissolve completes.
         prepareAthleteSelectionForReveal();
         await Promise.all([
             animateUnlock(
