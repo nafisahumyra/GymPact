@@ -47,8 +47,8 @@ body {
 
 .lock-actor {
     position: relative;
-    width: 132px;
-    height: 144px;
+    width: 112px;
+    height: 122px;
     margin: 0 auto 6px;
     pointer-events: none;
     will-change: transform, opacity;
@@ -205,8 +205,8 @@ body {
     .athlete-selection-screen { padding: 30px 18px; border-radius: 24px; }
 
     .pin-lock .lock-actor {
-        width: 108px;
-        height: 118px;
+        width: 92px;
+        height: 100px;
         margin-top: -8px;
         margin-bottom: 12px;
     }
