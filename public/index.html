@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css?v=app-background-2">
-    <link rel="stylesheet" href="index.css?v=gentle-unlock-v6">
+    <link rel="stylesheet" href="index.css?v=gentle-unlock-v7">
 </head>
 
 <body>
@@ -21,7 +21,9 @@
 
             <div class="lock-actor" aria-hidden="true">
                 <div class="lock-face lock-face-front">
-                    <svg viewBox="0 0 150 164" focusable="false">
+                    <!-- The taller viewport reserves the headroom the shackle needs
+                         in its fully-open position on iOS/Safari. -->
+                    <svg viewBox="0 -28 150 192" preserveAspectRatio="xMidYMid meet" focusable="false">
                         <defs>
                             <linearGradient id="metal"><stop stop-color="#e1e6db"/><stop offset=".2" stop-color="#657560"/><stop offset=".45" stop-color="#e6ecd9"/><stop offset="1" stop-color="#667b56"/></linearGradient>
                             <linearGradient id="lock-body" x2=".8" y2="1"><stop stop-color="#38433a"/><stop offset="1" stop-color="#141b16"/></linearGradient>
