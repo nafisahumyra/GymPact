@@ -32,6 +32,12 @@ jobs:
         with:
           path: ./public
 
+      # GitHub occasionally needs a few seconds to index the Pages artifact before
+      # deploy-pages asks the Actions API for it. Without this, a successful upload
+      # can be reported as zero artifacts and leave the previously deployed site live.
+      - name: Wait for Pages artifact indexing
+        run: sleep 15
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
