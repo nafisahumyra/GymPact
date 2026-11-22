@@ -241,6 +241,10 @@ body.dashboard-page {
 }
 
 .dashboard-section { margin-bottom: 22px; }
+.dashboard-page.is-overview-tab .dashboard-header-content {
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: 9px;
+}
 
 .dashboard-bottom-nav {
     position: absolute;
@@ -602,7 +606,11 @@ body.dashboard-page {
 .stats-container {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    overflow: hidden;
+    border: 1px solid var(--line-soft);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(25, 29, 30, .94), rgba(13, 16, 17, .98));
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .14);
 }
 
 .stat-card,
@@ -616,18 +624,29 @@ body.dashboard-page {
     box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
 }
 
-.stat-card { padding: 18px; }
+.stat-card {
+    min-width: 0;
+    padding: 14px 16px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.stat-card + .stat-card { border-left: 1px solid var(--line-soft); }
 .stat-card h4 {
-    margin-bottom: 8px;
+    margin: 0;
     color: var(--muted);
-    font-size: .76rem;
-    font-weight: 650;
+    font-size: .72rem;
+    font-weight: 500;
+    line-height: 1.3;
 }
 .stat-card p {
+    margin: 4px 0 0;
     color: var(--green);
-    font-size: clamp(1.55rem, 7vw, 2rem);
-    font-weight: 850;
-    letter-spacing: -.05em;
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: -.025em;
+    font-variant-numeric: tabular-nums;
 }
 
 .pact-card {
@@ -719,6 +738,33 @@ body.dashboard-page {
     background: linear-gradient(145deg, rgba(25, 29, 30, .94), rgba(13, 16, 17, .98));
     box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
 }
+.home-month-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title chevron" "meta chevron";
+    gap: 3px 14px;
+    width: 100%;
+    min-height: 78px;
+    padding: 15px 16px;
+    border-color: #3d483b;
+    border-radius: 20px;
+    background: linear-gradient(120deg, #222b23, #171f19);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-synthesis: none;
+    text-align: left;
+    box-shadow: none;
+}
+.home-month-card:hover:not(:disabled), .home-month-card:focus-visible {
+    border-color: rgba(145,242,100,.62);
+    background: linear-gradient(120deg, #273126, #19221b);
+    color: var(--text);
+    box-shadow: 0 0 0 3px rgba(145,242,100,.1);
+    transform: none;
+}
+.home-month-card-title { grid-area: title; color: var(--text); font-size: 16px; font-weight: 500; line-height: 1.2; }
+.home-month-card-meta { grid-area: meta; overflow: hidden; color: #aab8ad; font-size: 12px; font-weight: 400; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.home-month-card-chevron { grid-area: chevron; display: grid; place-items: center; width: 16px; height: 16px; color: #d3dbd4; }
+.home-month-card-chevron svg { width: 16px; height: 16px; }
 .pact-card.home-cycle-empty { border-color: var(--line); }
 .home-cycle-kicker { grid-column: 1; margin: 0 0 4px; color: var(--green); font-size: .72rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
 .pact-card.home-cycle-empty > .home-cycle-kicker { margin: 0 0 4px; color: var(--green); font-size: .72rem; font-weight: 800; letter-spacing: .11em; }
@@ -1517,7 +1563,7 @@ body.dashboard-page {
     .dashboard-header-content { padding-top: 20px; }
     .dashboard-content-inner { padding-top: 28px; padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
     .dashboard-section { margin-bottom: 28px; }
-    .stat-card { padding: 22px; }
+    .stats-container .stat-card { padding: 14px 16px; }
     .muscle-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .modal-content { padding: 30px; }
 }

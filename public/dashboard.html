@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css?v=app-background-2">
-    <link rel="stylesheet" href="dashboard.css?v=home-weekly-card-v3">
+    <link rel="stylesheet" href="dashboard.css?v=home-pact-layout-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=home-weekly-card-v3">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=home-pact-layout-v1">
 
     <div class="dashboard-shell">
 
@@ -79,37 +79,24 @@
         </section>
 
         <section class="dashboard-section" data-dashboard-tab-content="overview">
-
-            <h3>This Week</h3>
-
             <div id="current-challenge" class="pact-card"></div>
-
         </section>
 
-        <section class="dashboard-section" data-dashboard-tab-content="overview">
+        <section class="dashboard-section home-month-section" data-dashboard-tab-content="overview">
+            <div id="home-month-pact" aria-live="polite"></div>
+        </section>
 
+        <section class="dashboard-section home-statistics-section" data-dashboard-tab-content="overview" aria-label="Lifetime statistics">
             <div class="stats-container">
-
                 <div class="stat-card">
                     <h4>Total Workouts</h4>
                     <p id="workout-count">0</p>
                 </div>
-
                 <div class="stat-card">
-                    <h4>Pact Streak</h4>
-                    <p id="streak-count">0 🔥</p>
+                    <h4>Successful pact streak</h4>
+                    <p id="streak-count">0</p>
                 </div>
-
             </div>
-
-        </section>
-
-        <section class="dashboard-section home-month-section" data-dashboard-tab-content="overview">
-
-            <h3>This Month</h3>
-
-            <div id="home-month-pact" aria-live="polite"></div>
-
         </section>
 
         <section id="pact-progress-page" class="pact-progress-page" aria-labelledby="pact-progress-title" tabindex="-1" style="display: none" hidden></section>

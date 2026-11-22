@@ -229,7 +229,7 @@ async function loadDashboardMetrics({ preserveOnError = false } = {}) {
         const streak = calculatePactStreak(weeklyHistoryResponse.data.pacts, monthlyHistoryResponse.data.pacts, athleteId);
 
         workoutCount.textContent = athleteWorkouts.length;
-        streakCount.textContent = `${streak} 🔥`;
+        streakCount.textContent = streak;
 
     } catch (error) {
 
@@ -1402,6 +1402,7 @@ function showDashboardTab(tab) {
 
     }
     activeDashboardTab = tab;
+    document.body.classList.toggle("is-overview-tab", tab === "overview");
     document.body.classList.toggle("is-progress-tab", tab === "progress");
     document.body.classList.toggle("is-pact-tab", tab === "pact");
     if (dashboardContent) dashboardContent.scrollTop = 0;
@@ -3507,11 +3508,19 @@ function renderHomeMonthPact() {
     if (!homeMonthPactContent) return;
 
     homeMonthPactContent.innerHTML = "";
-    const card = document.createElement("article");
-    const title = document.createElement("h3");
-    const action = document.createElement("button");
+    const card = document.createElement("button");
+    const title = document.createElement("span");
+    const meta = document.createElement("span");
+    const chevron = document.createElement("span");
 
+    card.type = "button";
     card.className = "home-month-card";
+    title.className = "home-month-card-title";
+    title.textContent = "Monthly pact";
+    meta.className = "home-month-card-meta";
+    chevron.className = "home-month-card-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     if (!monthlyPact) {
 
@@ -3525,14 +3534,9 @@ function renderHomeMonthPact() {
             month: "long"
         }).format(new Date(`${currentMonthDate().year}-${currentMonthDate().month}-01T12:00:00Z`));
 
-        card.classList.add("home-cycle-empty", "home-cycle-compact");
-        title.className = "home-cycle-date";
-        title.textContent = label;
-        action.className = "home-cycle-action";
-        action.type = "button";
-        action.textContent = `+ Create ${monthName} Pact`;
-        action.addEventListener("click", openMonthlyCreate);
-        card.append(title, action);
+        meta.textContent = `${monthName} · Start a pact`;
+        card.setAttribute("aria-label", `Create Monthly pact for ${label}`);
+        card.addEventListener("click", openMonthlyCreate);
 
     } else {
 
@@ -3544,19 +3548,21 @@ function renderHomeMonthPact() {
             failed: "Pact Failed"
         };
 
-        card.classList.add("home-cycle-compact");
-        title.className = "home-cycle-date";
-        title.textContent = monthlyPact.monthLabel;
-        action.className = "home-cycle-secondary-action";
-        action.type = "button";
-        action.textContent = `${statusLabels[monthlyPact.status] || "View Pact"} →`;
-        action.addEventListener("click", () => {
+        const monthName = new Intl.DateTimeFormat(undefined, {
+            timeZone: "America/New_York",
+            month: "long"
+        }).format(new Date(`${monthlyPact.monthStart}T12:00:00Z`));
+        const status = statusLabels[monthlyPact.status] || "View pact";
+        meta.textContent = `${monthName} · ${status}`;
+        card.setAttribute("aria-label", `View Monthly pact: ${monthName}, ${status}`);
+        card.addEventListener("click", () => {
             showDashboardTab("pact");
             showPactType("monthly");
         });
-        card.append(title, action);
 
     }
+
+    card.append(title, meta, chevron);
 
     homeMonthPactContent.appendChild(card);
 
