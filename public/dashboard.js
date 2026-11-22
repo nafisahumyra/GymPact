@@ -1361,6 +1361,7 @@ function openPactProgressDetails() {
         content.hidden = true;
     });
     pactProgressPage.hidden = false;
+    pactProgressPage.style.display = "grid";
     welcomeMessage.hidden = true;
     if (dashboardContent) dashboardContent.scrollTop = 0;
     pactProgressPage.focus({ preventScroll: true });
@@ -1374,6 +1375,7 @@ function closePactProgressDetails() {
 
     pactProgressDetailsOpen = false;
     pactProgressPage.hidden = true;
+    pactProgressPage.style.display = "none";
     dashboardTabContent.forEach(content => {
         content.hidden = content.dataset.dashboardTabContent !== activeDashboardTab;
     });
@@ -1387,7 +1389,12 @@ function closePactProgressDetails() {
 function showDashboardTab(tab) {
 
     pactProgressDetailsOpen = false;
-    if (pactProgressPage) pactProgressPage.hidden = true;
+    if (pactProgressPage) {
+
+        pactProgressPage.hidden = true;
+        pactProgressPage.style.display = "none";
+
+    }
     activeDashboardTab = tab;
     document.body.classList.toggle("is-progress-tab", tab === "progress");
     document.body.classList.toggle("is-pact-tab", tab === "pact");
