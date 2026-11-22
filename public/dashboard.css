@@ -648,6 +648,17 @@ body.dashboard-page {
     letter-spacing: -.025em;
     font-variant-numeric: tabular-nums;
 }
+.streak-stat-value {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.streak-stat-value img {
+    display: block;
+    width: auto;
+    height: 24px;
+    flex: 0 0 auto;
+}
 
 .pact-card {
     position: relative;
