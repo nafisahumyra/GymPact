@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css?v=app-background-2">
-    <link rel="stylesheet" href="dashboard.css?v=profile-restore-v1">
+    <link rel="stylesheet" href="dashboard.css?v=home-weekly-card-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=activity-edit-v6">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=home-weekly-card-v1">
 
     <div class="dashboard-shell">
 
@@ -56,27 +56,6 @@
 
             <div class="dashboard-container dashboard-content-inner">
 
-        <section class="dashboard-section" data-dashboard-tab-content="overview">
-
-           
-
-            <div class="stats-container">
-
-                <div class="stat-card">
-                    <h4>Total Workouts</h4>
-                    <p id="workout-count">0</p>
-                </div>
-
-
-                <div class="stat-card">
-                    <h4>Pact Streak</h4>
-                    <p id="streak-count">0 🔥</p>
-                </div>
-
-            </div>
-
-        </section>
-
         <section class="dashboard-section activity-section" data-dashboard-tab-content="activity" hidden>
           
             <div id="activity-workouts" class="activity-workouts" aria-live="polite"></div>
@@ -107,6 +86,24 @@
 
         </section>
 
+        <section class="dashboard-section" data-dashboard-tab-content="overview">
+
+            <div class="stats-container">
+
+                <div class="stat-card">
+                    <h4>Total Workouts</h4>
+                    <p id="workout-count">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <h4>Pact Streak</h4>
+                    <p id="streak-count">0 🔥</p>
+                </div>
+
+            </div>
+
+        </section>
+
         <section class="dashboard-section home-month-section" data-dashboard-tab-content="overview">
 
             <h3>This Month</h3>
@@ -114,6 +111,8 @@
             <div id="home-month-pact" aria-live="polite"></div>
 
         </section>
+
+        <section id="pact-progress-page" class="pact-progress-page" aria-labelledby="pact-progress-title" tabindex="-1" hidden></section>
 
             </div>
 

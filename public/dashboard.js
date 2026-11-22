@@ -26,6 +26,10 @@ const progressRunnerLoads = new Map();
 const progressRunnerAnimationFrames = new Set();
 const currentChallengeContainer =
     document.getElementById("current-challenge");
+const pactProgressPage = document.getElementById("pact-progress-page");
+const dashboardContent = document.getElementById("dashboard-content");
+let pactProgressDetailsOpen = false;
+let pactProgressHomeScrollTop = 0;
 const workoutCount =
     document.getElementById("workout-count");
 const streakCount =
@@ -829,17 +833,20 @@ function getNextWeekPactRange() {
 
 function renderNextWeekPactCard() {
 
+    const title = document.createElement("h4");
     const range = document.createElement("h4");
     const create = document.createElement("button");
 
     currentChallengeContainer.classList.add("home-cycle-empty", "home-cycle-compact");
+    title.className = "home-cycle-kicker";
+    title.textContent = "Weekly pact";
     range.className = "home-cycle-date";
     range.textContent = getNextWeekPactRange();
     create.className = "home-cycle-action";
     create.type = "button";
     create.textContent = "+ Create Week Pact";
     create.addEventListener("click", startWeeklyPact);
-    currentChallengeContainer.append(range, create);
+    currentChallengeContainer.append(title, range, create);
 
 }
 
@@ -1152,45 +1159,238 @@ function appendRequirementTarget(container, requirement, timeframe) {
 }
 
 
-function createPactProgressOverview(challenge) {
+function getRequirementProgressPercent(requirement) {
 
-    const progress = document.createElement("section");
-    const title = document.createElement("h4");
+    const completed = Number(requirement?.completed);
+    const target = Number(requirement?.targetAmount);
 
-    progress.className = "home-pact-progress";
-    title.className = "challenge-progress-title";
-    title.textContent = "Pact Progress";
-    progress.appendChild(title);
+    if (!Number.isFinite(completed) || !Number.isFinite(target) || target <= 0) return 0;
 
-    const details = document.createElement("div");
-    details.className = "pact-progress-detail";
+    return Math.max(0, Math.min((completed / target) * 100, 100));
 
-    (challenge.progress || []).forEach(participant => {
+}
 
-        const card = document.createElement("article");
-        const heading = document.createElement("h4");
 
-        card.classList.add("pact-progress-athlete");
-        heading.textContent = participant.displayName;
-        card.appendChild(heading);
-        participant.requirements.forEach(requirement => appendRequirementProgress(card, requirement, "pact"));
-        details.appendChild(card);
+function formatRequirementProgress(requirement) {
+
+    const completed = Number(requirement?.completed) || 0;
+    const target = Number(requirement?.targetAmount) || 0;
+    const unit = getRequirementLabel(requirement?.type).toLowerCase();
+
+    return `${completed.toLocaleString()} / ${target.toLocaleString()} ${unit}`;
+
+}
+
+
+function createHomeRequirementRing(requirement) {
+
+    const item = document.createElement("span");
+    const ring = document.createElement("span");
+    const value = document.createElement("strong");
+    const label = document.createElement("span");
+    const percentage = getRequirementProgressPercent(requirement);
+    const completed = Number(requirement?.completed) || 0;
+    const target = Number(requirement?.targetAmount) || 0;
+
+    item.className = "home-weekly-pact-requirement";
+    ring.className = "home-weekly-pact-ring";
+    ring.style.setProperty("--ring-progress", `${percentage}%`);
+    value.textContent = requirement.type === "steps"
+        ? `${Math.round(percentage)}%`
+        : `${completed}/${target}`;
+    label.className = "home-weekly-pact-requirement-label";
+    label.textContent = getRequirementLabel(requirement.type);
+    ring.appendChild(value);
+    item.append(ring, label);
+
+    return item;
+
+}
+
+
+function renderHomeWeeklyPactCard(challenge) {
+
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const participant = (challenge.progress || []).find(item => item.userId === athleteId);
+    const card = document.createElement("button");
+    const rings = document.createElement("span");
+    const copy = document.createElement("span");
+    const title = document.createElement("strong");
+    const chevron = document.createElement("span");
+    const requirements = participant?.requirements || [];
+    const visibleRequirements = requirements.length > 3 ? requirements.slice(0, 2) : requirements.slice(0, 3);
+
+    card.type = "button";
+    card.className = "home-weekly-pact-card";
+    card.setAttribute("aria-label", "Open weekly Pact progress details");
+    rings.className = "home-weekly-pact-rings";
+    visibleRequirements.forEach(requirement => rings.appendChild(createHomeRequirementRing(requirement)));
+
+    if (requirements.length > 3) {
+
+        const more = document.createElement("span");
+        const moreValue = document.createElement("strong");
+        const moreLabel = document.createElement("span");
+
+        more.className = "home-weekly-pact-requirement home-weekly-pact-more";
+        moreValue.textContent = `+${requirements.length - 2}`;
+        moreLabel.textContent = "More";
+        more.append(moreValue, moreLabel);
+        rings.appendChild(more);
+
+    }
+
+    copy.className = "home-weekly-pact-copy";
+    title.textContent = "Weekly pact";
+    chevron.className = "home-weekly-pact-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>';
+    copy.append(title, chevron);
+    card.append(rings, copy);
+    card.addEventListener("click", openPactProgressDetails);
+
+    return card;
+
+}
+
+
+function renderPactProgressDetails(challenge) {
+
+    if (!pactProgressPage || !challenge) return;
+
+    pactProgressPage.innerHTML = "";
+
+    const back = document.createElement("button");
+    const heading = document.createElement("h2");
+    const dateRange = document.createElement("p");
+    const participantList = document.createElement("div");
+    const selectedAthleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const participants = [...(challenge.progress || [])].sort((first, second) => {
+
+        return first.userId === selectedAthleteId ? -1 : second.userId === selectedAthleteId ? 1 : 0;
 
     });
 
-    progress.appendChild(details);
-    return progress;
+    back.className = "pact-progress-back";
+    back.type = "button";
+    back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg><span>Back to Home</span>';
+    back.addEventListener("click", closePactProgressDetails);
+    heading.id = "pact-progress-title";
+    heading.textContent = "Pact progress";
+    dateRange.className = "pact-progress-dates";
+    dateRange.textContent = `${formatShortPactDate(challenge.startDate)}–${formatShortPactDate(challenge.endDate)}, ${new Date(`${challenge.endDate}T12:00:00`).getFullYear()}`;
+    participantList.className = "pact-progress-participants";
+
+    participants.forEach((participant, index) => {
+
+        const section = document.createElement("section");
+        const participantHeading = document.createElement("h3");
+        const name = document.createElement("span");
+
+        section.className = "pact-progress-participant";
+        if (index > 0) section.classList.add("has-divider");
+        name.textContent = participant.displayName || "Athlete";
+        participantHeading.appendChild(name);
+
+        if (participant.userId === selectedAthleteId) {
+
+            const you = document.createElement("small");
+            you.textContent = "You";
+            participantHeading.appendChild(you);
+
+        }
+
+        section.appendChild(participantHeading);
+
+        (participant.requirements || []).forEach(requirement => {
+
+            const row = document.createElement("div");
+            const labels = document.createElement("div");
+            const label = document.createElement("span");
+            const value = document.createElement("strong");
+            const bar = document.createElement("div");
+            const fill = document.createElement("span");
+
+            row.className = "pact-progress-requirement";
+            label.textContent = getRequirementLabel(requirement.type);
+            value.textContent = formatRequirementProgress(requirement);
+            labels.append(label, value);
+            bar.className = "pact-progress-bar";
+            fill.style.width = `${getRequirementProgressPercent(requirement)}%`;
+            bar.appendChild(fill);
+            row.append(labels, bar);
+            section.appendChild(row);
+
+        });
+
+        participantList.appendChild(section);
+
+    });
+
+    const wager = document.createElement("section");
+    const wagerTitle = document.createElement("h3");
+    const wagerCopy = document.createElement("p");
+
+    wager.className = "pact-progress-wager";
+    wagerTitle.textContent = "Wager";
+    wagerCopy.textContent = `${challenge.wagerType === "reward" ? "Reward" : "Punishment"}: ${challenge.wagerDescription || "Not set."}`;
+    wager.append(wagerTitle, wagerCopy);
+
+    if (challenge.status !== "active") {
+
+        const outcome = document.createElement("p");
+        outcome.className = "pact-progress-outcome";
+        outcome.textContent = getChallengeStatusText(challenge.status, challenge);
+        wager.appendChild(outcome);
+
+    }
+
+    pactProgressPage.append(back, heading, dateRange, participantList, wager);
+
+}
+
+
+function openPactProgressDetails() {
+
+    if (!currentChallenge || currentChallenge.status !== "active" || !pactProgressPage) return;
+
+    pactProgressHomeScrollTop = dashboardContent?.scrollTop || 0;
+    pactProgressDetailsOpen = true;
+    renderPactProgressDetails(currentChallenge);
+    dashboardTabContent.forEach(content => {
+        content.hidden = true;
+    });
+    pactProgressPage.hidden = false;
+    welcomeMessage.hidden = true;
+    if (dashboardContent) dashboardContent.scrollTop = 0;
+    pactProgressPage.focus({ preventScroll: true });
+
+}
+
+
+function closePactProgressDetails() {
+
+    if (!pactProgressDetailsOpen) return;
+
+    pactProgressDetailsOpen = false;
+    pactProgressPage.hidden = true;
+    dashboardTabContent.forEach(content => {
+        content.hidden = content.dataset.dashboardTabContent !== activeDashboardTab;
+    });
+    welcomeMessage.hidden = activeDashboardTab !== "overview";
+    if (dashboardContent) dashboardContent.scrollTop = pactProgressHomeScrollTop;
+    currentChallengeContainer.querySelector(".home-weekly-pact-card")?.focus({ preventScroll: true });
 
 }
 
 
 function showDashboardTab(tab) {
 
+    pactProgressDetailsOpen = false;
+    if (pactProgressPage) pactProgressPage.hidden = true;
     activeDashboardTab = tab;
     document.body.classList.toggle("is-progress-tab", tab === "progress");
     document.body.classList.toggle("is-pact-tab", tab === "pact");
-    const dashboardContent = document.getElementById("dashboard-content");
-
     if (dashboardContent) dashboardContent.scrollTop = 0;
 
     dashboardTabs.forEach(button => {
@@ -2945,7 +3145,7 @@ function renderProgressRace() {
 function renderCurrentChallenge(challenge) {
 
     currentChallengeContainer.innerHTML = "";
-    currentChallengeContainer.classList.remove("home-cycle-empty");
+    currentChallengeContainer.classList.remove("home-cycle-empty", "home-cycle-compact", "home-weekly-pact-host");
 
 
     if (!challenge) {
@@ -2953,6 +3153,17 @@ function renderCurrentChallenge(challenge) {
         renderNextWeekPactCard();
         if (activeDashboardTab === "progress") renderProgressRace();
 
+        return;
+
+    }
+
+    if (challenge.status === "active" && Array.isArray(challenge.progress)) {
+
+        currentChallengeContainer.classList.add("home-weekly-pact-host");
+        currentChallengeContainer.appendChild(renderHomeWeeklyPactCard(challenge));
+        celebratePactCompletion(challenge);
+        if (pactProgressDetailsOpen) renderPactProgressDetails(challenge);
+        if (activeDashboardTab === "progress") renderProgressRace();
         return;
 
     }
@@ -2966,13 +3177,6 @@ function renderCurrentChallenge(challenge) {
     timePeriod.textContent = `${formatChallengeDate(challenge.startDate)} → ${formatChallengeDate(challenge.endDate)}`;
     pactMeta.append(createChallengeStatusPill(challenge.status), timePeriod);
     currentChallengeContainer.appendChild(pactMeta);
-
-    if (challenge.status === "active" && Array.isArray(challenge.progress)) {
-
-        currentChallengeContainer.appendChild(createPactProgressOverview(challenge));
-        celebratePactCompletion(challenge);
-
-    }
 
     if (challenge.status === "pending" && Array.isArray(challenge.requirements)) {
 
