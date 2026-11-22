@@ -1175,9 +1175,15 @@ function formatRequirementProgress(requirement) {
 
     const completed = Number(requirement?.completed) || 0;
     const target = Number(requirement?.targetAmount) || 0;
-    const unit = getRequirementLabel(requirement?.type).toLowerCase();
+    const type = requirement?.type;
 
-    return `${completed.toLocaleString()} / ${target.toLocaleString()} ${unit}`;
+    if (type === "workouts" || type === "steps") {
+
+        return `${completed.toLocaleString()} / ${target.toLocaleString()}`;
+
+    }
+
+    return `${completed.toLocaleString()} / ${target.toLocaleString()} ${getRequirementLabel(type)}`;
 
 }
 
