@@ -664,6 +664,7 @@ body.dashboard-page {
 .home-weekly-pact-chevron { display: grid; place-items: center; width: 24px; height: 24px; color: #d5ded7; }
 .home-weekly-pact-chevron svg { width: 21px; height: 21px; }
 .pact-progress-page { display: grid; gap: 20px; max-width: 760px; padding: max(4px, env(safe-area-inset-top)) 0 calc(132px + env(safe-area-inset-bottom)); }
+.pact-progress-page[hidden] { display: none; }
 .pact-progress-back { display: inline-flex; justify-self: start; align-items: center; gap: 5px; min-height: 34px; padding: 4px 0; border: 0; background: transparent; color: #b3dd9b; font-size: .9rem; font-weight: 720; box-shadow: none; }
 .pact-progress-back:hover:not(:disabled), .pact-progress-back:focus-visible { background: transparent; color: var(--green); box-shadow: none; transform: none; }
 .pact-progress-back svg { width: 19px; height: 19px; }
