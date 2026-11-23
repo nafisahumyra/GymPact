@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css?v=source-sans3-v1">
-    <link rel="stylesheet" href="dashboard.css?v=month-detail-source-sans3-v1">
+    <link rel="stylesheet" href="dashboard.css?v=home-scroll-greeting-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=month-detail-goal-panel-v1">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=home-scroll-greeting-v1">
 
     <div class="dashboard-shell">
 
@@ -43,8 +43,6 @@
             </div>
 
                 </div>
-
-                <h2 id="welcome-message"></h2>
 
                 <p id="dashboard-refresh-feedback" class="refresh-feedback" role="status" hidden></p>
 
@@ -76,6 +74,11 @@
                 <h3 id="exercise-progress-title">Trackers</h3>
                 <div id="exercise-trackers" class="exercise-trackers" aria-live="polite"></div>
             </section>
+        </section>
+
+        <section class="dashboard-section home-greeting-section" data-dashboard-tab-content="overview">
+            <p id="home-greeting-line" class="home-greeting-line"></p>
+            <p id="home-greeting-name" class="home-greeting-name" hidden></p>
         </section>
 
         <section class="dashboard-section" data-dashboard-tab-content="overview">

@@ -1,10 +1,21 @@
 const currentUser = localStorage.getItem("currentUser") || "Athlete";
+let savedHomeGreetingName = String(localStorage.getItem("currentUser") || "").trim();
+const homeGreetingLine = document.getElementById("home-greeting-line");
+const homeGreetingName = document.getElementById("home-greeting-name");
 
-// Welcome message
+function refreshHomeGreeting() {
+    if (!homeGreetingLine || !homeGreetingName) return;
 
-const welcomeMessage = document.getElementById("welcome-message");
-welcomeMessage.textContent =
-    `Welcome back, ${currentUser}!`;
+    const hour = new Date().getHours();
+    homeGreetingLine.textContent = hour < 12
+        ? "Good morning,"
+        : hour <= 17
+            ? "Good afternoon,"
+            : "Good evening,";
+
+    homeGreetingName.textContent = savedHomeGreetingName;
+    homeGreetingName.hidden = !savedHomeGreetingName;
+}
 
 
 
@@ -1373,7 +1384,6 @@ function openPactProgressDetails() {
     });
     pactProgressPage.hidden = false;
     pactProgressPage.style.display = "grid";
-    welcomeMessage.hidden = true;
     if (dashboardContent) dashboardContent.scrollTop = 0;
     pactProgressPage.focus({ preventScroll: true });
 
@@ -1392,7 +1402,6 @@ function closePactProgressDetails() {
     dashboardTabContent.forEach(content => {
         content.hidden = content.dataset.dashboardTabContent !== activeDashboardTab;
     });
-    welcomeMessage.hidden = activeDashboardTab !== "overview";
     if (dashboardContent) dashboardContent.scrollTop = pactProgressHomeScrollTop;
     currentChallengeContainer.querySelector(".home-weekly-pact-card")?.focus({ preventScroll: true });
 
@@ -1431,7 +1440,7 @@ function showDashboardTab(tab) {
         content.hidden = content.dataset.dashboardTabContent !== tab;
 
     });
-    welcomeMessage.hidden = tab !== "overview";
+    if (tab === "overview") refreshHomeGreeting();
 
     renderExerciseTrackers();
 
@@ -1614,7 +1623,10 @@ function renderProfileAvatar({ displayName = currentUser, photoUrl = null } = {}
     profileDisplayName = displayName;
     profilePhotoUrl = photoUrl;
     localStorage.setItem("currentUser", displayName);
-    welcomeMessage.textContent = `Welcome back, ${displayName}!`;
+    if (displayName && (displayName !== "Athlete" || savedHomeGreetingName)) {
+        savedHomeGreetingName = String(displayName).trim();
+    }
+    refreshHomeGreeting();
     renderAvatarImage(profileMenuImage, profileMenuInitials, displayName, photoUrl);
     renderAvatarImage(
         profilePageImage,
@@ -3551,7 +3563,6 @@ function openHomeMonthPactDetail() {
         const text = document.createElement("p"); text.textContent = latest.body; checkinCard.append(author, text); checkin.append(checkinHeading, checkinCard); homeMonthPactDetail.appendChild(checkin);
     }
     dashboardTabContent.forEach(content => { content.hidden = true; });
-    welcomeMessage.hidden = true;
     homeMonthPactDetail.hidden = false;
     dashboardContent.scrollTop = 0;
     homeMonthPactDetail.focus({ preventScroll: true });
@@ -3564,7 +3575,6 @@ function closeHomeMonthPactDetail() {
     document.body.classList.remove("is-home-month-detail");
     homeMonthPactDetail.hidden = true;
     dashboardTabContent.forEach(content => { content.hidden = content.dataset.dashboardTabContent !== activeDashboardTab; });
-    welcomeMessage.hidden = activeDashboardTab !== "overview";
     if (dashboardContent) dashboardContent.scrollTop = homeMonthPactHomeScrollTop;
     homeMonthPactContent.querySelector("button")?.focus({ preventScroll: true });
 }
@@ -3922,10 +3932,15 @@ document.addEventListener("visibilitychange", () => {
 
     if (document.visibilityState === "visible") {
 
+        if (activeDashboardTab === "overview") refreshHomeGreeting();
         refreshDashboard();
 
     }
 
+});
+
+window.addEventListener("focus", () => {
+    if (activeDashboardTab === "overview") refreshHomeGreeting();
 });
 
 refreshDashboard();
