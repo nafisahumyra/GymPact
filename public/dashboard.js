@@ -3537,9 +3537,9 @@ function openHomeMonthPactDetail() {
     homeMonthPactDetail.innerHTML = "";
     const back = document.createElement("button"); back.type = "button"; back.className = "home-month-detail-back"; back.innerHTML = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m10 3-5 5 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Home';
     back.addEventListener("click", closeHomeMonthPactDetail);
-    const title = document.createElement("header"); title.className = "home-month-detail-heading";
+    const title = document.createElement("header"); title.className = "home-month-detail-topbar";
     const [monthName, year] = monthlyPact.monthLabel.split(/\s+(?=\d{4}$)/);
-    title.innerHTML = `<h2>${monthName || monthlyPact.monthLabel}${year ? ` <span>${year}</span>` : ""}</h2><span>Active</span>`;
+    title.innerHTML = `<h2>${monthName || monthlyPact.monthLabel}${year ? ` <span>${year}</span>` : ""}</h2>`;
     const pair = document.createElement("div"); pair.className = "home-month-detail-pair";
     const own = monthlyPact.commitments.find(item => item.userId === athleteId);
     const partner = monthlyPact.commitments.find(item => item.userId !== athleteId);
@@ -3558,7 +3558,8 @@ function openHomeMonthPactDetail() {
     const consequence = document.createElement("section"); consequence.className = "home-month-detail-consequence"; consequence.innerHTML = '<span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 1c4-3 7 3 14 0v10c-7 3-10-3-14 0"/></svg></span><div><small>Shared consequence</small></div>';
     const consequenceText = document.createElement("p"); consequenceText.textContent = monthlyPact.consequence; consequence.lastElementChild.appendChild(consequenceText);
     const allCheckins = [...(monthlyPact.checkins || [])].sort((left, right) => `${right.date}|${right.createdAt || ""}`.localeCompare(`${left.date}|${left.createdAt || ""}`));
-    homeMonthPactDetail.append(back, title, pair, goals, consequence);
+    title.prepend(back);
+    homeMonthPactDetail.append(title, pair, goals, consequence);
     if (allCheckins[0]) {
         const latest = allCheckins[0]; const checkin = document.createElement("section"); checkin.className = "home-month-detail-latest";
         const checkinHeading = document.createElement("div"); checkinHeading.innerHTML = `<h3>Latest check-in</h3><span>${formatMonthDate(latest.date)}</span>`;
