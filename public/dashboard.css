@@ -776,6 +776,78 @@ body.dashboard-page {
 .home-month-card-meta { grid-area: meta; overflow: hidden; color: #aab8ad; font-size: 12px; font-weight: 400; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .home-month-card-chevron { grid-area: chevron; display: grid; place-items: center; width: 16px; height: 16px; color: #d3dbd4; }
 .home-month-card-chevron svg { width: 16px; height: 16px; }
+.home-month-checkin-card {
+    display: grid;
+    gap: 0;
+    padding: 20px;
+    border: 1px solid #3d4b3f;
+    border-radius: 22px;
+    background: linear-gradient(130deg, #202b22, #172019);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-synthesis: none;
+}
+.home-month-checkin-heading { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+.home-month-checkin-heading > div { display: grid; gap: 4px; }
+.home-month-checkin-heading > div > span { color: #b4c0b5; font-size: 14px; font-weight: 400; }
+.home-month-checkin-heading h3 { margin: 0; color: var(--text); font-size: 32px; font-weight: 500; letter-spacing: -.04em; line-height: 1.05; }
+.home-month-calendar-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 17px; background: #2a3b29; color: #b8eb96; }
+.home-month-calendar-icon svg { width: 25px; height: 25px; }
+.home-month-checkin-label { margin: 28px 0 5px; color: #b4c0b5; font-size: 14px; }
+.home-month-checkin-goal { margin: 0; color: #f0f4ee; font-size: 22px; font-weight: 400; line-height: 1.38; }
+.home-month-checkin-update { display: grid; gap: 7px; margin-top: 26px; padding-top: 20px; border-top: 1px solid #405043; }
+.home-month-checkin-update > p { margin: 0; }
+.home-month-checkin-prompt { color: #e1e8e0; font-size: 18px; line-height: 1.3; }
+.home-month-checkin-latest { color: #b9c7bb; font-size: 13px; }
+.home-month-checkin-excerpt { color: #e4ece4; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.home-month-checkin-achieved { color: var(--green); font-size: 18px; font-weight: 500; }
+.home-month-checkin-update .home-month-checkin-achieved + p { color: #b9c7bb; font-size: 14px; }
+.home-month-checkin-visibility { display: flex; align-items: center; gap: 7px; color: #b4c0b5; font-size: 14px; line-height: 1.35; }
+.home-month-checkin-visibility::before { width: 14px; height: 14px; flex: 0 0 14px; border: 1.5px solid currentColor; border-radius: 50%; content: ""; }
+.home-month-checkin-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; }
+.home-month-checkin-add { min-height: 48px; padding: 11px 18px; border: 0; border-radius: 14px; background: var(--green); color: #10200d; font-size: 16px; font-weight: 500; }
+.home-month-checkin-view { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; padding: 6px 0; border: 0; background: transparent; color: #d0dccf; font-size: 16px; font-weight: 400; box-shadow: none; }
+.home-month-checkin-view:hover:not(:disabled), .home-month-checkin-view:focus-visible { background: transparent; color: var(--green); box-shadow: none; transform: none; }
+.home-month-checkin-view svg { width: 17px; height: 17px; }
+.monthly-checkin-visibility { margin: 8px 0 14px !important; color: var(--muted) !important; font-size: .82rem !important; line-height: 1.4 !important; }
+
+.home-month-pact-detail { display: grid; max-width: 760px; padding: max(4px, env(safe-area-inset-top)) 0 calc(132px + env(safe-area-inset-bottom)); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-synthesis: none; }
+.home-month-pact-detail[hidden] { display: none; }
+.home-month-detail-back { display: inline-flex; align-items: center; justify-self: start; gap: 4px; min-height: 44px; padding: 6px 0; border: 0; background: transparent; color: #b7d9aa; font-size: 14px; font-weight: 400; box-shadow: none; }
+.home-month-detail-back:hover:not(:disabled), .home-month-detail-back:focus-visible { background: transparent; color: var(--green); box-shadow: none; transform: none; }
+.home-month-detail-back svg { width: 16px; height: 16px; }
+.home-month-detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; }
+.home-month-detail-heading h2 { margin: 0; color: var(--text); font-size: 38px; font-weight: 500; letter-spacing: -.05em; line-height: 1.1; }
+.home-month-detail-heading h2 span { color: #95a79a; font-weight: 400; }
+.home-month-detail-heading > span { padding: 7px 15px; border-radius: 99px; background: #253b23; color: #a3ed78; font-size: 14px; font-weight: 400; }
+.home-month-detail-pair { display: flex; align-items: center; margin: 24px 0; }
+.home-month-detail-avatar { display: grid; place-items: center; width: 42px; height: 42px; overflow: hidden; border: 3px solid #0e1810; border-radius: 50%; background: #2a4027; color: #b3e89b; font-size: 15px; font-weight: 500; object-fit: cover; }
+.home-month-detail-avatar + .home-month-detail-avatar { margin-left: -10px; }
+.home-month-detail-avatar.is-muted { background: #34443d; color: #d3dfd6; }
+.home-month-detail-pair p { margin: 0 0 0 13px; color: #acbdae; font-size: 15px; line-height: 1.4; }
+.home-month-detail-pair strong { color: #e4eee2; font-weight: 500; }
+.home-month-detail-goals { display: grid; gap: 12px; }
+.home-month-detail-goal { padding: 18px; border: 1px solid #344638; border-radius: 18px; background: linear-gradient(125deg, #202e23, #17231b); }
+.home-month-detail-person { display: flex; align-items: center; gap: 10px; }
+.home-month-detail-person .home-month-detail-avatar { width: 38px; height: 38px; margin: 0; border: 0; }
+.home-month-detail-person strong, .home-month-detail-person small { display: block; }
+.home-month-detail-person strong { color: var(--text); font-size: 17px; font-weight: 500; }
+.home-month-detail-person small { margin-top: 2px; color: #9eaf9f; font-size: 13px; }
+.home-month-detail-state { margin-left: auto; color: #bdcabc; font-size: 14px; }
+.home-month-detail-state.is-achieved { color: var(--green); }
+.home-month-detail-goal > p { margin: 20px 0 0; color: #edf3e9; font-size: 23px; line-height: 1.35; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.home-month-detail-consequence { display: flex; gap: 12px; padding: 22px 4px; border-bottom: 1px solid #405043; }
+.home-month-detail-consequence > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: #263721; color: #b2dc94; }
+.home-month-detail-consequence > span svg { width: 21px; height: 21px; }
+.home-month-detail-consequence small { color: #b0c19f; font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
+.home-month-detail-consequence p { margin: 6px 0 0; color: #bacabd; font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
+.home-month-detail-latest { margin-top: 22px; }
+.home-month-detail-latest > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.home-month-detail-latest h3 { margin: 0; color: var(--text); font-size: 19px; font-weight: 500; }
+.home-month-detail-latest > div > span { color: #a6b6a7; font-size: 14px; }
+.home-month-detail-note { margin-top: 13px; padding: 15px; border-radius: 14px; background: #17211a; }
+.home-month-detail-note strong { color: var(--text); font-size: 15px; font-weight: 500; }
+.home-month-detail-note p { margin: 6px 0 0; color: #c4d1c6; font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pact-card.home-cycle-empty { border-color: var(--line); }
 .home-cycle-kicker { grid-column: 1; margin: 0 0 4px; color: var(--green); font-size: .72rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
 .pact-card.home-cycle-empty > .home-cycle-kicker { margin: 0 0 4px; color: var(--green); font-size: .72rem; font-weight: 800; letter-spacing: .11em; }

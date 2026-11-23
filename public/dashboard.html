@@ -12,11 +12,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/gp-images/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css?v=app-background-2">
-    <link rel="stylesheet" href="dashboard.css?v=home-pact-layout-v2">
+    <link rel="stylesheet" href="dashboard.css?v=month-checkin-v1">
 </head>
 
 
-<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=home-pact-layout-v1">
+<body class="dashboard-page" data-protected-page data-protected-script="dashboard.js?v=month-checkin-v1">
 
     <div class="dashboard-shell">
 
@@ -100,6 +100,7 @@
         </section>
 
         <section id="pact-progress-page" class="pact-progress-page" aria-labelledby="pact-progress-title" tabindex="-1" style="display: none" hidden></section>
+        <section id="home-month-pact-detail" class="home-month-pact-detail" tabindex="-1" hidden></section>
 
             </div>
 
@@ -474,10 +475,11 @@
 
     <div id="monthly-checkin-modal" class="modal">
         <div class="modal-content exercise-modal-content">
-            <h2>Daily check-in</h2>
+            <h2>Today’s check-in</h2>
             <p id="monthly-checkin-date"></p>
             <label for="monthly-checkin-text">What did you complete?</label>
             <textarea id="monthly-checkin-text" maxlength="1000" placeholder="Write a short check-in"></textarea>
+            <p class="monthly-checkin-visibility">Your check-in is shared with your Pact partner and saved to today’s calendar note.</p>
             <p id="monthly-checkin-error" class="exercise-form-error" hidden></p>
             <div class="modal-buttons">
                 <button id="cancel-monthly-checkin" type="button">Cancel</button>

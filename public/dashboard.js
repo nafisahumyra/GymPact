@@ -27,9 +27,12 @@ const progressRunnerAnimationFrames = new Set();
 const currentChallengeContainer =
     document.getElementById("current-challenge");
 const pactProgressPage = document.getElementById("pact-progress-page");
+const homeMonthPactDetail = document.getElementById("home-month-pact-detail");
 const dashboardContent = document.getElementById("dashboard-content");
 let pactProgressDetailsOpen = false;
 let pactProgressHomeScrollTop = 0;
+let homeMonthPactDetailOpen = false;
+let homeMonthPactHomeScrollTop = 0;
 const workoutCount =
     document.getElementById("workout-count");
 const streakCount =
@@ -1394,6 +1397,8 @@ function closePactProgressDetails() {
 
 function showDashboardTab(tab) {
 
+    homeMonthPactDetailOpen = false;
+    if (homeMonthPactDetail) homeMonthPactDetail.hidden = true;
     pactProgressDetailsOpen = false;
     if (pactProgressPage) {
 
@@ -3363,7 +3368,8 @@ function monthlyRequest(action, extra = {}) {
 }
 
 function formatMonthDate(date) {
-    return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return new Intl.DateTimeFormat(undefined, { timeZone: "America/New_York", month: "short", day: "numeric" })
+        .format(new Date(`${date}T12:00:00Z`));
 }
 
 function formatMonthPactCompletion(timestamp) {
@@ -3503,11 +3509,137 @@ function renderMonthlyCalendar(pact, container, { interactive = true } = {}) {
     container.appendChild(calendar);
 }
 
+function appendMonthDetailAvatar(container, name, { photoUrl = null, muted = false } = {}) {
+    const initials = document.createElement("span");
+    initials.className = `home-month-detail-avatar${muted ? " is-muted" : ""}`;
+    initials.textContent = getActivityInitials(name);
+    container.appendChild(initials);
+    if (!photoUrl) return;
+    const image = document.createElement("img");
+    image.className = "home-month-detail-avatar";
+    image.alt = "";
+    image.src = photoUrl;
+    image.onload = () => { initials.hidden = true; image.hidden = false; };
+    image.onerror = () => { image.hidden = true; initials.hidden = false; };
+    image.hidden = true;
+    container.appendChild(image);
+}
+
+function openHomeMonthPactDetail() {
+    if (!monthlyPact || !homeMonthPactDetail || homeMonthPactDetailOpen) return;
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    homeMonthPactHomeScrollTop = dashboardContent?.scrollTop || 0;
+    homeMonthPactDetailOpen = true;
+    homeMonthPactDetail.innerHTML = "";
+    const back = document.createElement("button"); back.type = "button"; back.className = "home-month-detail-back"; back.innerHTML = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m10 3-5 5 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Home';
+    back.addEventListener("click", closeHomeMonthPactDetail);
+    const title = document.createElement("header"); title.className = "home-month-detail-heading";
+    const [monthName, year] = monthlyPact.monthLabel.split(/\s+(?=\d{4}$)/);
+    title.innerHTML = `<h2>${monthName || monthlyPact.monthLabel}${year ? ` <span>${year}</span>` : ""}</h2><span>Active</span>`;
+    const pair = document.createElement("div"); pair.className = "home-month-detail-pair";
+    const own = monthlyPact.commitments.find(item => item.userId === athleteId);
+    const partner = monthlyPact.commitments.find(item => item.userId !== athleteId);
+    appendMonthDetailAvatar(pair, own?.displayName || profileDisplayName, { photoUrl: profilePhotoUrl });
+    appendMonthDetailAvatar(pair, partner?.displayName || "GymPact athlete", { muted: true });
+    const pairCopy = document.createElement("p"); pairCopy.innerHTML = "Different goals.<br><strong>In it together.</strong>"; pair.appendChild(pairCopy);
+    const goals = document.createElement("div"); goals.className = "home-month-detail-goals";
+    [own, partner].filter(Boolean).forEach((commitment, index) => {
+        const person = document.createElement("article"); person.className = "home-month-detail-goal";
+        const personHead = document.createElement("div"); personHead.className = "home-month-detail-person";
+        appendMonthDetailAvatar(personHead, commitment.displayName, { photoUrl: index === 0 ? profilePhotoUrl : null, muted: index !== 0 });
+        const identity = document.createElement("div"); const name = document.createElement("strong"); name.textContent = commitment.displayName; const role = document.createElement("small"); role.textContent = index === 0 ? "Your goal" : "Partner’s goal"; identity.append(name, role);
+        const state = document.createElement("span"); state.className = `home-month-detail-state${commitment.completedAt ? " is-achieved" : ""}`; state.textContent = commitment.completedAt ? "Achieved" : "In progress";
+        personHead.append(identity, state); const goal = document.createElement("p"); goal.textContent = commitment.goal; person.append(personHead, goal); goals.appendChild(person);
+    });
+    const consequence = document.createElement("section"); consequence.className = "home-month-detail-consequence"; consequence.innerHTML = '<span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 1c4-3 7 3 14 0v10c-7 3-10-3-14 0"/></svg></span><div><small>Shared consequence</small></div>';
+    const consequenceText = document.createElement("p"); consequenceText.textContent = monthlyPact.consequence; consequence.lastElementChild.appendChild(consequenceText);
+    const allCheckins = [...(monthlyPact.checkins || [])].sort((left, right) => `${right.date}|${right.createdAt || ""}`.localeCompare(`${left.date}|${left.createdAt || ""}`));
+    homeMonthPactDetail.append(back, title, pair, goals, consequence);
+    if (allCheckins[0]) {
+        const latest = allCheckins[0]; const checkin = document.createElement("section"); checkin.className = "home-month-detail-latest";
+        const checkinHeading = document.createElement("div"); checkinHeading.innerHTML = `<h3>Latest check-in</h3><span>${formatMonthDate(latest.date)}</span>`;
+        const checkinCard = document.createElement("article"); checkinCard.className = "home-month-detail-note";
+        const author = document.createElement("strong"); author.textContent = latest.userId === athleteId ? "You" : latest.displayName;
+        const text = document.createElement("p"); text.textContent = latest.body; checkinCard.append(author, text); checkin.append(checkinHeading, checkinCard); homeMonthPactDetail.appendChild(checkin);
+    }
+    dashboardTabContent.forEach(content => { content.hidden = true; });
+    welcomeMessage.hidden = true;
+    homeMonthPactDetail.hidden = false;
+    dashboardContent.scrollTop = 0;
+    homeMonthPactDetail.focus({ preventScroll: true });
+}
+
+function closeHomeMonthPactDetail() {
+    if (!homeMonthPactDetailOpen) return;
+    homeMonthPactDetailOpen = false;
+    homeMonthPactDetail.hidden = true;
+    dashboardTabContent.forEach(content => { content.hidden = content.dataset.dashboardTabContent !== activeDashboardTab; });
+    welcomeMessage.hidden = activeDashboardTab !== "overview";
+    if (dashboardContent) dashboardContent.scrollTop = homeMonthPactHomeScrollTop;
+    homeMonthPactContent.querySelector("button")?.focus({ preventScroll: true });
+}
+
 function renderHomeMonthPact() {
 
     if (!homeMonthPactContent) return;
 
     homeMonthPactContent.innerHTML = "";
+
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+
+    if (monthlyPact?.status === "active") {
+
+        const own = monthlyPact.commitments.find(item => item.userId === athleteId);
+        const partner = monthlyPact.commitments.find(item => item.userId !== athleteId);
+        if (!own) return;
+
+        const card = document.createElement("article");
+        card.className = "home-month-checkin-card";
+        const monthName = new Intl.DateTimeFormat(undefined, { timeZone: "America/New_York", month: "long" })
+            .format(new Date(`${monthlyPact.monthStart}T12:00:00Z`));
+        const ownCheckins = (monthlyPact.checkins || []).filter(item => item.userId === athleteId)
+            .sort((left, right) => `${right.date}|${right.createdAt || ""}`.localeCompare(`${left.date}|${left.createdAt || ""}`));
+        const latest = ownCheckins[0];
+        const today = getCalendarDayInGymPactTimeZone();
+        const heading = document.createElement("div"); heading.className = "home-month-checkin-heading";
+        heading.innerHTML = `<div><span>Monthly pact</span><h3>${monthName}</h3></div><span class="home-month-calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span>`;
+        const label = document.createElement("p"); label.className = "home-month-checkin-label"; label.textContent = "Your goal";
+        const goal = document.createElement("p"); goal.className = "home-month-checkin-goal"; goal.textContent = own.goal;
+        const update = document.createElement("div"); update.className = "home-month-checkin-update";
+
+        if (own.completedAt) {
+            update.innerHTML = '<p class="home-month-checkin-achieved">Goal achieved</p><p>Your completion has been recorded.</p>';
+        } else if (latest) {
+            const latestLabel = document.createElement("p"); latestLabel.className = "home-month-checkin-latest";
+            latestLabel.textContent = `Your latest check-in · ${formatMonthDate(latest.date)}`;
+            const excerpt = document.createElement("p"); excerpt.className = "home-month-checkin-excerpt";
+            excerpt.textContent = latest.body.length > 150 ? `${latest.body.slice(0, 147).trimEnd()}…` : latest.body;
+            update.append(latestLabel, excerpt);
+        } else {
+            update.innerHTML = '<p class="home-month-checkin-prompt">How’s your goal coming along?</p>';
+        }
+
+        const visibility = document.createElement("p"); visibility.className = "home-month-checkin-visibility";
+        visibility.textContent = `Check-ins are shared with ${partner?.displayName || "your Pact partner"}.`;
+        update.appendChild(visibility);
+
+        const actions = document.createElement("div"); actions.className = "home-month-checkin-actions";
+        if (!own.completedAt) {
+            const add = document.createElement("button"); add.type = "button"; add.className = "home-month-checkin-add";
+            add.textContent = latest?.date === today ? "Edit today’s check-in" : "Add a check-in";
+            add.addEventListener("click", () => openMonthlyCheckin(today));
+            actions.appendChild(add);
+        }
+        const view = document.createElement("button"); view.type = "button"; view.className = "home-month-checkin-view";
+        view.innerHTML = 'View pact <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        view.addEventListener("click", openHomeMonthPactDetail);
+        actions.appendChild(view);
+        card.append(heading, label, goal, update, actions);
+        homeMonthPactContent.appendChild(card);
+        return;
+
+    }
+
     const card = document.createElement("button");
     const title = document.createElement("span");
     const meta = document.createElement("span");
@@ -3686,7 +3818,17 @@ function openMonthlySign() {
     modal("monthly-sign-goal").value = ""; modal("monthly-signature-input").value = "";
     showMonthlyStep("monthly-sign-goal-step", "monthly-sign-pledge-step", false); setMonthlyError("monthly-sign-error"); setMonthlyError("monthly-sign-pledge-error");
 }
-function openMonthlyCheckin(date) { monthlyCheckinDate = date; modal("monthly-checkin-date").textContent = formatMonthDate(date); modal("monthly-checkin-text").value = ""; setMonthlyError("monthly-checkin-error"); modal("monthly-checkin-modal").style.display = "flex"; }
+function openMonthlyCheckin(date) {
+    monthlyCheckinDate = date;
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const existing = (monthlyPact?.checkins || []).filter(entry => entry.userId === athleteId && entry.date === date)
+        .sort((left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || "")))[0];
+    modal("monthly-checkin-date").textContent = `${formatMonthDate(date)} · Shared with your Pact partner`;
+    modal("monthly-checkin-text").value = existing?.body || "";
+    modal("save-monthly-checkin").textContent = existing ? "Save changes" : "Save check-in";
+    setMonthlyError("monthly-checkin-error");
+    modal("monthly-checkin-modal").style.display = "flex";
+}
 function openMonthlyCompletion() { modal("monthly-completion-photo").value = ""; setMonthlyError("monthly-completion-error"); modal("monthly-completion-modal").style.display = "flex"; }
 
 modal("cancel-monthly-create").addEventListener("click", () => { modal("monthly-pact-create-modal").style.display = "none"; });

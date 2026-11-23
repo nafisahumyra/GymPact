@@ -82,7 +82,8 @@ serve(async request => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: headers(request) });
   try {
     const body = await request.json();
-    if (!await verifyGymPactSession(body.sessionToken)) return json({ error: "Invalid session." }, request, 401);
+    const session = await verifyGymPactSession(body.sessionToken);
+    if (!session) return json({ error: "Invalid session." }, request, 401);
     const environment = getDataEnvironment(body.dataEnvironment);
     if (!environment) return json({ error: "Invalid data environment." }, request, 400);
     const admin = getAdminClient();
@@ -159,10 +160,16 @@ serve(async request => {
       const local = localDateParts();
       const today = `${local.year}-${String(local.month).padStart(2, "0")}-${String(local.day).padStart(2, "0")}`;
       if (pact.status !== "active" || !text || date < pact.month_start || date > monthEnd(pact.month_start) || date > today) return json({ error: "Check-ins are available only on active Pact days." }, request, 400);
-      if (![pact.created_by, pact.recipient_id].includes(body.userId)) return json({ error: "Not a Pact participant." }, request, 403);
-      const { error } = await admin.from("monthly_pact_checkins").insert({ monthly_pact_id: pact.id, user_id: body.userId, checkin_date: date, body: text });
-      if (error) throw error;
-      return json({ checkinSaved: true }, request, 201);
+      if (!session.athlete_id || body.userId !== session.athlete_id || ![pact.created_by, pact.recipient_id].includes(body.userId)) return json({ error: "Not a Pact participant." }, request, 403);
+      const { data: existing, error: existingError } = await admin.from("monthly_pact_checkins")
+        .select("id").eq("monthly_pact_id", pact.id).eq("user_id", body.userId).eq("checkin_date", date)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (existingError) throw existingError;
+      const result = existing
+        ? await admin.from("monthly_pact_checkins").update({ body: text }).eq("id", existing.id)
+        : await admin.from("monthly_pact_checkins").insert({ monthly_pact_id: pact.id, user_id: body.userId, checkin_date: date, body: text });
+      if (result.error) throw result.error;
+      return json({ checkinSaved: true, checkinUpdated: Boolean(existing) }, request, existing ? 200 : 201);
     }
     return json({ error: "Unknown action." }, request, 400);
   } catch (error) {
