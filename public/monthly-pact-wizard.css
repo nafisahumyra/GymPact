@@ -1,0 +1,46 @@
+.gp-monthly-wizard-overlay { position: fixed; z-index: 80; inset: 0; display: grid; align-items: start; justify-items: center; overflow: auto; padding: max(16px, env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); background: rgba(3, 7, 4, .8); }
+.gp-monthly-wizard { box-sizing: border-box; width: min(100%, 420px); margin: auto; padding: 24px 22px; border: 1px solid #2d3a30; border-radius: 26px; background: radial-gradient(ellipse at 65% 15%, #182f1d, #0a110c 80%); color: #f0f4ed; font: 14px/1.5 system-ui, sans-serif; font-synthesis: none; }
+.gp-monthly-wizard [hidden] { display: none !important; }
+.gp-monthly-wizard__header { display: flex; justify-content: space-between; gap: 12px; color: #c8d4c8; font-size: 13px; }
+.gp-monthly-wizard__step-count { color: #b8d0ab; white-space: nowrap; }
+.gp-monthly-wizard__steps { display: flex; gap: 6px; margin: 17px 0 30px; }
+.gp-monthly-wizard__steps span { height: 3px; flex: 1; border-radius: 3px; background: #344238; }
+.gp-monthly-wizard__steps span.is-current { background: #a0ed73; }
+.gp-monthly-wizard__eyebrow { margin: 0 0 9px; color: #a5b99f; font-size: 10px; letter-spacing: 1.2px; }
+.gp-monthly-wizard h2 { margin: 0; color: #f0f4ed; font-size: 29px; font-weight: 500; letter-spacing: -.9px; line-height: 1.17; }
+.gp-monthly-wizard__intro { margin: 13px 0 25px; color: #aebfb0; font-size: 14px; }
+.gp-monthly-wizard label { display: block; margin: 16px 0 7px; color: #c2d0bf; font-size: 12px; }
+.gp-monthly-wizard input, .gp-monthly-wizard textarea, .gp-monthly-wizard select { box-sizing: border-box; width: 100%; padding: 11px 12px; border: 1px solid #3e5140; border-radius: 11px; background: #142018; color: #edf4e9; font: 16px/1.4 system-ui, sans-serif; }
+.gp-monthly-wizard textarea { resize: vertical; }
+.gp-monthly-wizard input[readonly], .gp-monthly-wizard textarea[readonly] { color: #aebfab; }
+.gp-monthly-wizard__fine { margin: 17px 0 0; color: #a7baa6; font-size: 12px; line-height: 1.55; }
+.gp-monthly-wizard__choice { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 0; margin: 0 0 12px; padding: 17px 13px; border: 1px solid #384b3b; border-radius: 14px; background: #17251b; color: #e7eee3; font: inherit; text-align: left; box-shadow: none; }
+.gp-monthly-wizard__choice.is-selected { border-color: #8ac866; background: #253b25; }
+.gp-monthly-wizard__choice svg { width: 20px; height: 20px; margin-top: 2px; flex: 0 0 auto; color: #b2d995; }
+.gp-monthly-wizard__choice-copy { flex: 1; min-width: 0; }
+.gp-monthly-wizard__choice strong { display: block; color: inherit; font-size: 14px; font-weight: 500; }
+.gp-monthly-wizard__choice small { display: block; margin-top: 4px; color: #bacab6; font-size: 12px; }
+.gp-monthly-wizard__choice em { display: block; margin-top: 11px; color: #e0ebd9; font-size: 12px; font-style: normal; font-weight: 600; }
+.gp-monthly-wizard__radio { width: 14px; height: 14px; margin-top: 4px; flex: 0 0 auto; border: 1px solid #869e7d; border-radius: 50%; }
+.gp-monthly-wizard__choice.is-selected .gp-monthly-wizard__radio { border-color: #a0ed73; background: #a0ed73; box-shadow: inset 0 0 0 3px #253b25; }
+.gp-monthly-wizard__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.gp-monthly-wizard__review { margin: 25px 0 0; padding: 18px; border: 1px solid #3e5140; border-radius: 16px; background: #1d2e21; }
+.gp-monthly-wizard__review-month { color: #b7cfa8; font-size: 12px; }
+.gp-monthly-wizard__review h3 { margin: 10px 0 16px; color: #f0f4ed; font-size: 22px; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.gp-monthly-wizard__review-tracking { padding-top: 12px; border-top: 1px solid #3e5140; color: #c3d5bb; font-size: 13px; }
+.gp-monthly-wizard__review-row { display: flex; justify-content: space-between; gap: 12px; padding: 20px 0; border-bottom: 1px solid #344538; font-size: 13px; }
+.gp-monthly-wizard__review-row strong { font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.gp-monthly-wizard__review-consequence { margin-top: 20px; }
+.gp-monthly-wizard__review-consequence > span { color: #a9bfa3; font-size: 12px; }
+.gp-monthly-wizard__review-consequence p { margin: 6px 0; overflow-wrap: anywhere; }
+.gp-monthly-wizard__error { min-height: 1.5em; margin: 16px 0 0; color: #ffc0a2; font-size: 13px; }
+.gp-monthly-wizard__footer { display: flex; gap: 12px; margin-top: 30px; }
+.gp-monthly-wizard button { min-height: 44px; cursor: pointer; }
+.gp-monthly-wizard__next { display: inline-flex; align-items: center; justify-content: center; gap: 10px; flex: 1; padding: 12px 15px; border: 0; border-radius: 12px; background: #a0ed73; color: #13200e; font: 500 14px system-ui, sans-serif; box-shadow: none; }
+.gp-monthly-wizard__next svg { width: 16px; height: 16px; }
+.gp-monthly-wizard__back { padding: 12px 17px; border: 1px solid #3e5140; border-radius: 12px; background: transparent; color: #c8d8c0; font: 14px system-ui, sans-serif; box-shadow: none; }
+.gp-monthly-wizard__cancel { margin-top: 14px; padding: 0; border: 0; background: transparent; color: #a7baa5; font: 12px system-ui, sans-serif; box-shadow: none; }
+.gp-monthly-wizard__initials { width: 108px !important; text-align: center; text-transform: uppercase; letter-spacing: 1.2px; }
+.gp-monthly-wizard__initials::placeholder { font-size: 14px; letter-spacing: 0; text-transform: none; }
+.gp-monthly-wizard button:focus-visible, .gp-monthly-wizard input:focus-visible, .gp-monthly-wizard textarea:focus-visible, .gp-monthly-wizard select:focus-visible { outline: 2px solid #ccf6af; outline-offset: 3px; }
+@media (max-width: 360px) { .gp-monthly-wizard { padding: 20px 16px; } .gp-monthly-wizard__fields { grid-template-columns: 1fr; gap: 0; } }

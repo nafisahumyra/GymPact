@@ -45,7 +45,7 @@ function localDateString(value: string | Date) {
 
 async function mapPact(admin: ReturnType<typeof getAdminClient>, pact: any) {
   const { data: commitments, error } = await admin.from("monthly_pact_commitments")
-    .select("user_id, goal, signature, signed_at, completed_at, proof_path, users(display_name)")
+    .select("user_id, goal, signature, signed_at, completed_at, proof_path, goal_type, tracking_mode, target, unit, reported_progress, users(display_name)")
     .eq("monthly_pact_id", pact.id).order("signed_at");
   if (error) throw error;
   const { data: checkins, error: checkinsError } = await admin.from("monthly_pact_checkins")
@@ -63,6 +63,8 @@ async function mapPact(admin: ReturnType<typeof getAdminClient>, pact: any) {
     commitments: (commitments ?? []).map((item: any) => ({
       userId: item.user_id, displayName: item.users?.display_name ?? "GymPact athlete", goal: item.goal,
       signature: item.signature, signedAt: item.signed_at, completedAt: item.completed_at,
+      goalType: item.goal_type, trackingMode: item.tracking_mode, target: item.target,
+      unit: item.unit, reportedProgress: item.reported_progress,
       completedByDeadline: Boolean(item.completed_at && localDateString(item.completed_at) <= monthEnd(pact.month_start)),
       proofPath: item.proof_path
     })),
@@ -75,6 +77,18 @@ async function validUser(admin: ReturnType<typeof getAdminClient>, userId: unkno
   if (typeof userId !== "string") return false;
   const { data } = await admin.from("users").select("id").eq("id", userId).maybeSingle();
   return Boolean(data);
+}
+
+function trackingSettings(body: Record<string, unknown>) {
+  const goalType = body.goalType === "cumulative" ? "cumulative" : body.goalType === "single_attempt" ? "single_attempt" : null;
+  const trackingMode = body.trackingMode === "checkins_only" ? "checkins_only" : body.trackingMode === "track" ? "track" : null;
+  if (!goalType || !trackingMode) return null;
+  if (trackingMode === "checkins_only") return { goal_type: goalType, tracking_mode: trackingMode, target: null, unit: null, reported_progress: null };
+  const target = typeof body.target === "number" ? body.target : Number(body.target);
+  const reportedProgress = typeof body.startingValue === "number" ? body.startingValue : Number(body.startingValue);
+  const unit = typeof body.unit === "string" ? body.unit.trim() : "";
+  if (!Number.isFinite(target) || target <= 0 || !Number.isFinite(reportedProgress) || reportedProgress < 0 || !unit || unit.length > 40) return null;
+  return { goal_type: goalType, tracking_mode: trackingMode, target, unit, reported_progress: reportedProgress };
 }
 
 serve(async request => {
@@ -106,7 +120,10 @@ serve(async request => {
           .maybeSingle());
       }
       if (error) throw error;
-      return json({ pact: currentPact ? await mapPact(admin, currentPact) : null, candidateMonth, candidateLabel: monthLabel(candidateMonth) }, request);
+      const { data: candidateUsers, error: candidateUsersError } = await admin.from("users").select("id, display_name").order("id");
+      if (candidateUsersError) throw candidateUsersError;
+      const partner = (candidateUsers ?? []).find(user => user.id !== session.athlete_id) ?? null;
+      return json({ pact: currentPact ? await mapPact(admin, currentPact) : null, candidateMonth, candidateLabel: monthLabel(candidateMonth), partner: partner ? { userId: partner.id, displayName: partner.display_name ?? "GymPact athlete" } : null }, request);
     }
 
     if (action === "list") {
@@ -123,14 +140,15 @@ serve(async request => {
       const goal = typeof body.goal === "string" ? body.goal.trim() : "";
       const signature = typeof body.signature === "string" ? body.signature.trim() : "";
       const consequence = typeof body.consequence === "string" ? body.consequence.trim() : "";
-      if (!goal || !signature || !consequence) return json({ error: "Goal, consequence, and signature are required." }, request, 400);
+      const tracking = trackingSettings(body);
+      if (!goal || !signature || !consequence || !tracking) return json({ error: "Goal, consequence, signature, and valid tracking settings are required." }, request, 400);
       const { data: users, error: usersError } = await admin.from("users").select("id").order("id");
       if (usersError || users?.length !== 2) throw usersError || new Error("Athletes unavailable");
       const recipient = users.find(user => user.id !== body.userId);
       const monthStart = monthStartForNewPact(environment);
       const { data: pact, error } = await admin.from("monthly_pacts").insert({ month_start: monthStart, created_by: body.userId, recipient_id: recipient.id, consequence, status: "pending", data_environment: environment }).select().single();
       if (error) return json({ error: error.code === "23505" ? "A Pact already exists for this month." : "Unable to create Month Pact." }, request, error.code === "23505" ? 409 : 400);
-      const { error: commitmentError } = await admin.from("monthly_pact_commitments").insert({ monthly_pact_id: pact.id, user_id: body.userId, goal, signature });
+      const { error: commitmentError } = await admin.from("monthly_pact_commitments").insert({ monthly_pact_id: pact.id, user_id: body.userId, goal, signature, ...tracking });
       if (commitmentError) throw commitmentError;
       return json({ pact: await mapPact(admin, pact) }, request, 201);
     }
@@ -146,8 +164,9 @@ serve(async request => {
     if (action === "sign") {
       const goal = typeof body.goal === "string" ? body.goal.trim() : "";
       const signature = typeof body.signature === "string" ? body.signature.trim() : "";
-      if (pact.status !== "pending" || pact.recipient_id !== body.userId || !goal || !signature) return json({ error: "Goal and signature are required to sign." }, request, 400);
-      const { error } = await admin.from("monthly_pact_commitments").insert({ monthly_pact_id: pact.id, user_id: body.userId, goal, signature });
+      const tracking = trackingSettings(body);
+      if (pact.status !== "pending" || pact.recipient_id !== body.userId || !goal || !signature || !tracking) return json({ error: "Goal, signature, and valid tracking settings are required to sign." }, request, 400);
+      const { error } = await admin.from("monthly_pact_commitments").insert({ monthly_pact_id: pact.id, user_id: body.userId, goal, signature, ...tracking });
       if (error) throw error;
       const status = isMonthActive(pact.month_start) ? "active" : "upcoming";
       const { data: signed, error: updateError } = await admin.from("monthly_pacts").update({ status, signed_at: new Date().toISOString() }).eq("id", pact.id).select().single();

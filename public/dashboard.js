@@ -3806,17 +3806,28 @@ function showMonthlyStep(detailsId, pledgeId, showPledge) { modal(detailsId).hid
 function monthPactDeadline(pact) { return new Date(`${pact.monthEnd}T12:00:00`).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }); }
 function monthEndForStart(monthStart) { const date = new Date(`${monthStart}T12:00:00`); return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().slice(0, 10); }
 function openMonthlyCreate() {
-    modal("monthly-pact-create-modal").style.display = "flex";
-    modal("monthly-create-copy").textContent = monthlyCandidate?.candidateLabel || "Upcoming month";
-    modal("monthly-goal").value = ""; modal("monthly-consequence").value = ""; modal("monthly-signature").value = "";
-    showMonthlyStep("monthly-create-details-step", "monthly-create-pledge-step", false); setMonthlyError("monthly-create-error"); setMonthlyError("monthly-create-pledge-error");
+    if (!window.GymPactMonthlyWizard || !monthlyCandidate) return;
+    const partnerName = monthlyCandidate.partner?.displayName || "Your Pact partner";
+    window.GymPactMonthlyWizard.open({
+        mode: "create", monthStart: monthlyCandidate.candidateMonth, monthLabel: monthlyCandidate.candidateLabel || "Upcoming month", partnerName,
+        onSubmit: async values => {
+            const { data, error } = await monthlyRequest("create", values);
+            if (error || data?.error) throw new Error(data?.error || "We couldn’t create that Month Pact. Please try again.");
+            await loadMonthlyPact();
+        }
+    });
 }
 function openMonthlySign() {
-    modal("monthly-pact-sign-modal").style.display = "flex";
+    if (!window.GymPactMonthlyWizard || !monthlyPact) return;
     const sender = monthlyPact.commitments.find(item => item.userId === monthlyPact.createdBy);
-    modal("monthly-sign-copy").textContent = `${sender?.displayName || "Your partner"}’s goal: ${sender?.goal || "Not available"}. Shared consequence: ${monthlyPact.consequence}`;
-    modal("monthly-sign-goal").value = ""; modal("monthly-signature-input").value = "";
-    showMonthlyStep("monthly-sign-goal-step", "monthly-sign-pledge-step", false); setMonthlyError("monthly-sign-error"); setMonthlyError("monthly-sign-pledge-error");
+    window.GymPactMonthlyWizard.open({
+        mode: "accept", monthStart: monthlyPact.monthStart, monthLabel: monthlyPact.monthLabel, partnerName: sender?.displayName || "Your partner", partnerGoal: sender?.goal || "", consequence: monthlyPact.consequence,
+        onSubmit: async values => {
+            const { data, error } = await monthlyRequest("sign", { pactId: monthlyPact.id, ...values });
+            if (error || data?.error) throw new Error(data?.error || "We couldn’t sign that Month Pact. Please try again.");
+            await loadMonthlyPact();
+        }
+    });
 }
 function openMonthlyCheckin(date) {
     monthlyCheckinDate = date;
