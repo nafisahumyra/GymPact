@@ -39,7 +39,6 @@
 .gp-monthly-wizard__next { display: inline-flex; align-items: center; justify-content: center; gap: 10px; flex: 1; padding: 12px 15px; border: 0; border-radius: 12px; background: #a0ed73; color: #13200e; font: 500 14px system-ui, sans-serif; box-shadow: none; }
 .gp-monthly-wizard__next svg { width: 16px; height: 16px; }
 .gp-monthly-wizard__back { padding: 12px 17px; border: 1px solid #3e5140; border-radius: 12px; background: transparent; color: #c8d8c0; font: 14px system-ui, sans-serif; box-shadow: none; }
-.gp-monthly-wizard__cancel { margin-top: 14px; padding: 0; border: 0; background: transparent; color: #a7baa5; font: 12px system-ui, sans-serif; box-shadow: none; }
 .gp-monthly-wizard__initials { width: 108px !important; text-align: center; text-transform: uppercase; letter-spacing: 1.2px; }
 .gp-monthly-wizard__initials::placeholder { font-size: 14px; letter-spacing: 0; text-transform: none; }
 .gp-monthly-wizard button:focus-visible, .gp-monthly-wizard input:focus-visible, .gp-monthly-wizard textarea:focus-visible, .gp-monthly-wizard select:focus-visible { outline: 2px solid #ccf6af; outline-offset: 3px; }

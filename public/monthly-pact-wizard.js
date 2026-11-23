@@ -29,7 +29,7 @@
             <header class="gp-monthly-wizard__header"><span>${state.creator ? "New monthly pact" : "Review monthly pact"}</span><span class="gp-monthly-wizard__step-count"></span></header>
             <div class="gp-monthly-wizard__steps" aria-label="Setup progress"><span></span><span></span><span></span><span></span></div>
             <form novalidate>
-                <section data-step="0"><p class="gp-monthly-wizard__eyebrow">THE AGREEMENT</p><h2>What are you<br>working toward?</h2><p class="gp-monthly-wizard__intro">Your goals can be different. You share the commitment.</p>
+                <section data-step="0"><p class="gp-monthly-wizard__eyebrow">THE AGREEMENT</p><h2>What are you<br>working toward?</h2>
                     <label>Pact month<input data-field="month" type="month" readonly></label>
                     <div data-creator-only><label>Your goal<textarea data-field="goal" rows="2" placeholder="Run a mile in 10 minutes."></textarea></label><label>Partner<input data-field="partner" readonly></label></div>
                     <div data-accept-only hidden><label data-partner-goal-label></label><textarea data-field="partner-goal" rows="2" readonly></textarea><label>Your goal<textarea data-field="goal" rows="2" placeholder="Run a mile in 10 minutes."></textarea></label></div>
@@ -47,8 +47,8 @@
                     <p class="gp-monthly-wizard__fine">Updates are shared with ${escape(options.partnerName || "your Pact partner")}. Marking your goal achieved is always a separate action.</p>
                 </section>
                 <section data-step="3" hidden><p class="gp-monthly-wizard__eyebrow">ONE LAST LOOK</p><h2>Ready to make<br>a pact?</h2><div class="gp-monthly-wizard__review"><span class="gp-monthly-wizard__review-month"></span><h3></h3><div class="gp-monthly-wizard__review-tracking"></div></div><div class="gp-monthly-wizard__review-row"><span>Partner</span><strong></strong></div><div class="gp-monthly-wizard__review-consequence"><span>Shared consequence</span><p></p></div><p class="gp-monthly-wizard__fine" data-review-note></p><label>Your initials<input class="gp-monthly-wizard__initials" data-field="initials" type="text" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Initials"></label><p class="gp-monthly-wizard__fine">By initialing, you agree to this pact and its shared consequence.</p></section>
-                <p class="gp-monthly-wizard__error" role="alert" aria-live="polite" hidden></p><footer class="gp-monthly-wizard__footer"><button class="gp-monthly-wizard__back" type="button" hidden>Back</button><button class="gp-monthly-wizard__next" type="submit">Continue${arrow}</button></footer>
-            </form><button class="gp-monthly-wizard__cancel" type="button">Cancel</button>
+                <p class="gp-monthly-wizard__error" role="alert" aria-live="polite" hidden></p><footer class="gp-monthly-wizard__footer"><button class="gp-monthly-wizard__back" type="button">Cancel</button><button class="gp-monthly-wizard__next" type="submit">Continue${arrow}</button></footer>
+            </form>
         </article>`;
         document.body.appendChild(overlay);
         const root = overlay.querySelector(".gp-monthly-wizard");
@@ -82,7 +82,9 @@
             root.querySelectorAll("[data-step]").forEach((page, index) => { page.hidden = index !== state.step; });
             root.querySelectorAll(".gp-monthly-wizard__steps span").forEach((item, index) => item.classList.toggle("is-current", index <= state.step));
             root.querySelector(".gp-monthly-wizard__step-count").textContent = `${state.step + 1} of 4`;
-            root.querySelector(".gp-monthly-wizard__back").hidden = state.step === 0 || state.busy;
+            const back = root.querySelector(".gp-monthly-wizard__back");
+            back.hidden = state.busy;
+            back.textContent = state.step === 0 ? "Cancel" : "Back";
             const next = root.querySelector(".gp-monthly-wizard__next"); next.disabled = state.busy; next.innerHTML = state.step === 3 ? (state.busy ? "Saving…" : state.creator ? "Sign & send pact" : "Sign & accept") : `Continue${arrow}`;
             root.querySelectorAll("[data-goal-type]").forEach(button => { const selected = button.dataset.goalType === state.goalType; button.classList.toggle("is-selected", selected); button.setAttribute("aria-pressed", String(selected)); });
             root.querySelectorAll("[data-tracking-mode]").forEach(button => { const selected = button.dataset.trackingMode === state.trackingMode; button.classList.toggle("is-selected", selected); button.setAttribute("aria-pressed", String(selected)); });
@@ -100,8 +102,7 @@
         }
         root.querySelectorAll("[data-goal-type]").forEach(button => button.addEventListener("click", () => { capture(); state.goalType = button.dataset.goalType; render(); }));
         root.querySelectorAll("[data-tracking-mode]").forEach(button => button.addEventListener("click", () => { capture(); state.trackingMode = button.dataset.trackingMode; render(); }));
-        root.querySelector(".gp-monthly-wizard__back").addEventListener("click", () => { capture(); state.step -= 1; render(); });
-        root.querySelector(".gp-monthly-wizard__cancel").addEventListener("click", close);
+        root.querySelector(".gp-monthly-wizard__back").addEventListener("click", () => { if (state.step === 0) { close(); return; } capture(); state.step -= 1; render(); });
         overlay.addEventListener("click", event => { if (event.target === overlay && !state.busy) close(); });
         field("initials").addEventListener("input", () => { const cursor = field("initials").selectionStart; field("initials").value = field("initials").value.toUpperCase(); field("initials").setSelectionRange(cursor, cursor); });
         form.addEventListener("submit", async event => { event.preventDefault(); if (state.busy) return; const message = validate(); if (message) { setError(message); return; } if (state.step < 3) { state.step += 1; render(); return; } state.busy = true; render(); try { await options.onSubmit({ goal: state.goal.trim(), consequence: state.consequence.trim(), signature: state.initials.trim(), goalType: state.goalType, trackingMode: state.trackingMode, target: state.trackingMode === "track" ? Number(state.target) : null, unit: state.trackingMode === "track" ? state.unit : null, startingValue: state.trackingMode === "track" ? Number(state.startingValue) : null }); close(); } catch (submitError) { state.busy = false; render(); setError(submitError?.message || "We couldn’t save that Month Pact. Please try again."); } });
