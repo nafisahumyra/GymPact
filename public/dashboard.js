@@ -3590,7 +3590,6 @@ function renderHomeMonthPact() {
     if (monthlyPact?.status === "active") {
 
         const own = monthlyPact.commitments.find(item => item.userId === athleteId);
-        const partner = monthlyPact.commitments.find(item => item.userId !== athleteId);
         if (!own) return;
 
         const card = document.createElement("article");
@@ -3608,7 +3607,7 @@ function renderHomeMonthPact() {
         const update = document.createElement("div"); update.className = "home-month-checkin-update";
 
         if (own.completedAt) {
-            update.innerHTML = '<p class="home-month-checkin-achieved">Goal achieved</p><p>Your completion has been recorded.</p>';
+            update.innerHTML = '<p class="home-month-checkin-achieved">Goal achieved</p>';
         } else if (latest) {
             const latestLabel = document.createElement("p"); latestLabel.className = "home-month-checkin-latest";
             latestLabel.textContent = `Your latest check-in · ${formatMonthDate(latest.date)}`;
@@ -3619,12 +3618,11 @@ function renderHomeMonthPact() {
             update.innerHTML = '<p class="home-month-checkin-prompt">How’s your goal coming along?</p>';
         }
 
-        const visibility = document.createElement("p"); visibility.className = "home-month-checkin-visibility";
-        visibility.textContent = `Check-ins are shared with ${partner?.displayName || "your Pact partner"}.`;
-        update.appendChild(visibility);
-
         const actions = document.createElement("div"); actions.className = "home-month-checkin-actions";
-        if (!own.completedAt) {
+        if (own.completedAt) {
+            actions.classList.add("is-achieved");
+            actions.appendChild(update);
+        } else {
             const add = document.createElement("button"); add.type = "button"; add.className = "home-month-checkin-add";
             add.textContent = latest?.date === today ? "Edit today’s check-in" : "Add a check-in";
             add.addEventListener("click", () => openMonthlyCheckin(today));
@@ -3634,7 +3632,9 @@ function renderHomeMonthPact() {
         view.innerHTML = 'View pact <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         view.addEventListener("click", openHomeMonthPactDetail);
         actions.appendChild(view);
-        card.append(heading, label, goal, update, actions);
+        card.append(heading, label, goal);
+        if (!own.completedAt) card.appendChild(update);
+        card.appendChild(actions);
         homeMonthPactContent.appendChild(card);
         return;
 
