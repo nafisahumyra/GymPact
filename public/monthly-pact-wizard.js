@@ -19,7 +19,7 @@
             consequence: options.initial?.consequence || options.consequence || "",
             target: options.initial?.target ?? "",
             unit: options.initial?.unit || "reps",
-            startingValue: options.initial?.startingValue ?? "",
+            startingValue: options.initial?.startingValue ?? 0,
             initials: ""
         };
         const overlay = document.createElement("div");
@@ -77,7 +77,7 @@
         field("starting-value").value = state.startingValue;
 
         function capture() { state.goal = field("goal").value; state.consequence = field("consequence").value; state.target = field("target").value; state.unit = field("unit").value; state.startingValue = field("starting-value").value; state.initials = field("initials").value.toUpperCase(); }
-        function trackingText() { if (state.trackingMode === "checkins_only") return "Check-ins only · No numeric target"; const prefix = `${state.goalType === "single_attempt" ? "Single attempt" : "Cumulative"} · Current best`; return `${prefix}: ${state.startingValue} / ${state.target} ${state.unit} · Check-ins included`; }
+        function trackingText() { if (state.trackingMode === "checkins_only") return "Check-ins only · No numeric target"; const prefix = state.goalType === "single_attempt" ? "Single attempt · Current best" : "Cumulative"; return `${prefix}: ${state.startingValue} / ${state.target} ${state.unit} · Check-ins included`; }
         function render() {
             root.querySelectorAll("[data-step]").forEach((page, index) => { page.hidden = index !== state.step; });
             root.querySelectorAll(".gp-monthly-wizard__steps span").forEach((item, index) => item.classList.toggle("is-current", index <= state.step));
@@ -89,6 +89,10 @@
             root.querySelectorAll("[data-goal-type]").forEach(button => { const selected = button.dataset.goalType === state.goalType; button.classList.toggle("is-selected", selected); button.setAttribute("aria-pressed", String(selected)); });
             root.querySelectorAll("[data-tracking-mode]").forEach(button => { const selected = button.dataset.trackingMode === state.trackingMode; button.classList.toggle("is-selected", selected); button.setAttribute("aria-pressed", String(selected)); });
             root.querySelector("[data-numeric]").hidden = state.trackingMode === "checkins_only";
+            const currentBest = root.querySelector("[data-start-label]");
+            currentBest.hidden = state.goalType !== "single_attempt";
+            if (state.goalType === "cumulative") state.startingValue = 0;
+            field("starting-value").value = state.startingValue;
             root.querySelector("[data-start-label]").firstChild.textContent = "Current best";
             if (state.step === 3) { root.querySelector(".gp-monthly-wizard__review-month").textContent = options.monthLabel || "Monthly pact"; root.querySelector(".gp-monthly-wizard__review h3").textContent = state.goal.trim(); root.querySelector(".gp-monthly-wizard__review-tracking").textContent = trackingText(); root.querySelector(".gp-monthly-wizard__review-row strong").textContent = options.partnerName || "Your partner"; root.querySelector(".gp-monthly-wizard__review-consequence p").textContent = state.consequence.trim(); }
             setError("");
@@ -96,7 +100,7 @@
         function validate() {
             capture();
             if (state.step === 0 && (!state.goal.trim() || !state.consequence.trim())) return "Add your goal and shared consequence.";
-            if (state.step === 2 && state.trackingMode === "track" && (!(Number(state.target) > 0) || state.startingValue === "" || Number(state.startingValue) < 0)) return "Enter a positive target and a starting value of zero or more.";
+            if (state.step === 2 && state.trackingMode === "track" && (!(Number(state.target) > 0) || (state.goalType === "single_attempt" && (state.startingValue === "" || Number(state.startingValue) < 0)))) return "Enter a positive target and a current best of zero or more.";
             if (state.step === 3 && !state.initials.trim()) return "Add your initials to sign the pact.";
             return "";
         }
@@ -105,7 +109,7 @@
         root.querySelector(".gp-monthly-wizard__back").addEventListener("click", () => { if (state.step === 0) { close(); return; } capture(); state.step -= 1; render(); });
         overlay.addEventListener("click", event => { if (event.target === overlay && !state.busy) close(); });
         field("initials").addEventListener("input", () => { const cursor = field("initials").selectionStart; field("initials").value = field("initials").value.toUpperCase(); field("initials").setSelectionRange(cursor, cursor); });
-        form.addEventListener("submit", async event => { event.preventDefault(); if (state.busy) return; const message = validate(); if (message) { setError(message); return; } if (state.step < 3) { state.step += 1; render(); return; } state.busy = true; render(); try { await options.onSubmit({ goal: state.goal.trim(), consequence: state.consequence.trim(), signature: state.initials.trim(), goalType: state.goalType, trackingMode: state.trackingMode, target: state.trackingMode === "track" ? Number(state.target) : null, unit: state.trackingMode === "track" ? state.unit : null, startingValue: state.trackingMode === "track" ? Number(state.startingValue) : null }); close(); } catch (submitError) { state.busy = false; render(); setError(submitError?.message || "We couldn’t save that Month Pact. Please try again."); } });
+        form.addEventListener("submit", async event => { event.preventDefault(); if (state.busy) return; const message = validate(); if (message) { setError(message); return; } if (state.step < 3) { state.step += 1; render(); return; } state.busy = true; render(); try { await options.onSubmit({ goal: state.goal.trim(), consequence: state.consequence.trim(), signature: state.initials.trim(), goalType: state.goalType, trackingMode: state.trackingMode, target: state.trackingMode === "track" ? Number(state.target) : null, unit: state.trackingMode === "track" ? state.unit : null, startingValue: state.trackingMode === "track" ? (state.goalType === "single_attempt" ? Number(state.startingValue) : 0) : null }); close(); } catch (submitError) { state.busy = false; render(); setError(submitError?.message || "We couldn’t save that Month Pact. Please try again."); } });
         render();
         window.setTimeout(() => field("goal").focus(), 0);
         return { close };
