@@ -830,7 +830,7 @@ body.dashboard-page {
 .home-month-detail-person > span:first-child { color: #b7c6b8; font-size: 12px; font-weight: 500; line-height: 1.35; }
 .home-month-detail-state { flex: 0 0 auto; color: #bdcabc; font-size: 12px; font-weight: 400; line-height: 1.35; text-align: right; }
 .home-month-detail-state.is-achieved { color: var(--green); }
-.home-month-detail-goal > p { margin: 9px 0 0; color: #edf3e9; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 20px; font-weight: 600; line-height: 1.42; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.home-month-detail-goal > p { margin: 9px 0 0; color: #edf3e9; font-family: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 20px; font-weight: 500; line-height: 1.45; letter-spacing: normal; overflow-wrap: anywhere; }
 .home-month-detail-consequence { display: flex; gap: 12px; margin-top: 38px; padding: 22px 4px; border-bottom: 1px solid #405043; }
 .home-month-detail-consequence > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: rgba(206, 80, 70, .16); color: #ef766c; }
 .home-month-detail-consequence > span svg { width: 21px; height: 21px; }
