@@ -34,6 +34,7 @@ body.dashboard-page {
 
 /* Home-owned Pact detail views are full screens, not dashboard sub-sections. */
 .dashboard-page.is-home-pact-detail .dashboard-app-header { display: none; }
+.dashboard-page.is-home-month-detail .dashboard-content-inner { padding-top: max(12px, env(safe-area-inset-top)); }
 
 .dashboard-header-content {
     padding: max(16px, env(safe-area-inset-top)) clamp(16px, 4vw, 40px) 12px;
@@ -828,7 +829,7 @@ body.dashboard-page {
 .home-month-detail-avatar.is-muted { background: #34443d; color: #d3dfd6; }
 .home-month-detail-pair p { margin: 0 0 0 13px; color: #acbdae; font-size: 15px; line-height: 1.4; }
 .home-month-detail-pair strong { color: #e4eee2; font-weight: 500; }
-.home-month-detail-goals { display: grid; gap: 12px; }
+.home-month-detail-goals { display: grid; gap: 12px; margin-top: 34px; }
 .home-month-detail-goal { padding: 18px; border: 1px solid #344638; border-radius: 18px; background: linear-gradient(125deg, #202e23, #17231b); }
 .home-month-detail-person { display: flex; align-items: center; gap: 10px; }
 .home-month-detail-person .home-month-detail-avatar { width: 38px; height: 38px; margin: 0; border: 0; }
