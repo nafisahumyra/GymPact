@@ -804,6 +804,7 @@ body.dashboard-page {
 .home-month-checkin-achieved::before { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(145,242,100,.18); color: var(--green); content: "✓"; font-size: 11px; }
 .home-month-checkin-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
 .home-month-checkin-actions.is-achieved { margin-top: 18px; padding-top: 16px; border-top: 1px solid #405043; }
+.home-month-checkin-actions.is-achieved .home-month-checkin-update { margin: 0; padding: 0; border: 0; }
 .home-month-checkin-add { min-height: 42px; padding: 9px 14px; border: 0; border-radius: 12px; background: var(--green); color: #10200d; font-size: 14px; font-weight: 500; }
 .home-month-checkin-view { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 5px 0; border: 0; background: transparent; color: #d0dccf; font-size: 14px; font-weight: 400; box-shadow: none; }
 .home-month-checkin-view:hover:not(:disabled), .home-month-checkin-view:focus-visible { background: transparent; color: var(--green); box-shadow: none; transform: none; }
