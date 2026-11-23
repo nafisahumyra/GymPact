@@ -3515,22 +3515,6 @@ function renderMonthlyCalendar(pact, container, { interactive = true } = {}) {
     container.appendChild(calendar);
 }
 
-function appendMonthDetailAvatar(container, name, { photoUrl = null, muted = false } = {}) {
-    const initials = document.createElement("span");
-    initials.className = `home-month-detail-avatar${muted ? " is-muted" : ""}`;
-    initials.textContent = getActivityInitials(name);
-    container.appendChild(initials);
-    if (!photoUrl) return;
-    const image = document.createElement("img");
-    image.className = "home-month-detail-avatar";
-    image.alt = "";
-    image.src = photoUrl;
-    image.onload = () => { initials.hidden = true; image.hidden = false; };
-    image.onerror = () => { image.hidden = true; initials.hidden = false; };
-    image.hidden = true;
-    container.appendChild(image);
-}
-
 function openHomeMonthPactDetail() {
     if (!monthlyPact || !homeMonthPactDetail || homeMonthPactDetailOpen) return;
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
@@ -3550,10 +3534,9 @@ function openHomeMonthPactDetail() {
     [own, partner].filter(Boolean).forEach((commitment, index) => {
         const person = document.createElement("article"); person.className = "home-month-detail-goal";
         const personHead = document.createElement("div"); personHead.className = "home-month-detail-person";
-        appendMonthDetailAvatar(personHead, commitment.displayName, { photoUrl: index === 0 ? profilePhotoUrl : null, muted: index !== 0 });
-        const identity = document.createElement("div"); const name = document.createElement("strong"); name.textContent = commitment.displayName; identity.append(name);
+        const label = document.createElement("span"); label.textContent = index === 0 ? "Your goal" : `${commitment.displayName}’s goal`;
         const state = document.createElement("span"); state.className = `home-month-detail-state${commitment.completedAt ? " is-achieved" : ""}`; state.textContent = commitment.completedAt ? "Achieved" : "In progress";
-        personHead.append(identity, state); const goal = document.createElement("p"); goal.textContent = commitment.goal; person.append(personHead, goal); goals.appendChild(person);
+        personHead.append(label, state); const goal = document.createElement("p"); goal.textContent = commitment.goal; person.append(personHead, goal); goals.appendChild(person);
     });
     const consequence = document.createElement("section"); consequence.className = "home-month-detail-consequence"; consequence.innerHTML = '<span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 1c4-3 7 3 14 0v10c-7 3-10-3-14 0"/></svg></span><div><small>Shared consequence</small></div>';
     const consequenceText = document.createElement("p"); consequenceText.textContent = monthlyPact.consequence; consequence.lastElementChild.appendChild(consequenceText);
