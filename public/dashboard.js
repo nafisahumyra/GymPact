@@ -3540,18 +3540,14 @@ function openHomeMonthPactDetail() {
     const title = document.createElement("header"); title.className = "home-month-detail-topbar";
     const [monthName, year] = monthlyPact.monthLabel.split(/\s+(?=\d{4}$)/);
     title.innerHTML = `<h2>${monthName || monthlyPact.monthLabel}${year ? ` <span>${year}</span>` : ""}</h2>`;
-    const pair = document.createElement("div"); pair.className = "home-month-detail-pair";
     const own = monthlyPact.commitments.find(item => item.userId === athleteId);
     const partner = monthlyPact.commitments.find(item => item.userId !== athleteId);
-    appendMonthDetailAvatar(pair, own?.displayName || profileDisplayName, { photoUrl: profilePhotoUrl });
-    appendMonthDetailAvatar(pair, partner?.displayName || "GymPact athlete", { muted: true });
-    const pairCopy = document.createElement("p"); pairCopy.innerHTML = "Different goals.<br><strong>In it together.</strong>"; pair.appendChild(pairCopy);
     const goals = document.createElement("div"); goals.className = "home-month-detail-goals";
     [own, partner].filter(Boolean).forEach((commitment, index) => {
         const person = document.createElement("article"); person.className = "home-month-detail-goal";
         const personHead = document.createElement("div"); personHead.className = "home-month-detail-person";
         appendMonthDetailAvatar(personHead, commitment.displayName, { photoUrl: index === 0 ? profilePhotoUrl : null, muted: index !== 0 });
-        const identity = document.createElement("div"); const name = document.createElement("strong"); name.textContent = commitment.displayName; const role = document.createElement("small"); role.textContent = index === 0 ? "Your goal" : "Partner’s goal"; identity.append(name, role);
+        const identity = document.createElement("div"); const name = document.createElement("strong"); name.textContent = commitment.displayName; identity.append(name);
         const state = document.createElement("span"); state.className = `home-month-detail-state${commitment.completedAt ? " is-achieved" : ""}`; state.textContent = commitment.completedAt ? "Achieved" : "In progress";
         personHead.append(identity, state); const goal = document.createElement("p"); goal.textContent = commitment.goal; person.append(personHead, goal); goals.appendChild(person);
     });
@@ -3559,7 +3555,7 @@ function openHomeMonthPactDetail() {
     const consequenceText = document.createElement("p"); consequenceText.textContent = monthlyPact.consequence; consequence.lastElementChild.appendChild(consequenceText);
     const allCheckins = [...(monthlyPact.checkins || [])].sort((left, right) => `${right.date}|${right.createdAt || ""}`.localeCompare(`${left.date}|${left.createdAt || ""}`));
     title.prepend(back);
-    homeMonthPactDetail.append(title, pair, goals, consequence);
+    homeMonthPactDetail.append(title, goals, consequence);
     if (allCheckins[0]) {
         const latest = allCheckins[0]; const checkin = document.createElement("section"); checkin.className = "home-month-detail-latest";
         const checkinHeading = document.createElement("div"); checkinHeading.innerHTML = `<h3>Latest check-in</h3><span>${formatMonthDate(latest.date)}</span>`;
