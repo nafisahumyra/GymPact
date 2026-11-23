@@ -15,7 +15,16 @@
 .gp-monthly-wizard input[readonly], .gp-monthly-wizard textarea[readonly] { color: #aebfab; }
 .gp-monthly-wizard__fine { margin: 17px 0 0; color: #a7baa6; font-size: 12px; line-height: 1.55; }
 .gp-monthly-wizard__choice { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 0; margin: 0 0 12px; padding: 17px 13px; border: 1px solid #384b3b; border-radius: 14px; background: #17251b; color: #e7eee3; font: inherit; text-align: left; box-shadow: none; }
-.gp-monthly-wizard__choice.is-selected { border-color: #8ac866; background: #253b25; }
+.gp-monthly-wizard .gp-monthly-wizard__choice.is-selected {
+  border-color: #8ac866 !important;
+  background: #253b25 !important;
+  color: #edf4e9 !important;
+  box-shadow: inset 0 0 0 1px rgba(138, 200, 102, .14) !important;
+}
+.gp-monthly-wizard .gp-monthly-wizard__choice.is-selected strong { color: #edf4e9 !important; }
+.gp-monthly-wizard .gp-monthly-wizard__choice.is-selected small { color: #c8d7c8 !important; }
+.gp-monthly-wizard .gp-monthly-wizard__choice.is-selected em { color: #e2eddc !important; }
+.gp-monthly-wizard .gp-monthly-wizard__choice.is-selected svg { color: #b2d995 !important; }
 .gp-monthly-wizard__choice svg { width: 20px; height: 20px; margin-top: 2px; flex: 0 0 auto; color: #b2d995; }
 .gp-monthly-wizard__choice-copy { flex: 1; min-width: 0; }
 .gp-monthly-wizard__choice strong { display: block; color: inherit; font-size: 14px; font-weight: 500; }
