@@ -827,22 +827,22 @@ body.dashboard-page {
 .home-month-detail-goal { padding: 20px; }
 .home-month-detail-goal + .home-month-detail-goal { border-top: 1px solid rgba(88, 111, 91, .58); }
 .home-month-detail-person { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.home-month-detail-person > span:first-child { color: #b7c6b8; font-size: 12px; font-weight: 400; line-height: 1.35; }
+.home-month-detail-person > span:first-child { color: #b7c6b8; font-size: 12px; font-weight: 500; line-height: 1.35; }
 .home-month-detail-state { flex: 0 0 auto; color: #bdcabc; font-size: 12px; font-weight: 400; line-height: 1.35; text-align: right; }
 .home-month-detail-state.is-achieved { color: var(--green); }
-.home-month-detail-goal > p { margin: 9px 0 0; color: #edf3e9; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: clamp(19px, 5vw, 21px); font-weight: 400; line-height: 1.42; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.home-month-detail-goal > p { margin: 9px 0 0; color: #edf3e9; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 20px; font-weight: 600; line-height: 1.42; letter-spacing: -.015em; overflow-wrap: anywhere; }
 .home-month-detail-consequence { display: flex; gap: 12px; margin-top: 38px; padding: 22px 4px; border-bottom: 1px solid #405043; }
 .home-month-detail-consequence > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: rgba(206, 80, 70, .16); color: #ef766c; }
 .home-month-detail-consequence > span svg { width: 21px; height: 21px; }
-.home-month-detail-consequence small { color: #b0c19f; font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
-.home-month-detail-consequence p { margin: 6px 0 0; color: #bacabd; font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
+.home-month-detail-consequence small { color: #b0c19f; font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+.home-month-detail-consequence p { margin: 6px 0 0; color: #bacabd; font-size: 15px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; }
 .home-month-detail-latest { margin-top: 34px; }
 .home-month-detail-latest > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.home-month-detail-latest h3 { margin: 0; color: var(--text); font-size: 18px; font-weight: 500; }
-.home-month-detail-latest > div > span { color: #a6b6a7; font-size: 14px; }
+.home-month-detail-latest h3 { margin: 0; color: var(--text); font-size: 17px; font-weight: 600; }
+.home-month-detail-latest > div > span { color: #a6b6a7; font-size: 12px; font-weight: 400; }
 .home-month-detail-note { margin-top: 13px; padding: 15px; border-radius: 14px; background: #17211a; }
-.home-month-detail-note strong { color: var(--text); font-size: 15px; font-weight: 500; }
-.home-month-detail-note p { margin: 6px 0 0; color: #c4d1c6; font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.home-month-detail-note strong { color: var(--text); font-size: 14px; font-weight: 600; }
+.home-month-detail-note p { margin: 6px 0 0; color: #c4d1c6; font-size: 15px; font-weight: 400; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 370px) {
     .home-month-detail-topbar h2 { font-size: 24px; }
 }
