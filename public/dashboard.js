@@ -1365,6 +1365,7 @@ function openPactProgressDetails() {
 
     pactProgressHomeScrollTop = dashboardContent?.scrollTop || 0;
     pactProgressDetailsOpen = true;
+    document.body.classList.add("is-home-pact-detail");
     renderPactProgressDetails(currentChallenge);
     dashboardTabContent.forEach(content => {
         content.hidden = true;
@@ -1383,6 +1384,7 @@ function closePactProgressDetails() {
     if (!pactProgressDetailsOpen) return;
 
     pactProgressDetailsOpen = false;
+    document.body.classList.remove("is-home-pact-detail");
     pactProgressPage.hidden = true;
     pactProgressPage.style.display = "none";
     dashboardTabContent.forEach(content => {
@@ -1397,6 +1399,7 @@ function closePactProgressDetails() {
 
 function showDashboardTab(tab) {
 
+    document.body.classList.remove("is-home-pact-detail");
     homeMonthPactDetailOpen = false;
     if (homeMonthPactDetail) homeMonthPactDetail.hidden = true;
     pactProgressDetailsOpen = false;
@@ -3530,6 +3533,7 @@ function openHomeMonthPactDetail() {
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
     homeMonthPactHomeScrollTop = dashboardContent?.scrollTop || 0;
     homeMonthPactDetailOpen = true;
+    document.body.classList.add("is-home-pact-detail");
     homeMonthPactDetail.innerHTML = "";
     const back = document.createElement("button"); back.type = "button"; back.className = "home-month-detail-back"; back.innerHTML = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m10 3-5 5 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Home';
     back.addEventListener("click", closeHomeMonthPactDetail);
@@ -3572,6 +3576,7 @@ function openHomeMonthPactDetail() {
 function closeHomeMonthPactDetail() {
     if (!homeMonthPactDetailOpen) return;
     homeMonthPactDetailOpen = false;
+    document.body.classList.remove("is-home-pact-detail");
     homeMonthPactDetail.hidden = true;
     dashboardTabContent.forEach(content => { content.hidden = content.dataset.dashboardTabContent !== activeDashboardTab; });
     welcomeMessage.hidden = activeDashboardTab !== "overview";
