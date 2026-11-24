@@ -786,11 +786,19 @@ body.dashboard-page {
 }
 .home-month-checkin-heading { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
 .home-month-checkin-heading > div { display: grid; gap: 4px; }
-.home-month-checkin-heading > div > span { color: #b4c0b5; font-size: 12px; font-weight: 400; }
+.home-month-checkin-heading > div > span,
+.home-month-checkin-label {
+    color: #b4c0b5;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
 .home-month-checkin-heading h3 { margin: 0; color: var(--text); font-size: 25px; font-weight: 500; letter-spacing: -.035em; line-height: 1.1; }
 .home-month-calendar-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: #2a3b29; color: #b8eb96; }
 .home-month-calendar-icon svg { width: 19px; height: 19px; }
-.home-month-checkin-label { margin: 20px 0 5px; color: #b4c0b5; font-size: 12px; font-weight: 400; }
+.home-month-checkin-label { margin: 20px 0 5px; }
 .home-month-checkin-goal { margin: 0; color: #f0f4ee; font-size: 17px; font-weight: 400; line-height: 1.4; }
 .home-month-checkin-update { display: grid; gap: 5px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #405043; }
 .home-month-checkin-update > p { margin: 0; }
