@@ -1,5 +1,6 @@
 import { getAdminClient } from "./gympact-session.ts";
 import type { DataEnvironment } from "./data-environment.ts";
+import { getStepTotalSummary } from "./pact-requirements.ts";
 
 type AdminClient = ReturnType<typeof getAdminClient>;
 
@@ -17,7 +18,7 @@ export type StepTracker = {
 export async function getActivePactForAthlete(admin: AdminClient, userId: string, environment: DataEnvironment = "production") {
   const { data, error } = await admin
     .from("pacts")
-    .select("id, timeframe, start_date, end_date, active_at, pact_participants!inner(user_id)")
+    .select("id, timeframe, start_date, end_date, active_at, data_environment, pact_participants!inner(user_id)")
     .eq("status", "active")
     .eq("data_environment", environment)
     .eq("pact_participants.user_id", userId)
@@ -38,12 +39,10 @@ export async function getStepTracker(admin: AdminClient, pactId: string, userId:
   if (error) throw error;
   if (!goal) return null;
 
-  const { data: logs, error: logsError } = await admin
-    .from("weekly_step_logs")
-    .select("steps")
-    .eq("goal_id", goal.id);
-  if (logsError) throw logsError;
-  const totalSteps = (logs ?? []).reduce((sum, log) => sum + Number(log.steps), 0);
+  const { data: pact, error: pactError } = await admin
+    .from("pacts").select("id, start_date, end_date, active_at, data_environment").eq("id", pactId).single();
+  if (pactError) throw pactError;
+  const { total: totalSteps } = await getStepTotalSummary(admin, pact, userId);
 
   return {
     id: goal.id, pactId: goal.pact_id, userId: goal.user_id, exerciseName: "Steps",
@@ -74,7 +73,7 @@ export async function ensureStepTrackerForPact(
     .from("weekly_step_goals")
     .upsert(
       { pact_id: pactId, user_id: userId, target_steps: Number(requirement.target_amount) },
-      { onConflict: "pact_id,user_id", ignoreDuplicates: true },
+      { onConflict: "pact_id,user_id" },
     );
   if (goalError) throw goalError;
 

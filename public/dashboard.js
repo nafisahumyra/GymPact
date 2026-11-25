@@ -131,6 +131,7 @@ const EXERCISE_ICONS = {
     Steps: "assets/gp-images/steps.png"
 };
 let exerciseTrackers = [];
+let activeStepPact = null;
 let exerciseTrackersLoaded = false;
 let pendingExerciseTrackerRemoval = null;
 
@@ -388,7 +389,7 @@ function renderExerciseTrackers() {
         message.textContent = "Choose a tracker to get started.";
         choices.className = "exercise-tracker-setup-options";
 
-        ["Steps", "Pullups", "Pushups"].forEach(exerciseName => {
+        ["Pullups", "Pushups"].forEach(exerciseName => {
 
             const choice = document.createElement("button");
             const identity = document.createElement("span");
@@ -538,7 +539,9 @@ function renderExerciseTrackers() {
 
         });
 
-        overflowMenu.append(changeTarget, reset, moveUp, moveDown, remove);
+        if (!isStepsTracker) overflowMenu.append(changeTarget, reset);
+        overflowMenu.append(moveUp, moveDown);
+        if (!isStepsTracker) overflowMenu.append(remove);
         overflow.append(overflowButton, overflowMenu);
         header.appendChild(overflow);
 
@@ -577,7 +580,7 @@ function renderExerciseTrackers() {
             const logSet = document.createElement("button");
 
             logSet.type = "button";
-            logSet.textContent = isStepsTracker ? "+ Log Steps" : "+ Log Set";
+            logSet.textContent = isStepsTracker ? "Update steps" : "+ Log Set";
             logSet.addEventListener("click", () => {
 
                 openExerciseSetModal(tracker.exerciseName);
@@ -719,6 +722,7 @@ async function loadExerciseTrackers({ preserveOnError = false } = {}) {
 
         }
 
+        activeStepPact = data.stepPact || null;
         exerciseTrackers = sortExerciseTrackers([
             ...data.trackers,
             ...(data.stepTracker ? [data.stepTracker] : [])
@@ -4568,19 +4572,45 @@ function openExerciseSetModal(exerciseName) {
 
     pendingTrackedExercise = exerciseName;
     const isStepsTracker = exerciseName === "Steps";
+    const dailyDate = document.getElementById("daily-step-date");
+    const dailyDateLabel = document.getElementById("daily-step-date-label");
 
     exerciseSetName.textContent = isStepsTracker ? "Steps" : exerciseName;
-    exerciseSetTitlePrefix.textContent = "Log ";
+    exerciseSetTitlePrefix.textContent = isStepsTracker ? "Update daily " : "Log ";
     exerciseSetTitleSuffix.textContent = isStepsTracker ? "" : " set";
-    exerciseSetLabel.textContent = isStepsTracker ? "Steps to add" : "Reps in this set";
-    exerciseSetReps.placeholder = isStepsTracker ? "e.g. 8000" : "e.g. 12";
-    saveExerciseSetButton.textContent = isStepsTracker ? "Log steps" : "Log set";
+    exerciseSetLabel.textContent = isStepsTracker ? "Total steps for this day" : "Reps in this set";
+    exerciseSetReps.placeholder = isStepsTracker ? "e.g. 10000" : "e.g. 12";
+    saveExerciseSetButton.textContent = isStepsTracker ? "Save daily total" : "Log set";
+    dailyDate.hidden = !isStepsTracker;
+    dailyDateLabel.hidden = !isStepsTracker;
+    delete saveExerciseSetButton.dataset.confirmLegacy;
+    if (isStepsTracker) {
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+        dailyDate.min = activeStepPact?.startDate || "";
+        dailyDate.max = activeStepPact?.endDate && activeStepPact.endDate < today ? activeStepPact.endDate : today;
+        dailyDate.value = dailyDate.max || today;
+        dailyDate.onchange = () => loadDailyStepTotal(dailyDate.value);
+        loadDailyStepTotal(dailyDate.value);
+    }
     exerciseSetReps.value = "";
     setExerciseFormError(exerciseSetError);
     logExerciseSetModal.style.display = "flex";
 
     window.setTimeout(() => exerciseSetReps.focus(), 0);
 
+}
+
+async function loadDailyStepTotal(localDate) {
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    if (!sessionToken || !athleteId || !localDate) return;
+    try {
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("daily-steps", { body: { action: "get", sessionToken, userId: athleteId, localDate } });
+        if (error || data?.error) throw error || new Error(data.error);
+        exerciseSetReps.value = Number(data.total || 0);
+        setExerciseFormError(exerciseSetError, data.canReplaceLegacy ? "Saving this total replaces older step entries for this day in pact progress." : "");
+    } catch { setExerciseFormError(exerciseSetError, "We couldn't load this day's steps. Please try again."); }
 }
 
 
@@ -4776,12 +4806,12 @@ saveExerciseSetButton.addEventListener("click", async () => {
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
 
-    if (!Number.isInteger(reps) || reps <= 0) {
+    if (!Number.isInteger(reps) || (pendingTrackedExercise === "Steps" ? reps < 0 : reps <= 0)) {
 
         setExerciseFormError(
             exerciseSetError,
             pendingTrackedExercise === "Steps"
-                ? "Enter a whole number of steps greater than zero."
+                ? "Enter a whole-number daily total of zero or more."
                 : "Enter a whole-number rep count greater than zero."
         );
 
@@ -4805,14 +4835,19 @@ saveExerciseSetButton.addEventListener("click", async () => {
         const supabase = GymPactSupabase.getClient();
         const isStepsTracker = pendingTrackedExercise === "Steps";
         const { data, error } = await supabase.functions.invoke(
-            isStepsTracker ? "log-steps" : "log-exercise-set",
+            isStepsTracker ? "daily-steps" : "log-exercise-set",
             {
                 body: isStepsTracker
-                    ? { sessionToken, userId: athleteId, steps: reps }
+                    ? { action: "save", sessionToken, userId: athleteId, localDate: document.getElementById("daily-step-date").value, steps: reps, confirmReplaceLegacy: saveExerciseSetButton.dataset.confirmLegacy === "true" }
                     : { sessionToken, userId: athleteId, exerciseName: pendingTrackedExercise, reps }
             }
         );
 
+        if (data?.requiresConfirmation) {
+            saveExerciseSetButton.dataset.confirmLegacy = "true";
+            setExerciseFormError(exerciseSetError, `${data.error} Tap Save daily total again to confirm.`);
+            return;
+        }
         if (error || !data?.tracker) {
 
             throw error || new Error("Exercise set was unavailable.");

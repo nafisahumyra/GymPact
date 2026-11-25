@@ -9,11 +9,10 @@ serve(async request => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   try {
     const { sessionToken, userId } = await request.json();
-    if (!await verifyGymPactSession(sessionToken) || !await ensureAthlete(userId)) return Response.json({ error: "Invalid session or athlete." }, { status: 401, headers: corsHeaders });
+    const session = await verifyGymPactSession(sessionToken);
+    if (!session?.athlete_id || session.athlete_id !== userId || !await ensureAthlete(userId)) return Response.json({ error: "Invalid session or athlete." }, { status: 401, headers: corsHeaders });
     const admin = getAdminClient(); const pact = await getActivePactForAthlete(admin, userId);
     if (!pact) return Response.json({ removed: true }, { headers: corsHeaders });
-    const { error } = await admin.from("weekly_step_goals").delete().eq("pact_id", pact.id).eq("user_id", userId);
-    if (error) throw error;
-    return Response.json({ removed: true }, { headers: corsHeaders });
+    return Response.json({ error: "Steps tracking is linked to this pact and cannot be removed." }, { status: 409, headers: corsHeaders });
   } catch { return Response.json({ error: "Unable to remove Steps tracker." }, { status: 500, headers: corsHeaders }); }
 });

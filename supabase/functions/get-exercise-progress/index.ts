@@ -19,7 +19,7 @@ serve(async request => {
     const environment = getDataEnvironment(dataEnvironment);
     const session = await verifyGymPactSession(sessionToken);
 
-    if (!environment || !session || !await ensureAthlete(userId)) {
+    if (!environment || !session?.athlete_id || session.athlete_id !== userId || !await ensureAthlete(userId)) {
       return Response.json({ error: "Invalid session or athlete." }, { status: 401, headers: corsHeaders });
     }
 
@@ -28,7 +28,7 @@ serve(async request => {
       ? await ensureStepTrackerForPact(getAdminClient(), activePact.id, userId)
       : null;
 
-    return Response.json({ trackers: await getExerciseTrackers(userId, environment), stepTracker }, { headers: corsHeaders });
+    return Response.json({ trackers: await getExerciseTrackers(userId, environment), stepTracker, stepPact: activePact && stepTracker ? { startDate: activePact.start_date, endDate: activePact.end_date, activeAt: activePact.active_at } : null }, { headers: corsHeaders });
   } catch {
     return Response.json({ error: "Unable to load exercise progress." }, { status: 500, headers: corsHeaders });
   }

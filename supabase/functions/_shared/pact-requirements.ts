@@ -14,7 +14,13 @@ type PactWindow = { start_date: string; end_date: string; active_at: string | nu
 
 const PACT_TIME_ZONE = "America/New_York";
 
-function addUtcDays(date: string, days: number) {
+export function getPactLocalDate(instant: string | Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: PACT_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date(instant));
+}
+
+export function addUtcDays(date: string, days: number) {
   const value = new Date(`${date}T00:00:00.000Z`);
   value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(0, 10);
@@ -55,6 +61,50 @@ function stepTotal(measurements: unknown) {
     return item.unit === "steps" && typeof item.amount === "number" && item.amount > 0
       ? total + item.amount : total;
   }, 0);
+}
+
+export async function getStepTotalSummary(
+  admin: AdminClient,
+  pact: PactWindow & { id: string; active_at: string | null },
+  userId: string,
+) {
+  const { start, endExclusive } = getPactWindow(pact);
+  const environment = pact.data_environment ?? "production";
+  const startInstant = new Date(start);
+  const legacyByDate = new Map<string, number>();
+  const addLegacy = (date: string, steps: number) => {
+    legacyByDate.set(date, (legacyByDate.get(date) ?? 0) + steps);
+  };
+  const [{ data: workouts, error: workoutsError }, { data: logs, error: logsError }, { data: daily, error: dailyError }] = await Promise.all([
+    admin.from("workouts").select("logged_at, measurements").eq("user_id", userId).eq("data_environment", environment).gte("logged_at", start).lt("logged_at", endExclusive.toISOString()),
+    admin.from("weekly_step_logs").select("logged_at, steps").eq("pact_id", pact.id).eq("user_id", userId).gte("logged_at", start).lt("logged_at", endExclusive.toISOString()),
+    admin.from("daily_step_totals").select("local_date, steps").eq("pact_id", pact.id).eq("user_id", userId).eq("data_environment", environment).gte("local_date", pact.start_date).lte("local_date", pact.end_date),
+  ]);
+  if (workoutsError) throw workoutsError;
+  if (logsError) throw logsError;
+  if (dailyError) throw dailyError;
+  (workouts ?? []).forEach(workout => {
+    const steps = stepTotal(workout.measurements);
+    if (steps) addLegacy(getPactLocalDate(workout.logged_at), steps);
+  });
+  (logs ?? []).forEach(log => addLegacy(getPactLocalDate(log.logged_at), Number(log.steps) || 0));
+
+  // A daily total represents a complete local day. Do not guess how much of a
+  // partial activation day occurred after the pact became active.
+  const explicitByDate = new Map<string, number>();
+  (daily ?? []).forEach(record => {
+    if (getLocalMidnightUtc(record.local_date) >= startInstant) {
+      explicitByDate.set(record.local_date, Number(record.steps) || 0);
+    }
+  });
+  const dates = new Set([...legacyByDate.keys(), ...explicitByDate.keys()]);
+  let total = 0;
+  let legacyTotal = 0;
+  explicitByDate.forEach(value => { total += value; });
+  legacyByDate.forEach((value, date) => {
+    if (!explicitByDate.has(date)) { total += value; legacyTotal += value; }
+  });
+  return { total, legacyTotal, explicitByDate, legacyByDate, dates };
 }
 
 function repetitionTotal(measurements: unknown) {
@@ -111,7 +161,6 @@ export async function getPactRequirementProgress(
     const classified = classifyWorkoutForPact(workout.muscles, requirements);
     total.workouts += classified.workouts;
     total.hiit += classified.hiit;
-    total.steps += stepTotal(workout.measurements);
     const reps = repetitionTotal(workout.measurements);
     total.pushups += classified.pushups ? reps : 0;
     total.pullups += classified.pullups ? reps : 0;
@@ -138,16 +187,14 @@ export async function getPactRequirementProgress(
     });
   }
 
-  const { data: stepLogs, error: stepLogsError } = await admin
-    .from("weekly_step_logs")
-    .select("user_id, steps")
-    .eq("pact_id", pact.id)
-    .in("user_id", participants.map(participant => participant.userId));
-  if (stepLogsError) throw stepLogsError;
-  (stepLogs ?? []).forEach(log => {
-    const total = totals.get(log.user_id) ?? { workouts: 0, hiit: 0, steps: 0, pushups: 0, pullups: 0 };
-    total.steps += Number(log.steps);
-    totals.set(log.user_id, total);
+  const stepSummaries = await Promise.all(participants.map(async participant => ({
+    userId: participant.userId,
+    summary: await getStepTotalSummary(admin, pact, participant.userId),
+  })));
+  stepSummaries.forEach(({ userId, summary }) => {
+    const total = totals.get(userId) ?? { workouts: 0, hiit: 0, steps: 0, pushups: 0, pullups: 0 };
+    total.steps = summary.total;
+    totals.set(userId, total);
   });
 
   return participants.map(participant => {
