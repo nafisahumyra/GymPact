@@ -45,9 +45,6 @@ serve(async request => {
     }
     const steps = Number(body.steps);
     if (!Number.isInteger(steps) || steps < 0) return Response.json({ error: "Enter a whole-number daily total of zero or more." }, { status: 400, headers: corsHeaders });
-    if (existingTotal === undefined && legacyTotal > 0 && body.confirmReplaceLegacy !== true) {
-      return Response.json({ requiresConfirmation: true, legacyTotal, error: `Saving replaces ${legacyTotal.toLocaleString()} legacy steps for this day in pact progress.` }, { status: 409, headers: corsHeaders });
-    }
     const { error } = await admin.from("daily_step_totals").upsert({
       pact_id: pact.id, user_id: body.userId, local_date: localDate, timezone: "America/New_York", steps,
       data_environment: environment, updated_at: new Date().toISOString(),

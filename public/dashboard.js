@@ -45,6 +45,7 @@ const dashboardContent = document.getElementById("dashboard-content");
 let pactProgressDetailsOpen = false;
 let pactProgressHomeScrollTop = 0;
 let pactStepBreakdown = null;
+let dailyStepsLoadVersion = 0;
 let homeMonthPactDetailOpen = false;
 let homeMonthPactHomeScrollTop = 0;
 const workoutCount =
@@ -4644,16 +4645,23 @@ function openExerciseSetModal(exerciseName) {
     dailyDate.hidden = !isStepsTracker;
     dailyDateLabel.hidden = !isStepsTracker;
     delete saveExerciseSetButton.dataset.confirmLegacy;
+    exerciseSetReps.value = "";
+    const loadVersion = ++dailyStepsLoadVersion;
     if (isStepsTracker) {
         const now = new Date();
         const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
         dailyDate.min = activeStepPact?.startDate || "";
         dailyDate.max = activeStepPact?.endDate && activeStepPact.endDate < today ? activeStepPact.endDate : today;
         dailyDate.value = dailyDate.max || today;
-        dailyDate.onchange = () => loadDailyStepTotal(dailyDate.value);
-        loadDailyStepTotal(dailyDate.value);
+        exerciseSetReps.dataset.userEdited = "false";
+        exerciseSetReps.oninput = () => { exerciseSetReps.dataset.userEdited = "true"; };
+        dailyDate.onchange = () => {
+            exerciseSetReps.dataset.userEdited = "false";
+            loadDailyStepTotal(dailyDate.value, ++dailyStepsLoadVersion);
+        };
+        loadDailyStepTotal(dailyDate.value, loadVersion);
     }
-    exerciseSetReps.value = "";
+    if (!isStepsTracker) exerciseSetReps.value = "";
     setExerciseFormError(exerciseSetError);
     logExerciseSetModal.style.display = "flex";
 
@@ -4661,13 +4669,14 @@ function openExerciseSetModal(exerciseName) {
 
 }
 
-async function loadDailyStepTotal(localDate) {
+async function loadDailyStepTotal(localDate, loadVersion = dailyStepsLoadVersion) {
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
     if (!sessionToken || !athleteId || !localDate) return;
     try {
         const { data, error } = await GymPactSupabase.getClient().functions.invoke("daily-steps", { body: { action: "get", sessionToken, userId: athleteId, localDate } });
         if (error || data?.error) throw error || new Error(data.error);
+        if (loadVersion !== dailyStepsLoadVersion || document.getElementById("daily-step-date").value !== localDate || exerciseSetReps.dataset.userEdited === "true") return;
         exerciseSetReps.value = Number(data.total || 0);
         setExerciseFormError(exerciseSetError);
     } catch { setExerciseFormError(exerciseSetError, "We couldn't load this day's steps. Please try again."); }
@@ -4898,19 +4907,13 @@ saveExerciseSetButton.addEventListener("click", async () => {
             isStepsTracker ? "daily-steps" : "log-exercise-set",
             {
                 body: isStepsTracker
-                    ? { action: "save", sessionToken, userId: athleteId, localDate: document.getElementById("daily-step-date").value, steps: reps, confirmReplaceLegacy: saveExerciseSetButton.dataset.confirmLegacy === "true" }
+                    ? { action: "save", sessionToken, userId: athleteId, localDate: document.getElementById("daily-step-date").value, steps: reps }
                     : { sessionToken, userId: athleteId, exerciseName: pendingTrackedExercise, reps }
             }
         );
 
-        if (data?.requiresConfirmation) {
-            saveExerciseSetButton.dataset.confirmLegacy = "true";
-            setExerciseFormError(exerciseSetError, `${data.error} Tap Save daily total again to confirm.`);
-            return;
-        }
         if (error || !data?.tracker) {
-
-            throw error || new Error("Exercise set was unavailable.");
+            throw error || new Error(data?.error || "Exercise set was unavailable.");
 
         }
 
@@ -4931,7 +4934,7 @@ saveExerciseSetButton.addEventListener("click", async () => {
     } catch (error) {
 
         console.error("Unable to log exercise set.", error);
-        setExerciseFormError(exerciseSetError, "We couldn't log that set. Please try again.");
+        setExerciseFormError(exerciseSetError, error?.message || "We couldn't save those daily steps. Please try again.");
 
     } finally {
 
