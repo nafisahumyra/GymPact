@@ -1458,9 +1458,12 @@ function createPactStepsStrip(participant, requirement, challenge) {
         if (!day.isFuture) button.addEventListener("click", () => own ? openDailyStepsForDate(day.localDate) : showPartnerStepsReadOnly(participant.displayName, day));
         shell.appendChild(button);
     });
-    const note = document.createElement("p"); note.className = "pact-steps-guide";
-    note.textContent = Number(data.total) >= target ? "Weekly goal reached" : "A flexible guide, not a daily requirement.";
-    shell.appendChild(note); return shell;
+    if (Number(data.total) >= target) {
+        const note = document.createElement("p"); note.className = "pact-steps-guide";
+        note.textContent = "Weekly goal reached";
+        shell.appendChild(note);
+    }
+    return shell;
 }
 
 async function loadPactStepBreakdown(challenge) {
@@ -4666,7 +4669,7 @@ async function loadDailyStepTotal(localDate) {
         const { data, error } = await GymPactSupabase.getClient().functions.invoke("daily-steps", { body: { action: "get", sessionToken, userId: athleteId, localDate } });
         if (error || data?.error) throw error || new Error(data.error);
         exerciseSetReps.value = Number(data.total || 0);
-        setExerciseFormError(exerciseSetError, data.canReplaceLegacy ? "Saving this total replaces older step entries for this day in pact progress." : "");
+        setExerciseFormError(exerciseSetError);
     } catch { setExerciseFormError(exerciseSetError, "We couldn't load this day's steps. Please try again."); }
 }
 
