@@ -2,14 +2,13 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { getCorsHeaders } from "../_shared/exercise-tracking.ts";
 import { getDataEnvironment } from "../_shared/data-environment.ts";
-import { addUtcDays, getLocalMidnightUtc, getPactLocalDate, getPactRequirements, getPactWindow, getStepTotalSummary } from "../_shared/pact-requirements.ts";
+import { addUtcDays, getPactLocalDate, getPactRequirements, getStepTotalSummary } from "../_shared/pact-requirements.ts";
 
 const TIME_ZONE = "America/New_York";
 function eligibleDates(pact: { start_date: string; end_date: string; active_at: string | null }) {
-  const { start, endExclusive } = getPactWindow(pact); const days: string[] = [];
+  const days: string[] = [];
   for (let date = pact.start_date; date <= pact.end_date; date = addUtcDays(date, 1)) {
-    const midnight = getLocalMidnightUtc(date);
-    if (midnight >= new Date(start) && getLocalMidnightUtc(addUtcDays(date, 1)) <= endExclusive) days.push(date);
+    days.push(date);
   }
   return days;
 }

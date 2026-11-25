@@ -70,7 +70,6 @@ export async function getStepTotalSummary(
 ) {
   const { start, endExclusive } = getPactWindow(pact);
   const environment = pact.data_environment ?? "production";
-  const startInstant = new Date(start);
   const legacyByDate = new Map<string, number>();
   const addLegacy = (date: string, steps: number) => {
     legacyByDate.set(date, (legacyByDate.get(date) ?? 0) + steps);
@@ -89,13 +88,12 @@ export async function getStepTotalSummary(
   });
   (logs ?? []).forEach(log => addLegacy(getPactLocalDate(log.logged_at), Number(log.steps) || 0));
 
-  // A daily total represents a complete local day. Do not guess how much of a
-  // partial activation day occurred after the pact became active.
+  // An explicit daily total is deliberately assigned to this pact by its owner,
+  // so it may count on the activation date. Timestamped legacy records above
+  // still respect the precise activation instant.
   const explicitByDate = new Map<string, number>();
   (daily ?? []).forEach(record => {
-    if (getLocalMidnightUtc(record.local_date) >= startInstant) {
-      explicitByDate.set(record.local_date, Number(record.steps) || 0);
-    }
+    explicitByDate.set(record.local_date, Number(record.steps) || 0);
   });
   const dates = new Set([...legacyByDate.keys(), ...explicitByDate.keys()]);
   let total = 0;
