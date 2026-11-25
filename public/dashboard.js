@@ -873,7 +873,7 @@ async function openWeeklyPactWizard({ renewal = false } = {}) {
         initialRequirements: prior?.requirements || [],
         onSubmit: async values => {
             const { data, error } = await GymPactSupabase.getClient().functions.invoke("create-pact", {
-                body: { sessionToken, createdBy: athleteId, timeframe: "week", startDate: candidate.startDate, endDate: candidate.endDate, dataEnvironment: "production", ...values }
+                body: { sessionToken, createdBy: athleteId, timeframe: "week", dataEnvironment: "production", ...values }
             });
             if (error || data?.error) throw new Error(data?.error || "We couldn’t send that weekly Pact.");
             await loadCurrentChallenge();

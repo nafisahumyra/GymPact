@@ -13,6 +13,11 @@
     ];
     const typeMeta = type => requirementTypes.find(item => item.type === type) || { type, label: type, detail: "target this week", unit: "" };
     const formatDate = value => new Date(`${value}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    const addDays = (value, days) => {
+        const date = new Date(`${value}T12:00:00Z`);
+        date.setUTCDate(date.getUTCDate() + days);
+        return date.toISOString().slice(0, 10);
+    };
 
     function open(options) {
         const renewal = options.mode === "renewal";
@@ -29,7 +34,7 @@
           <header class="gp-weekly-wizard__header"><span>New weekly pact</span><span class="gp-weekly-wizard__step-count"></span></header>
           <div class="gp-weekly-wizard__steps" aria-label="Setup progress"><span></span><span></span><span></span><span></span></div>
           <form novalidate>
-            <section data-step="0"><p class="gp-weekly-wizard__eyebrow">THE WEEK</p><h2 class="gp-weekly-wizard__week-heading">${renewal ? "Plan your next week." : "Plan your week."}</h2><label>Partner<input data-field="partner" readonly></label><label>Starts<input data-field="start" type="date" readonly></label><label>Ends<input data-field="end" type="date" readonly></label></section>
+            <section data-step="0"><p class="gp-weekly-wizard__eyebrow">THE WEEK</p><h2 class="gp-weekly-wizard__week-heading">${renewal ? "Plan your next week." : "Plan your week."}</h2><label>Partner<input data-field="partner" readonly></label><label>Starts<input data-field="start" type="date"></label><label>Ends<input data-field="end" type="date" readonly></label></section>
             <section data-step="1" hidden><p class="gp-weekly-wizard__eyebrow">YOUR GOALS</p><h2>${renewal ? "Same goals,<br>or a few changes?" : "What’s your goal<br>for the week?"}</h2><div class="gp-weekly-wizard__goal-rows"></div><button class="gp-weekly-wizard__add" type="button">+ Add requirement</button><div class="gp-weekly-wizard__picker" hidden><label>Requirement<select data-field="new-requirement"></select></label><button type="button" data-add-confirm>Add</button></div></section>
             <section data-step="2" hidden><p class="gp-weekly-wizard__eyebrow">THE WAGER</p><h2 class="gp-weekly-wizard__wager-heading">Make it worth<br>showing up for.</h2><button type="button" class="gp-weekly-wizard__choice" data-wager="punishment">${flagIcon}<span class="gp-weekly-wizard__choice-copy"><strong>Consequence</strong><small>A challenge if the pact isn’t met.</small></span><span class="gp-weekly-wizard__radio"></span></button><button type="button" class="gp-weekly-wizard__choice" data-wager="reward">${giftIcon}<span class="gp-weekly-wizard__choice-copy"><strong>Reward</strong><small>Something to look forward to.</small></span><span class="gp-weekly-wizard__radio"></span></button><label data-wager-label>Consequence<textarea data-field="wager" rows="3" placeholder="Embarrassing Challenge"></textarea></label></section>
             <section data-step="3" hidden><p class="gp-weekly-wizard__eyebrow">REVIEW &amp; SEND</p><h2>Your week.<br>Your commitment.</h2><div class="gp-weekly-wizard__review"><span class="gp-weekly-wizard__review-dates"></span><h3></h3><div class="gp-weekly-wizard__review-goals"></div></div><div class="gp-weekly-wizard__review-wager"><span></span><p></p></div><label>Your initials<input class="gp-weekly-wizard__initials" data-field="initials" maxlength="6" placeholder="Initials" autocapitalize="characters" autocomplete="off" spellcheck="false"></label><p class="gp-weekly-wizard__fine">By initialing, you agree to this pact and its wager.</p><p class="gp-weekly-wizard__fine">Your partner reviews and accepts before the new pact becomes active.</p></section>
@@ -45,7 +50,11 @@
         const close = () => { overlay.remove(); options.onClose?.(); };
         field("partner").value = options.partnerName || "Your Pact partner";
         field("start").value = options.startDate || "";
-        field("end").value = options.endDate || "";
+        field("end").value = field("start").value ? addDays(field("start").value, 7) : "";
+        field("start").min = options.startDate || "";
+        field("start").addEventListener("change", () => {
+            if (field("start").value) field("end").value = addDays(field("start").value, 7);
+        });
 
         function usedTypes() { return state.requirements.map(requirement => requirement.type); }
         function renderGoals() {
@@ -76,14 +85,14 @@
             if (state.step === 3) { root.querySelector(".gp-weekly-wizard__review-dates").textContent = `${formatDate(field("start").value)} – ${formatDate(field("end").value)}`; root.querySelector(".gp-weekly-wizard__review h3").textContent = `A pact with ${field("partner").value}`; const list = root.querySelector(".gp-weekly-wizard__review-goals"); list.replaceChildren(); state.requirements.forEach(requirement => { const row = document.createElement("p"); const name = document.createElement("span"); const target = document.createElement("strong"); name.textContent = typeMeta(requirement.type).label; target.textContent = `${Number(requirement.targetAmount).toLocaleString()}${typeMeta(requirement.type).unit ? ` ${typeMeta(requirement.type).unit}` : ""}`; row.append(name, target); list.append(row); }); root.querySelector(".gp-weekly-wizard__review-wager > span").textContent = reward ? "Reward" : "Consequence"; root.querySelector(".gp-weekly-wizard__review-wager p").textContent = state.wagers[state.wagerType]; }
             setError("");
         }
-        function validate() { syncWager(); if (state.step === 1 && state.requirements.some(item => !Number.isInteger(Number(item.targetAmount)) || Number(item.targetAmount) < 1)) return "Add a whole-number target for every requirement."; if (state.step === 2 && !state.wagers[state.wagerType].trim()) return `Describe this week’s ${state.wagerType === "reward" ? "reward" : "consequence"}.`; if (state.step === 3 && !field("initials").value.trim()) return "Add your initials to sign."; return ""; }
+        function validate() { syncWager(); if (state.step === 0 && (!field("start").value || field("end").value !== addDays(field("start").value, 7))) return "Choose a valid start date. Your seven-day end date is set automatically."; if (state.step === 1 && state.requirements.some(item => !Number.isInteger(Number(item.targetAmount)) || Number(item.targetAmount) < 1)) return "Add a whole-number target for every requirement."; if (state.step === 2 && !state.wagers[state.wagerType].trim()) return `Describe this week’s ${state.wagerType === "reward" ? "reward" : "consequence"}.`; if (state.step === 3 && !field("initials").value.trim()) return "Add your initials to sign."; return ""; }
         root.querySelector(".gp-weekly-wizard__add").addEventListener("click", () => { root.querySelector(".gp-weekly-wizard__picker").hidden = false; field("new-requirement").focus(); });
         root.querySelector("[data-add-confirm]").addEventListener("click", () => { const type = field("new-requirement").value; if (type && !usedTypes().includes(type)) state.requirements.push({ type, targetAmount: "" }); root.querySelector(".gp-weekly-wizard__picker").hidden = true; renderGoals(); });
         root.querySelectorAll("[data-wager]").forEach(button => button.addEventListener("click", () => { syncWager(); state.wagerType = button.dataset.wager === "reward" ? "reward" : "punishment"; render(); }));
         root.querySelector(".gp-weekly-wizard__back").addEventListener("click", () => { if (state.step === 0) { close(); return; } syncWager(); state.step -= 1; render(); });
         field("initials").addEventListener("input", () => { field("initials").value = field("initials").value.toUpperCase(); });
         overlay.addEventListener("click", event => { if (event.target === overlay && !state.busy) close(); });
-        form.addEventListener("submit", async event => { event.preventDefault(); if (state.busy) return; const message = validate(); if (message) { setError(message); return; } if (state.step < 3) { state.step += 1; render(); return; } state.busy = true; render(); try { await options.onSubmit({ requirements: state.requirements.map(item => ({ type:item.type, targetAmount:Number(item.targetAmount) })), wagerType: state.wagerType, wagerDescription: state.wagers[state.wagerType].trim(), initials: field("initials").value.trim() }); close(); } catch (submitError) { state.busy = false; render(); setError(submitError?.message || "We couldn’t send that weekly Pact. Please try again."); } });
+        form.addEventListener("submit", async event => { event.preventDefault(); if (state.busy) return; const message = validate(); if (message) { setError(message); return; } if (state.step < 3) { state.step += 1; render(); return; } state.busy = true; render(); try { await options.onSubmit({ startDate: field("start").value, endDate: field("end").value, requirements: state.requirements.map(item => ({ type:item.type, targetAmount:Number(item.targetAmount) })), wagerType: state.wagerType, wagerDescription: state.wagers[state.wagerType].trim(), initials: field("initials").value.trim() }); close(); } catch (submitError) { state.busy = false; render(); setError(submitError?.message || "We couldn’t send that weekly Pact. Please try again."); } });
         render(); return { close };
     }
     window.GymPactWeeklyWizard = { open };

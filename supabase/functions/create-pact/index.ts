@@ -87,8 +87,10 @@ serve(async (request) => {
       const start = new Date(`${startDate}T12:00:00Z`);
       const end = new Date(`${endDate}T12:00:00Z`);
       if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) ||
+        start.toISOString().slice(0, 10) !== startDate ||
+        end.toISOString().slice(0, 10) !== endDate ||
         Math.round((end.getTime() - start.getTime()) / 86_400_000) !== 7) {
-        return jsonResponse({ error: "Weekly Pacts must use the proposed seven-day dates." }, 400, corsHeaders);
+        return jsonResponse({ error: "Weekly Pacts must start on a valid day and run for exactly seven days." }, 400, corsHeaders);
       }
     }
 
