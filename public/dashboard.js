@@ -44,6 +44,7 @@ const homeMonthPactDetail = document.getElementById("home-month-pact-detail");
 const dashboardContent = document.getElementById("dashboard-content");
 let pactProgressDetailsOpen = false;
 let pactProgressHomeScrollTop = 0;
+let pactStepBreakdown = null;
 let homeMonthPactDetailOpen = false;
 let homeMonthPactHomeScrollTop = 0;
 const workoutCount =
@@ -1402,6 +1403,10 @@ function renderPactProgressDetails(challenge) {
             fill.style.width = `${getRequirementProgressPercent(requirement)}%`;
             bar.appendChild(fill);
             row.append(labels, bar);
+            if (requirement.type === "steps") {
+                const strip = createPactStepsStrip(participant, requirement, challenge);
+                row.appendChild(strip);
+            }
             section.appendChild(row);
 
         });
@@ -1432,6 +1437,56 @@ function renderPactProgressDetails(challenge) {
 
 }
 
+function createPactStepsStrip(participant, requirement, challenge) {
+    const shell = document.createElement("div");
+    shell.className = "pact-steps-strip";
+    const data = pactStepBreakdown?.people?.find(person => person.userId === participant.userId);
+    if (!data) { shell.setAttribute("aria-busy", "true"); shell.textContent = "Loading daily steps…"; return shell; }
+    const target = Number(requirement.targetAmount) || 0;
+    data.days.forEach(day => {
+        const button = document.createElement("button"); const weekday = document.createElement("span"); const ring = document.createElement("span"); const date = document.createElement("b"); const total = document.createElement("small");
+        const own = participant.userId === sessionStorage.getItem("gymPactSelectedAthleteId");
+        button.type = "button"; button.className = "pact-steps-day"; button.disabled = Boolean(day.isFuture);
+        if (day.isToday) button.setAttribute("aria-current", "date");
+        weekday.textContent = new Date(`${day.localDate}T12:00:00`).toLocaleDateString(undefined, { weekday: "narrow" });
+        date.textContent = new Date(`${day.localDate}T12:00:00`).getDate();
+        const amount = day.total === null ? 0 : Number(day.total);
+        ring.className = "pact-steps-ring"; ring.style.setProperty("--step-fill", `${day.total === null || day.isFuture ? 0 : Math.min(100, day.suggestedSteps ? (amount / day.suggestedSteps) * 100 : 100)}%`); ring.appendChild(date);
+        total.textContent = day.total === null ? "—" : amount >= 1000 ? `${(amount / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k` : amount.toLocaleString();
+        button.setAttribute("aria-label", `${day.localDate}: ${day.total === null ? "no entry" : `${amount.toLocaleString()} steps`}${day.isToday ? ", today" : ""}`);
+        button.append(weekday, ring, total);
+        if (!day.isFuture) button.addEventListener("click", () => own ? openDailyStepsForDate(day.localDate) : showPartnerStepsReadOnly(participant.displayName, day));
+        shell.appendChild(button);
+    });
+    const note = document.createElement("p"); note.className = "pact-steps-guide";
+    note.textContent = Number(data.total) >= target ? "Weekly goal reached" : "A flexible guide, not a daily requirement.";
+    shell.appendChild(note); return shell;
+}
+
+async function loadPactStepBreakdown(challenge) {
+    const token = sessionStorage.getItem("gymPactSessionToken");
+    if (!token || !challenge?.id) return;
+    try {
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("get-step-breakdown", { body: { sessionToken: token, pactId: challenge.id } });
+        if (error || data?.error) throw error || new Error(data.error);
+        pactStepBreakdown = data;
+        if (pactProgressDetailsOpen) renderPactProgressDetails(currentChallenge);
+    } catch (error) { console.warn("Unable to load daily Steps", error); }
+}
+
+function openDailyStepsForDate(localDate) {
+    openExerciseSetModal("Steps");
+    const input = document.getElementById("daily-step-date");
+    input.value = localDate; input.dispatchEvent(new Event("change"));
+}
+
+function showPartnerStepsReadOnly(name, day) {
+    const existing = document.getElementById("partner-steps-read-only"); existing?.remove();
+    const modal = document.createElement("div"); modal.id = "partner-steps-read-only"; modal.className = "modal"; modal.style.display = "flex";
+    modal.innerHTML = `<div class="modal-content exercise-modal-content"><h2>${name}'s steps</h2><p>${new Date(`${day.localDate}T12:00:00`).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</p><p><strong>${day.total === null ? "No total recorded" : `${Number(day.total).toLocaleString()} steps`}</strong></p><p>${day.suggestedSteps.toLocaleString()} suggested steps</p><div class="modal-buttons"><button type="button">Close</button></div></div>`;
+    modal.querySelector("button").addEventListener("click", () => modal.remove()); document.body.appendChild(modal);
+}
+
 
 function openPactProgressDetails() {
 
@@ -1442,6 +1497,8 @@ function openPactProgressDetails() {
     document.body.classList.add("is-home-pact-detail");
     document.body.classList.remove("is-home-month-detail");
     renderPactProgressDetails(currentChallenge);
+    pactStepBreakdown = null;
+    loadPactStepBreakdown(currentChallenge);
     dashboardTabContent.forEach(content => {
         content.hidden = true;
     });
