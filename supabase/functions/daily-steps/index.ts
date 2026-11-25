@@ -3,13 +3,15 @@ import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session
 import { getCorsHeaders } from "../_shared/exercise-tracking.ts";
 import { getDataEnvironment } from "../_shared/data-environment.ts";
 import { getActivePactForAthlete, ensureStepTrackerForPact, getStepTracker } from "../_shared/step-tracking.ts";
-import { getStepTotalSummary } from "../_shared/pact-requirements.ts";
+import { addUtcDays, getLocalMidnightUtc, getPactWindow, getStepTotalSummary } from "../_shared/pact-requirements.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function dateIsEligible(pact: { start_date: string; end_date: string; active_at: string | null }, localDate: string) {
-  return DATE.test(localDate) && localDate >= pact.start_date && localDate <= pact.end_date;
+  if (!DATE.test(localDate) || localDate < pact.start_date || localDate > pact.end_date) return false;
+  const { start, endExclusive } = getPactWindow(pact);
+  return getLocalMidnightUtc(localDate) >= new Date(start) && getLocalMidnightUtc(addUtcDays(localDate, 1)) <= endExclusive;
 }
 
 serve(async request => {

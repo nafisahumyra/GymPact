@@ -88,12 +88,13 @@ export async function getStepTotalSummary(
   });
   (logs ?? []).forEach(log => addLegacy(getPactLocalDate(log.logged_at), Number(log.steps) || 0));
 
-  // An explicit daily total is deliberately assigned to this pact by its owner,
-  // so it may count on the activation date. Timestamped legacy records above
-  // still respect the precise activation instant.
+  // A pact created or accepted partway through a local day begins on the next
+  // full local day. This is the same seven-day boundary used by the Week tab.
   const explicitByDate = new Map<string, number>();
   (daily ?? []).forEach(record => {
-    explicitByDate.set(record.local_date, Number(record.steps) || 0);
+    if (getLocalMidnightUtc(record.local_date) >= new Date(start)) {
+      explicitByDate.set(record.local_date, Number(record.steps) || 0);
+    }
   });
   const dates = new Set([...legacyByDate.keys(), ...explicitByDate.keys()]);
   let total = 0;
