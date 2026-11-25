@@ -57,6 +57,16 @@ function stepTotal(measurements: unknown) {
   }, 0);
 }
 
+function repetitionTotal(measurements: unknown) {
+  if (!Array.isArray(measurements)) return 0;
+  return measurements.reduce((total, measurement) => {
+    if (!measurement || typeof measurement !== "object") return total;
+    const item = measurement as { unit?: unknown; amount?: unknown };
+    return item.unit === "reps" && typeof item.amount === "number" && item.amount > 0
+      ? total + item.amount : total;
+  }, 0);
+}
+
 export async function getPactRequirements(admin: AdminClient, pactId: string): Promise<PactRequirement[]> {
   const { data, error } = await admin
     .from("pact_requirements")
@@ -94,16 +104,39 @@ export async function getPactRequirementProgress(
     .lt("logged_at", endExclusive.toISOString());
   if (error) throw error;
 
-  const totals = new Map<string, { workouts: number; hiit: number; steps: number }>();
-  participants.forEach(participant => totals.set(participant.userId, { workouts: 0, hiit: 0, steps: 0 }));
+  const totals = new Map<string, { workouts: number; hiit: number; steps: number; pushups: number; pullups: number }>();
+  participants.forEach(participant => totals.set(participant.userId, { workouts: 0, hiit: 0, steps: 0, pushups: 0, pullups: 0 }));
   (workouts ?? []).forEach(workout => {
-    const total = totals.get(workout.user_id) ?? { workouts: 0, hiit: 0, steps: 0 };
+    const total = totals.get(workout.user_id) ?? { workouts: 0, hiit: 0, steps: 0, pushups: 0, pullups: 0 };
     const classified = classifyWorkoutForPact(workout.muscles, requirements);
     total.workouts += classified.workouts;
     total.hiit += classified.hiit;
     total.steps += stepTotal(workout.measurements);
+    const reps = repetitionTotal(workout.measurements);
+    total.pushups += classified.pushups ? reps : 0;
+    total.pullups += classified.pullups ? reps : 0;
     totals.set(workout.user_id, total);
   });
+
+  const repTypes = requirements.filter(requirement => requirement.type === "pushups" || requirement.type === "pullups");
+  if (repTypes.length) {
+    const exerciseNames = repTypes.map(requirement => requirement.type === "pushups" ? "Pushups" : "Pullups");
+    const { data: exerciseLogs, error: exerciseLogsError } = await admin
+      .from("exercise_set_logs")
+      .select("user_id, exercise_name, reps, logged_at")
+      .in("user_id", participants.map(participant => participant.userId))
+      .in("exercise_name", exerciseNames)
+      .eq("data_environment", pact.data_environment ?? "production")
+      .gte("logged_at", start)
+      .lt("logged_at", endExclusive.toISOString());
+    if (exerciseLogsError) throw exerciseLogsError;
+    (exerciseLogs ?? []).forEach(log => {
+      const total = totals.get(log.user_id) ?? { workouts: 0, hiit: 0, steps: 0, pushups: 0, pullups: 0 };
+      if (log.exercise_name === "Pushups") total.pushups += Number(log.reps) || 0;
+      if (log.exercise_name === "Pullups") total.pullups += Number(log.reps) || 0;
+      totals.set(log.user_id, total);
+    });
+  }
 
   const { data: stepLogs, error: stepLogsError } = await admin
     .from("weekly_step_logs")
@@ -112,15 +145,15 @@ export async function getPactRequirementProgress(
     .in("user_id", participants.map(participant => participant.userId));
   if (stepLogsError) throw stepLogsError;
   (stepLogs ?? []).forEach(log => {
-    const total = totals.get(log.user_id) ?? { workouts: 0, hiit: 0, steps: 0 };
+    const total = totals.get(log.user_id) ?? { workouts: 0, hiit: 0, steps: 0, pushups: 0, pullups: 0 };
     total.steps += Number(log.steps);
     totals.set(log.user_id, total);
   });
 
   return participants.map(participant => {
-    const totalsForAthlete = totals.get(participant.userId) ?? { workouts: 0, hiit: 0, steps: 0 };
+    const totalsForAthlete = totals.get(participant.userId) ?? { workouts: 0, hiit: 0, steps: 0, pushups: 0, pullups: 0 };
     const progress = requirements.map(requirement => {
-      const raw = totalsForAthlete[requirement.type as "workouts" | "hiit" | "steps"] ?? 0;
+      const raw = totalsForAthlete[requirement.type as "workouts" | "hiit" | "steps" | "pushups" | "pullups"] ?? 0;
       return {
         ...requirement,
         completed: Math.min(raw, requirement.targetAmount),

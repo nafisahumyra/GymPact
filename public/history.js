@@ -321,8 +321,10 @@ function getRequirementDetails(type) {
 
     const requirements = {
         workouts: { label: "Workouts", icon: "assets/gp-images/Workout.png" },
-        hiit: { label: "HIIT", icon: "assets/gp-images/HIIT.png" },
-        steps: { label: "Steps", icon: "assets/gp-images/steps.png" }
+        hiit: { label: "HIIT sessions", icon: "assets/gp-images/HIIT.png" },
+        steps: { label: "Steps", icon: "assets/gp-images/steps.png" },
+        pushups: { label: "Pushups", icon: "assets/gp-images/pushup.png" },
+        pullups: { label: "Pullups", icon: "assets/gp-images/Pullup.png" }
     };
 
     return requirements[type] || {
@@ -334,7 +336,7 @@ function getRequirementDetails(type) {
 
 function sortRequirementsForDisplay(requirements) {
 
-    const order = { hiit: 0, steps: 1, workouts: 2 };
+    const order = { workouts: 0, steps: 1, pushups: 2, pullups: 3, hiit: 4 };
 
     return [...requirements].sort((first, second) => {
 

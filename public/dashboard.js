@@ -24,6 +24,8 @@ function refreshHomeGreeting() {
 let currentChallenge = null;
 let currentChallengeLoaded = false;
 let currentChallengeLoadError = false;
+let weeklyPactCandidate = null;
+let weeklyRenewalCandidate = null;
 let progressSelectedRequirementType = null;
 let progressDayParticipantId = null;
 let progressSelectedDay = null;
@@ -845,6 +847,60 @@ function getNextWeekPactRange() {
 
 }
 
+function weeklyRenewalDismissalKey(pactId) {
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    return athleteId && pactId ? `gymPactWeeklyRenewalDismissed:production:${athleteId}:${pactId}` : null;
+}
+
+async function openWeeklyPactWizard({ renewal = false } = {}) {
+    if (!window.GymPactWeeklyWizard) {
+        window.location.href = `create-pact.html?returnTab=${encodeURIComponent(activeDashboardTab)}`;
+        return;
+    }
+    const sessionToken = sessionStorage.getItem("gymPactSessionToken");
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const candidate = weeklyPactCandidate;
+    if (!sessionToken || !athleteId || !candidate) {
+        setDashboardRefreshFeedback("Weekly Pact details are still loading. Please try again.");
+        return;
+    }
+    const prior = renewal ? weeklyRenewalCandidate : null;
+    window.GymPactWeeklyWizard.open({
+        mode: renewal ? "renewal" : "new",
+        partnerName: prior?.partnerName || candidate.partnerName,
+        startDate: candidate.startDate,
+        endDate: candidate.endDate,
+        initialRequirements: prior?.requirements || [],
+        onSubmit: async values => {
+            const { data, error } = await GymPactSupabase.getClient().functions.invoke("create-pact", {
+                body: { sessionToken, createdBy: athleteId, timeframe: "week", startDate: candidate.startDate, endDate: candidate.endDate, dataEnvironment: "production", ...values }
+            });
+            if (error || data?.error) throw new Error(data?.error || "We couldn’t send that weekly Pact.");
+            await loadCurrentChallenge();
+            showDashboardTab("overview");
+        }
+    });
+}
+
+function appendWeeklyRenewalPrompt(container) {
+    const candidate = weeklyRenewalCandidate;
+    const dismissalKey = candidate ? weeklyRenewalDismissalKey(candidate.id) : null;
+    if (!candidate || !dismissalKey || localStorage.getItem(dismissalKey)) return;
+    const panel = document.createElement("section"); panel.className = "weekly-renewal-card";
+    const title = document.createElement("h4"); title.textContent = candidate.result === "both_completed" ? "Weekly pact complete" : "Weekly pact ended";
+    const dates = document.createElement("p"); dates.className = "weekly-renewal-dates"; dates.textContent = `${formatShortPactDate(candidate.startDate)} – ${formatShortPactDate(candidate.endDate)}`;
+    const results = document.createElement("div"); results.className = "weekly-renewal-results";
+    (candidate.results || []).forEach(person => {
+        const line = document.createElement("p"); const name = document.createElement("strong"); name.textContent = person.userId === sessionStorage.getItem("gymPactSelectedAthleteId") ? "You" : person.displayName;
+        const details = document.createElement("span"); details.textContent = (person.requirements || []).map(requirement => `${getRequirementLabel(requirement.type)} ${Number(requirement.completed || 0).toLocaleString()}/${Number(requirement.targetAmount || 0).toLocaleString()}`).join(" · ");
+        line.append(name, details); results.append(line);
+    });
+    const actions = document.createElement("div"); actions.className = "weekly-renewal-actions";
+    const plan = document.createElement("button"); plan.type = "button"; plan.textContent = "Plan next week"; plan.addEventListener("click", () => openWeeklyPactWizard({ renewal: true }));
+    const later = document.createElement("button"); later.type = "button"; later.className = "weekly-renewal-later"; later.textContent = "Not now"; later.addEventListener("click", () => { localStorage.setItem(dismissalKey, "1"); panel.remove(); });
+    actions.append(plan, later); panel.append(title, dates, results, actions); container.append(panel);
+}
+
 function renderNextWeekPactCard() {
 
     const title = document.createElement("h4");
@@ -861,6 +917,7 @@ function renderNextWeekPactCard() {
     create.textContent = "+ Create Week Pact";
     create.addEventListener("click", startWeeklyPact);
     currentChallengeContainer.append(title, range, create);
+    appendWeeklyRenewalPrompt(currentChallengeContainer);
 
 }
 
@@ -1030,13 +1087,13 @@ function appendChallengeDetail(container, title, value) {
 
 function getRequirementLabel(type) {
 
-    return { workouts: "Workouts", hiit: "HIIT", steps: "Steps" }[type] || type;
+    return { workouts: "Workouts", hiit: "HIIT sessions", steps: "Steps", pushups: "Pushups", pullups: "Pullups" }[type] || type;
 
 }
 
 function getRequirementText(type) {
 
-    return { workouts: "Workouts", hiit: "HIIT", steps: "Steps" }[type] || type;
+    return { workouts: "Workouts", hiit: "HIIT sessions", steps: "Steps", pushups: "Pushups", pullups: "Pullups" }[type] || type;
 
 }
 
@@ -1045,14 +1102,16 @@ function getRequirementIconPath(type) {
     return {
         workouts: "assets/gp-images/workout-label.png",
         hiit: "assets/gp-images/hiit-label.png",
-        steps: "assets/gp-images/steps-label.png"
+        steps: "assets/gp-images/steps-label.png",
+        pushups: "assets/gp-images/pushup.png",
+        pullups: "assets/gp-images/Pullup.png"
     }[type] || "";
 
 }
 
 function sortRequirementsForDisplay(requirements) {
 
-    const order = { hiit: 0, steps: 1, workouts: 2 };
+    const order = { workouts: 0, steps: 1, pushups: 2, pullups: 3, hiit: 4 };
 
     return [...requirements].sort((first, second) => {
 
@@ -3265,6 +3324,8 @@ async function loadCurrentChallenge({ preserveOnError = false } = {}) {
     if (!sessionToken) {
 
         currentChallenge = null;
+        weeklyPactCandidate = null;
+        weeklyRenewalCandidate = null;
         currentChallengeLoaded = true;
         currentChallengeLoadError = false;
         renderCurrentChallenge(currentChallenge);
@@ -3292,10 +3353,14 @@ async function loadCurrentChallenge({ preserveOnError = false } = {}) {
         }
 
         currentChallenge = null;
+        weeklyPactCandidate = null;
+        weeklyRenewalCandidate = null;
 
     } else {
 
         currentChallenge = data?.pact || null;
+        weeklyPactCandidate = data?.weeklyCandidate || null;
+        weeklyRenewalCandidate = data?.renewalCandidate || null;
         currentChallengeLoadError = false;
 
     }
@@ -4225,7 +4290,7 @@ async function startWeeklyPact() {
 
     if (!currentChallenge) {
 
-        window.location.href = `create-pact.html?returnTab=${encodeURIComponent(activeDashboardTab)}`;
+        await openWeeklyPactWizard();
 
         return;
 

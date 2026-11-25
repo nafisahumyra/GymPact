@@ -67,11 +67,12 @@ serve(async (request) => {
       requirements.length === 0 ||
       requirements.some(requirement => (
         !requirement ||
-        !["workouts", "hiit", "steps"].includes(requirement.type) ||
+        !["workouts", "hiit", "steps", "pushups", "pullups"].includes(requirement.type) ||
         !Number.isInteger(requirement.targetAmount) ||
         requirement.targetAmount < 1
       )) ||
       new Set(requirements.map(requirement => requirement.type)).size !== requirements.length ||
+      !requirements.some(requirement => requirement.type === "workouts") ||
       !["day", "week", "month"].includes(timeframe) ||
       !["reward", "punishment"].includes(wagerType) ||
       typeof wagerDescription !== "string" ||
@@ -80,6 +81,15 @@ serve(async (request) => {
       typeof endDate !== "string"
     ) {
       return jsonResponse({ error: "Invalid pact." }, 400, corsHeaders);
+    }
+
+    if (timeframe === "week") {
+      const start = new Date(`${startDate}T12:00:00Z`);
+      const end = new Date(`${endDate}T12:00:00Z`);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) ||
+        Math.round((end.getTime() - start.getTime()) / 86_400_000) !== 7) {
+        return jsonResponse({ error: "Weekly Pacts must use the proposed seven-day dates." }, 400, corsHeaders);
+      }
     }
 
     const admin = getAdminClient();

@@ -814,6 +814,16 @@ body.dashboard-page {
 .home-month-checkin-view { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 5px 0; border: 0; background: transparent; color: #d0dccf; font-size: 14px; font-weight: 400; box-shadow: none; }
 .home-month-checkin-view:hover:not(:disabled), .home-month-checkin-view:focus-visible { background: transparent; color: var(--green); box-shadow: none; transform: none; }
 .home-month-checkin-view svg { width: 15px; height: 15px; }
+.weekly-renewal-card { display:grid; gap:10px; width:100%; margin-top:18px; padding:16px; border:1px solid #405043; border-radius:16px; background:#172019; }
+.weekly-renewal-card h4, .weekly-renewal-card p { margin:0; }
+.weekly-renewal-card h4 { color:#edf4e9; font-size:16px; font-weight:500; }
+.weekly-renewal-dates { color:#aab8ad; font-size:12px; }
+.weekly-renewal-results { display:grid; gap:7px; padding-top:10px; border-top:1px solid #344538; }
+.weekly-renewal-results p { display:grid; gap:2px; color:#b9c7bb; font-size:12px; }
+.weekly-renewal-results strong { color:#edf4e9; font-size:13px; font-weight:500; }
+.weekly-renewal-actions { display:flex; gap:10px; padding-top:4px; }
+.weekly-renewal-actions button { min-height:38px; padding:8px 11px; border-radius:10px; font-size:13px; font-weight:500; }
+.weekly-renewal-later { border:1px solid #46534e; background:transparent; color:#c7d3c7; box-shadow:none; }
 .monthly-checkin-visibility { margin: 8px 0 14px !important; color: var(--muted) !important; font-size: .82rem !important; line-height: 1.4 !important; }
 
 .home-month-pact-detail { display: grid; max-width: 760px; padding: max(8px, env(safe-area-inset-top)) 0 calc(132px + env(safe-area-inset-bottom)); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-synthesis: none; }

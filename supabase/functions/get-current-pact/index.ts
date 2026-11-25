@@ -31,6 +31,66 @@ function getCorsHeaders(request: Request) {
   return headers;
 }
 
+function localDay(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function addDays(day: string, amount: number) {
+  const date = new Date(`${day}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString().slice(0, 10);
+}
+
+async function weeklyCandidate(admin: ReturnType<typeof getAdminClient>, viewerId: string | null) {
+  const { data: athletes, error } = await admin.from("users").select("id, display_name").order("id");
+  if (error || !viewerId || athletes?.length !== 2) return null;
+  const partner = athletes.find(athlete => athlete.id !== viewerId);
+  if (!partner) return null;
+  const startDate = localDay();
+  return { partnerName: partner.display_name || "Your Pact partner", startDate, endDate: addDays(startDate, 7) };
+}
+
+async function renewalCandidate(
+  admin: ReturnType<typeof getAdminClient>,
+  viewerId: string | null,
+  environment: string,
+) {
+  if (!viewerId) return null;
+  const { data: pacts, error } = await admin
+    .from("pacts")
+    .select("id, start_date, end_date, final_result, final_workout_counts, final_requirement_progress, completed_at, pact_participants(user_id, users(display_name))")
+    .eq("status", "completed").eq("data_environment", environment)
+    .order("completed_at", { ascending: false }).limit(24);
+  if (error) throw error;
+  const pact = (pacts ?? []).find(item => item.pact_participants?.some(participant => participant.user_id === viewerId));
+  if (!pact) return null;
+  const requirements = await getPactRequirements(admin, pact.id);
+  const partner = pact.pact_participants?.find(participant => participant.user_id !== viewerId);
+  const results = (pact.pact_participants ?? []).map(participant => ({
+    userId: participant.user_id,
+    displayName: participant.users?.display_name || "GymPact athlete",
+    requirements: requirements.map(requirement => ({
+      ...requirement,
+      completed: Number(pact.final_requirement_progress?.[participant.user_id]?.[requirement.type]?.completed
+        ?? (requirement.type === "workouts" ? pact.final_workout_counts?.[participant.user_id] : 0)),
+    })),
+  }));
+  return {
+    id: pact.id,
+    result: pact.final_result,
+    completedAt: pact.completed_at,
+    startDate: pact.start_date,
+    endDate: pact.end_date,
+    partnerName: partner?.users?.display_name || "Your Pact partner",
+    requirements,
+    results,
+  };
+}
+
 async function mapPact(
   admin: ReturnType<typeof getAdminClient>,
   pact: Record<string, unknown>,
@@ -183,7 +243,12 @@ serve(async (request) => {
       throw error;
     }
 
-    return new Response(JSON.stringify({ pact: pact ? await mapPact(admin, pact) : null }), {
+    const mappedPact = pact ? await mapPact(admin, pact) : null;
+    const viewerId = session.athlete_id ?? null;
+    const candidate = !mappedPact ? await weeklyCandidate(admin, viewerId) : null;
+    const renewal = !mappedPact ? await renewalCandidate(admin, viewerId, environment) : null;
+
+    return new Response(JSON.stringify({ pact: mappedPact, weeklyCandidate: candidate, renewalCandidate: renewal }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
