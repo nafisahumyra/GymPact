@@ -62,8 +62,20 @@
             state.requirements.forEach((requirement, index) => {
                 const meta = typeMeta(requirement.type); const row = document.createElement("div"); row.className = "gp-weekly-wizard__goal-row";
                 const copy = document.createElement("div"); copy.className = "gp-weekly-wizard__goal-copy"; copy.innerHTML = `<strong>${meta.label}</strong><small>${meta.detail}</small>`;
-                const input = document.createElement("input"); input.type = "number"; input.min = "1"; input.step = "1"; input.inputMode = "numeric"; input.value = requirement.targetAmount; input.placeholder = requirement.type === "workouts" ? "e.g. 3" : "Target"; input.setAttribute("aria-label", `${meta.label} target`); input.addEventListener("input", () => { state.requirements[index].targetAmount = input.value; });
-                row.append(copy, input);
+                const target = document.createElement("div"); target.className = "gp-weekly-wizard__goal-target";
+                const input = document.createElement("input"); input.type = "number"; input.min = "1"; input.step = "1"; input.inputMode = "numeric"; input.value = requirement.targetAmount; input.placeholder = requirement.type === "workouts" ? "e.g. 3" : "Target"; input.setAttribute("aria-label", `${meta.label} target`);
+                const dailyPace = document.createElement("small"); dailyPace.className = "gp-weekly-wizard__daily-pace";
+                const updateDailyPace = () => {
+                    const total = Number(input.value);
+                    if (requirement.type !== "steps" || !Number.isFinite(total) || total <= 0) { dailyPace.hidden = true; return; }
+                    const perDay = total / 7;
+                    const isExact = Number.isInteger(perDay);
+                    dailyPace.textContent = `${isExact ? "" : "≈ "}${Math.round(perDay).toLocaleString()} per day`;
+                    dailyPace.hidden = false;
+                };
+                input.addEventListener("input", () => { state.requirements[index].targetAmount = input.value; updateDailyPace(); });
+                target.append(input, dailyPace); updateDailyPace();
+                row.append(copy, target);
                 if (requirement.type === "workouts") { const required = document.createElement("span"); required.className = "gp-weekly-wizard__required-space"; required.setAttribute("aria-hidden", "true"); row.append(required); }
                 else { const remove = document.createElement("button"); remove.type = "button"; remove.className = "gp-weekly-wizard__remove"; remove.setAttribute("aria-label", `Remove ${meta.label}`); remove.innerHTML = closeIcon; remove.addEventListener("click", () => { state.requirements.splice(index, 1); renderGoals(); }); row.append(remove); }
                 rows.append(row);
