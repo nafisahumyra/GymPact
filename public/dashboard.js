@@ -3762,50 +3762,14 @@ function renderHomeMonthPact() {
 
         const own = monthlyPact.commitments.find(item => item.userId === athleteId);
         if (!own) return;
-
-        const card = document.createElement("article");
-        card.className = "home-month-checkin-card";
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "home-month-shortcut";
+        card.setAttribute("aria-label", "Open Monthly pact details");
         const monthName = new Intl.DateTimeFormat(undefined, { timeZone: "America/New_York", month: "long" })
             .format(new Date(`${monthlyPact.monthStart}T12:00:00Z`));
-        const ownCheckins = (monthlyPact.checkins || []).filter(item => item.userId === athleteId)
-            .sort((left, right) => `${right.date}|${right.createdAt || ""}`.localeCompare(`${left.date}|${left.createdAt || ""}`));
-        const latest = ownCheckins[0];
-        const today = getCalendarDayInGymPactTimeZone();
-        const heading = document.createElement("div"); heading.className = "home-month-checkin-heading";
-        heading.innerHTML = `<div><span>Monthly pact</span><h3>${monthName}</h3></div><span class="home-month-calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span>`;
-        const label = document.createElement("p"); label.className = "home-month-checkin-label"; label.textContent = "Your goal";
-        const goal = document.createElement("p"); goal.className = "home-month-checkin-goal"; goal.textContent = own.goal;
-        const update = document.createElement("div"); update.className = "home-month-checkin-update";
-
-        if (own.completedAt) {
-            update.innerHTML = '<p class="home-month-checkin-achieved">Goal achieved</p>';
-        } else if (latest) {
-            const latestLabel = document.createElement("p"); latestLabel.className = "home-month-checkin-latest";
-            latestLabel.textContent = `Your latest check-in · ${formatMonthDate(latest.date)}`;
-            const excerpt = document.createElement("p"); excerpt.className = "home-month-checkin-excerpt";
-            excerpt.textContent = latest.body.length > 150 ? `${latest.body.slice(0, 147).trimEnd()}…` : latest.body;
-            update.append(latestLabel, excerpt);
-        } else {
-            update.innerHTML = '<p class="home-month-checkin-prompt">How’s your goal coming along?</p>';
-        }
-
-        const actions = document.createElement("div"); actions.className = "home-month-checkin-actions";
-        if (own.completedAt) {
-            actions.classList.add("is-achieved");
-            actions.appendChild(update);
-        } else {
-            const add = document.createElement("button"); add.type = "button"; add.className = "home-month-checkin-add";
-            add.textContent = latest?.date === today ? "Edit today’s check-in" : "Add a check-in";
-            add.addEventListener("click", () => openMonthlyCheckin(today));
-            actions.appendChild(add);
-        }
-        const view = document.createElement("button"); view.type = "button"; view.className = "home-month-checkin-view";
-        view.innerHTML = 'View pact <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        view.addEventListener("click", openHomeMonthPactDetail);
-        actions.appendChild(view);
-        card.append(heading, label, goal);
-        if (!own.completedAt) card.appendChild(update);
-        card.appendChild(actions);
+        card.innerHTML = `<span class="home-month-shortcut-date"><span class="home-month-calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span><strong>${monthName}</strong></span><span class="home-month-shortcut-copy">Monthly pact</span><span class="home-month-shortcut-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>`;
+        card.addEventListener("click", openHomeMonthPactDetail);
         homeMonthPactContent.appendChild(card);
         return;
 
