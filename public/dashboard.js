@@ -17,6 +17,13 @@ function refreshHomeGreeting() {
     homeGreetingName.hidden = !savedHomeGreetingName;
 }
 
+document.addEventListener("pointerdown", event => {
+    if (homeTodayPopup && !homeTodaySection?.contains(event.target)) { clearTimeout(homeTodayDismissTimer); homeTodayPopup = null; renderHomeToday(); }
+});
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && homeTodayPopup) { clearTimeout(homeTodayDismissTimer); homeTodayPopup = null; renderHomeToday(); }
+});
+
 
 
 
@@ -46,6 +53,11 @@ let pactProgressDetailsOpen = false;
 let pactProgressHomeScrollTop = 0;
 let pactStepBreakdown = null;
 let dailyStepsLoadVersion = 0;
+let homeTodayStepData = null;
+let homeTodayPopup = null;
+let homeTodayDismissTimer = null;
+const homeTodaySection = document.getElementById("home-today-section");
+const homeTodayList = document.getElementById("home-today-list");
 let homeMonthPactDetailOpen = false;
 let homeMonthPactHomeScrollTop = 0;
 const workoutCount =
@@ -3381,6 +3393,30 @@ function renderCurrentChallenge(challenge) {
 
 }
 
+function renderHomeToday() {
+    if (!homeTodaySection || !homeTodayList) return;
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const today = getCalendarDayInGymPactTimeZone(); const tasks = [];
+    const ownWeekly = currentChallenge?.progress?.find(person => person.userId === athleteId);
+    const workouts = ownWeekly?.requirements?.find(item => item.type === "workouts");
+    const workoutToday = (currentChallenge?.workoutDays?.[athleteId] || []).some(item => item.date === today);
+    if (currentChallenge?.status === "active" && workouts && Number(workouts.completed) < Number(workouts.targetAmount)) tasks.push({ key: "workout", label: "Fit in a workout", done: workoutToday, open: workoutToday ? "Workout logged" : "Log a workout to check this off" });
+    const ownMonth = monthlyPact?.status === "active" && monthlyPact.commitments?.find(item => item.userId === athleteId);
+    const checkinToday = Boolean(ownMonth && monthlyPact.checkins?.some(item => item.userId === athleteId && item.date === today));
+    if (ownMonth && (!ownMonth.completedAt || getCalendarDayInGymPactTimeZone(ownMonth.completedAt) === today)) tasks.push({ key: "month", label: "Work toward your monthly goal", done: Boolean(ownMonth.completedAt) || checkinToday, open: Boolean(ownMonth.completedAt) || checkinToday ? "Check-in submitted" : "Add a check-in to mark this complete" });
+    const steps = ownWeekly?.requirements?.find(item => item.type === "steps"); const stepPerson = homeTodayStepData?.people?.find(item => item.userId === athleteId); const stepDay = stepPerson?.days?.find(item => item.isToday);
+    if (steps && stepDay && Number(stepPerson.total) < Number(stepPerson.target)) { const remaining = Math.max(0, Number(stepDay.suggestedSteps) - Number(stepDay.total || 0)); tasks.push({ key: "steps", label: remaining ? `${remaining.toLocaleString()} steps` : "Today’s step pace reached", done: remaining === 0, open: remaining === 0 ? "Today’s step pace reached" : "Update step tracker" }); }
+    homeTodaySection.hidden = tasks.length === 0; homeTodayList.replaceChildren();
+    tasks.forEach(task => { const row = document.createElement("div"); row.className = "home-todo-row"; const button = document.createElement("button"); button.type = "button"; button.className = `home-todo${task.done ? " is-complete" : ""}`; button.setAttribute("aria-expanded", String(homeTodayPopup === task.key)); const box = document.createElement("span"); box.className = "home-todo-box"; box.setAttribute("aria-hidden", "true"); box.textContent = task.done ? "✓" : ""; const label = document.createElement("span"); label.textContent = task.label; button.append(box, label); button.addEventListener("click", event => { event.stopPropagation(); clearTimeout(homeTodayDismissTimer); homeTodayPopup = homeTodayPopup === task.key ? null : task.key; renderHomeToday(); if (homeTodayPopup) homeTodayDismissTimer = setTimeout(() => { homeTodayPopup = null; renderHomeToday(); }, 3500); }); row.appendChild(button); if (homeTodayPopup === task.key) { const popup = document.createElement("div"); popup.className = "home-todo-popup"; popup.id = `home-todo-${task.key}`; popup.textContent = task.open; row.appendChild(popup); } homeTodayList.appendChild(row); });
+}
+
+async function loadHomeTodaySteps() {
+    const token = sessionStorage.getItem("gymPactSessionToken");
+    if (!token || !currentChallenge?.id || !currentChallenge.requirements?.some(item => item.type === "steps")) { homeTodayStepData = null; renderHomeToday(); return; }
+    const { data, error } = await GymPactSupabase.getClient().functions.invoke("get-step-breakdown", { body: { sessionToken: token, pactId: currentChallenge.id } });
+    homeTodayStepData = !error && data?.people ? data : null; renderHomeToday();
+}
+
 
 async function loadCurrentChallenge({ preserveOnError = false } = {}) {
 
@@ -3432,6 +3468,8 @@ async function loadCurrentChallenge({ preserveOnError = false } = {}) {
 
     currentChallengeLoaded = true;
     renderCurrentChallenge(currentChallenge);
+    loadHomeTodaySteps();
+    renderHomeToday();
 
 }
 
@@ -3926,7 +3964,7 @@ function renderMonthPact() {
 
 async function loadMonthlyPact({ preserveOnError = false } = {}) {
     if (!monthPactContent) return;
-    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; renderMonthPact(); renderHomeMonthPact(); }
+    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; renderMonthPact(); renderHomeMonthPact(); renderHomeToday(); }
     catch (error) { console.error("Unable to load Month Pact.", error); if (preserveOnError) throw error; monthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; homeMonthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; }
 }
 
