@@ -3768,7 +3768,10 @@ function renderHomeMonthPact() {
         card.setAttribute("aria-label", "Open Monthly pact details");
         const monthName = new Intl.DateTimeFormat(undefined, { timeZone: "America/New_York", month: "long" })
             .format(new Date(`${monthlyPact.monthStart}T12:00:00Z`));
-        card.innerHTML = `<span class="home-month-shortcut-date"><span class="home-month-calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span><strong>${monthName}</strong></span><span class="home-month-shortcut-copy">Monthly pact</span><span class="home-month-shortcut-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>`;
+        const subline = own.completedAt
+            ? '<span class="home-month-shortcut-achieved">Goal achieved</span>'
+            : `<span class="home-month-shortcut-goal"><small>Goal</small><span>${own.goal}</span></span>`;
+        card.innerHTML = `<span class="home-month-shortcut-date"><span class="home-month-calendar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span><span><strong>${monthName}</strong>${subline}</span></span><span class="home-month-shortcut-copy">Monthly pact</span><span class="home-month-shortcut-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>`;
         card.addEventListener("click", openHomeMonthPactDetail);
         homeMonthPactContent.appendChild(card);
         return;
