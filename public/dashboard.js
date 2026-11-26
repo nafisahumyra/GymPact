@@ -3504,12 +3504,15 @@ async function refreshDashboard() {
 
         try {
 
-            await Promise.all([
+            const results = await Promise.allSettled([
                 loadCurrentChallenge({ preserveOnError: true }),
                 loadDashboardMetrics({ preserveOnError: true }),
                 loadExerciseTrackers({ preserveOnError: true }),
                 loadMonthlyPact({ preserveOnError: true })
             ]);
+            const failures = results.filter(result => result.status === "rejected");
+            if (failures.length === results.length) throw failures[0].reason;
+            if (failures.length) console.warn("A non-critical dashboard refresh request failed.", failures);
 
         } catch (error) {
 
