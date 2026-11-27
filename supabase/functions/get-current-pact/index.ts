@@ -163,17 +163,11 @@ async function mapPact(
       const summary = viewerProgress.stepSummary;
       const prior = eligibleDates.slice(0, todayIndex).reduce((total, date) => total + (summary.explicitByDate.get(date) ?? summary.legacyByDate.get(date) ?? 0), 0);
       const todayTotal = summary.explicitByDate.get(today) ?? summary.legacyByDate.get(today) ?? null;
-      const { data: paceReference, error: paceReferenceError } = await admin
-        .from("daily_step_pace_references")
-        .select("suggested_steps")
-        .eq("pact_id", String(pact.id))
-        .eq("user_id", viewerId)
-        .eq("local_date", today)
-        .eq("data_environment", dataEnvironment)
-        .maybeSingle();
-      if (paceReferenceError) throw paceReferenceError;
+      // The existing breakdown only persists pace references for days before
+      // today; today's suggested pace is always its live calculated value.
+      // Keeping it local removes a database round trip from the Home path.
       const calculatedPace = Math.max(0, Math.ceil((stepsRequirement.targetAmount - prior) / (eligibleDates.length - todayIndex)));
-      todayStepPacing = { localDate: today, total: todayTotal, suggestedSteps: Number(paceReference?.suggested_steps ?? calculatedPace), target: stepsRequirement.targetAmount, weeklyTotal: summary.total };
+      todayStepPacing = { localDate: today, total: todayTotal, suggestedSteps: calculatedPace, target: stepsRequirement.targetAmount, weeklyTotal: summary.total };
     }
   }
 
