@@ -865,14 +865,22 @@ body.dashboard-page {
 .home-month-detail-topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
 .home-month-detail-topbar h2 { min-width: 0; margin: 0; color: var(--text); font-size: clamp(28px, 8.5vw, 33px); font-weight: 500; letter-spacing: -.045em; line-height: 1.08; white-space: nowrap; }
 .home-month-detail-topbar h2 span { color: #95a79a; font-weight: 400; }
-.home-month-detail-goals { display: grid; margin-top: 34px; overflow: hidden; border: 1px solid #344638; border-radius: 18px; background: linear-gradient(125deg, #202e23, #17231b); }
-.home-month-detail-goal { padding: 20px; }
-.home-month-detail-goal + .home-month-detail-goal { border-top: 1px solid rgba(88, 111, 91, .58); }
-.home-month-detail-person { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.home-month-detail-person > span:first-child { color: #b7c6b8; font-size: 12px; font-weight: 500; line-height: 1.35; }
-.home-month-detail-state { flex: 0 0 auto; color: #bdcabc; font-size: 12px; font-weight: 400; line-height: 1.35; text-align: right; }
-.home-month-detail-state.is-achieved { color: var(--green); }
-.home-month-detail-goal > p { margin: 9px 0 0; color: #edf3e9; font-family: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 20px; font-weight: 500; line-height: 1.45; letter-spacing: normal; overflow-wrap: anywhere; }
+.home-month-journey-people { display: inline-flex; justify-self: start; gap: 3px; margin: 20px 0 21px; padding: 3px; border-radius: 12px; background: #17241b; }
+.home-month-journey-people button { min-height: 36px; padding: 7px 17px; border: 0; border-radius: 9px; background: transparent; color: #a6b8a2; font: 400 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; box-shadow: none; }
+.home-month-journey-people button[aria-pressed="true"] { background: #31462c; color: #e0f2d6; }
+.home-month-journey-people button:hover:not(:disabled), .home-month-journey-people button:focus-visible { background: #31462c; color: #e0f2d6; box-shadow: none; transform: none; }
+.home-month-journey-goal { margin: 0 0 27px; padding: 17px 18px 19px; border: 1px solid #3c523b; border-radius: 16px; background: #1c2d20; }
+.home-month-journey-goal-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #adbfaa; font-size: 12px; font-weight: 400; line-height: 1.35; }
+.home-month-journey-goal-status { font-size: 11px; white-space: nowrap; }.home-month-journey-goal-status.is-achieved { color: #a3eb7b; }
+.home-month-journey-goal > p { margin: 11px 0 0; color: #edf4e9; font-family: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 20px; font-weight: 500; line-height: 1.45; letter-spacing: normal; overflow-wrap: anywhere; }
+.home-month-journey > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin-bottom: 25px; }
+.home-month-journey h3 { margin: 0; color: var(--text); font-family: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 22px; font-weight: 600; line-height: 1.3; letter-spacing: normal; }
+.home-month-journey-add { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; padding: 10px 12px; border: 1px solid #4b6940; border-radius: 11px; background: #273d25; color: #c6efac; font: 500 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; box-shadow: none; white-space: nowrap; }
+.home-month-journey-add svg { width: 14px; height: 14px; }.home-month-journey-add:hover:not(:disabled), .home-month-journey-add:focus-visible { background: #31462c; color: #e0f2d6; box-shadow: none; transform: none; }
+.home-month-journey-timeline { margin: 0; padding: 0; list-style: none; }
+.home-month-journey-event { position: relative; padding: 0 0 29px 31px; }.home-month-journey-event:not(:last-child)::after { position: absolute; top: 15px; bottom: 0; left: 6px; width: 1px; background: #3b503a; content: ""; }
+.home-month-journey-dot { position: absolute; top: 5px; left: 0; box-sizing: border-box; width: 13px; height: 13px; border: 1px solid #83987a; border-radius: 50%; background: #15261a; }.home-month-journey-event.is-latest:not(.is-start) .home-month-journey-dot { border-color: #a2e97b; background: #a2e97b; box-shadow: 0 0 0 4px #a2e97b12; }.home-month-journey-event.is-start { padding-bottom: 0; }.home-month-journey-event.is-start .home-month-journey-dot { border-color: #6d8564; background: #33462f; }
+.home-month-journey-event time { display: block; color: #e4eedf; font-size: 14px; font-weight: 500; }.home-month-journey-event p { margin: 6px 0 0; color: #afc1aa; font-size: 14px; font-weight: 400; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }.home-month-journey-event.is-start p { color: #99af93; font-size: 13px; }
 .home-month-detail-consequence { display: flex; gap: 12px; margin-top: 38px; padding: 22px 4px; border-bottom: 1px solid #405043; }
 .home-month-detail-consequence > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: rgba(206, 80, 70, .16); color: #ef766c; }
 .home-month-detail-consequence > span svg { width: 21px; height: 21px; }

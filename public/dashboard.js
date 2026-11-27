@@ -61,6 +61,7 @@ const homeTodayList = document.getElementById("home-today-list");
 const homeTodayCount = document.getElementById("home-today-count");
 let homeMonthPactDetailOpen = false;
 let homeMonthPactHomeScrollTop = 0;
+let homeMonthPactDetailParticipantId = null;
 const workoutCount =
     document.getElementById("workout-count");
 const streakCount =
@@ -3699,43 +3700,70 @@ function renderMonthlyCalendar(pact, container, { interactive = true } = {}) {
     container.appendChild(calendar);
 }
 
-function openHomeMonthPactDetail() {
-    if (!monthlyPact || !homeMonthPactDetail || homeMonthPactDetailOpen) return;
-    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
-    homeMonthPactHomeScrollTop = dashboardContent?.scrollTop || 0;
-    homeMonthPactDetailOpen = true;
-    document.body.classList.add("is-home-pact-detail");
-    document.body.classList.add("is-home-month-detail");
-    homeMonthPactDetail.innerHTML = "";
-    const back = document.createElement("button"); back.type = "button"; back.className = "home-month-detail-back"; back.innerHTML = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m10 3-5 5 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Home';
-    back.addEventListener("click", closeHomeMonthPactDetail);
-    const title = document.createElement("header"); title.className = "home-month-detail-topbar";
-    const [monthName, year] = monthlyPact.monthLabel.split(/\s+(?=\d{4}$)/);
-    title.innerHTML = `<h2>${monthName || monthlyPact.monthLabel}${year ? ` <span>${year}</span>` : ""}</h2>`;
-    const own = monthlyPact.commitments.find(item => item.userId === athleteId);
-    const partner = monthlyPact.commitments.find(item => item.userId !== athleteId);
-    const goals = document.createElement("div"); goals.className = "home-month-detail-goals";
-    [own, partner].filter(Boolean).forEach((commitment, index) => {
-        const person = document.createElement("article"); person.className = "home-month-detail-goal";
-        const personHead = document.createElement("div"); personHead.className = "home-month-detail-person";
-        const label = document.createElement("span"); label.textContent = index === 0 ? "Your goal" : `${commitment.displayName}’s goal`;
-        const state = document.createElement("span"); state.className = `home-month-detail-state${commitment.completedAt ? " is-achieved" : ""}`; state.textContent = commitment.completedAt ? "Achieved" : "In progress";
-        personHead.append(label, state); const goal = document.createElement("p"); goal.textContent = commitment.goal; person.append(personHead, goal); goals.appendChild(person);
+function sortMonthlyJourneyEntries(entries) {
+    return [...entries].sort((left, right) => {
+        const rightKey = `${right.date}|${right.createdAt || ""}|${right.id || ""}`;
+        const leftKey = `${left.date}|${left.createdAt || ""}|${left.id || ""}`;
+        return rightKey.localeCompare(leftKey);
     });
+}
+
+function canAddMonthlyJourneyCheckin(participantId) {
+    const today = `${currentMonthDate().year}-${currentMonthDate().month}-${currentMonthDate().day}`;
+    return participantId === sessionStorage.getItem("gymPactSelectedAthleteId")
+        && monthlyPact?.status === "active"
+        && today >= monthlyPact.monthStart
+        && today <= monthlyPact.monthEnd;
+}
+
+function renderHomeMonthPactDetail() {
+    if (!monthlyPact || !homeMonthPactDetail || !homeMonthPactDetailOpen) return;
+    const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    const commitments = monthlyPact.commitments || [];
+    const own = commitments.find(item => item.userId === athleteId);
+    const selected = commitments.find(item => item.userId === homeMonthPactDetailParticipantId) || own || commitments[0];
+    if (!selected) return;
+    homeMonthPactDetailParticipantId = selected.userId;
+    homeMonthPactDetail.replaceChildren();
+
+    const topbar = document.createElement("header"); topbar.className = "home-month-detail-topbar";
+    const back = document.createElement("button"); back.type = "button"; back.className = "home-month-detail-back"; back.innerHTML = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m10 3-5 5 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Home'; back.addEventListener("click", closeHomeMonthPactDetail);
+    const [monthName, year] = monthlyPact.monthLabel.split(/\s+(?=\d{4}$)/);
+    const heading = document.createElement("h2"); heading.append(document.createTextNode(monthName || monthlyPact.monthLabel)); if (year) { const yearNode = document.createElement("span"); yearNode.textContent = ` ${year}`; heading.appendChild(yearNode); }
+    topbar.append(back, heading);
+
+    const people = document.createElement("div"); people.className = "home-month-journey-people"; people.setAttribute("role", "group"); people.setAttribute("aria-label", "Whose goal and journey");
+    commitments.forEach(commitment => { const button = document.createElement("button"); button.type = "button"; button.setAttribute("aria-pressed", String(commitment.userId === selected.userId)); button.textContent = commitment.userId === athleteId ? "You" : commitment.displayName; button.addEventListener("click", () => { homeMonthPactDetailParticipantId = commitment.userId; renderHomeMonthPactDetail(); }); people.appendChild(button); });
+
+    const goal = document.createElement("section"); goal.className = "home-month-journey-goal";
+    const goalMeta = document.createElement("div"); goalMeta.className = "home-month-journey-goal-meta";
+    const goalLabel = document.createElement("span"); goalLabel.textContent = selected.userId === athleteId ? "Your goal" : `${selected.displayName}’s goal`;
+    const goalStatus = document.createElement("span"); goalStatus.className = `home-month-journey-goal-status${selected.completedAt ? " is-achieved" : ""}`; goalStatus.textContent = selected.completedAt ? "Achieved" : "In progress";
+    const goalText = document.createElement("p"); goalText.textContent = selected.goal; goalMeta.append(goalLabel, goalStatus); goal.append(goalMeta, goalText);
+
+    const journey = document.createElement("section"); journey.className = "home-month-journey";
+    const journeyHead = document.createElement("header"); const journeyTitle = document.createElement("h3"); journeyTitle.textContent = "Journey"; journeyHead.appendChild(journeyTitle);
+    if (canAddMonthlyJourneyCheckin(selected.userId)) { const add = document.createElement("button"); add.type = "button"; add.className = "home-month-journey-add"; add.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Add check-in'; add.addEventListener("click", () => openMonthlyCheckin(getMonthlyDefaultSelectedDate(monthlyPact))); journeyHead.appendChild(add); }
+    const timeline = document.createElement("ol"); timeline.className = "home-month-journey-timeline"; timeline.setAttribute("aria-label", "Monthly check-ins");
+    const entries = sortMonthlyJourneyEntries((monthlyPact.checkins || []).filter(entry => entry.userId === selected.userId));
+    entries.forEach((entry, index) => { const item = document.createElement("li"); item.className = "home-month-journey-event"; const dot = document.createElement("span"); dot.className = "home-month-journey-dot"; dot.setAttribute("aria-hidden", "true"); const date = document.createElement("time"); date.dateTime = entry.date; date.textContent = formatMonthDate(entry.date); const text = document.createElement("p"); text.textContent = entry.body; item.append(dot, date, text); if (index === 0) item.classList.add("is-latest"); timeline.appendChild(item); });
+    const start = document.createElement("li"); start.className = "home-month-journey-event is-start"; const startDot = document.createElement("span"); startDot.className = "home-month-journey-dot"; startDot.setAttribute("aria-hidden", "true"); const startDate = document.createElement("time"); startDate.dateTime = monthlyPact.monthStart; startDate.textContent = formatMonthDate(monthlyPact.monthStart); const startText = document.createElement("p"); startText.textContent = "Challenge started"; start.append(startDot, startDate, startText); timeline.appendChild(start);
+    journey.append(journeyHead, timeline);
+
     const consequence = document.createElement("section"); consequence.className = "home-month-detail-consequence"; consequence.innerHTML = '<span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 1c4-3 7 3 14 0v10c-7 3-10-3-14 0"/></svg></span><div><small>Shared consequence</small></div>';
     const consequenceText = document.createElement("p"); consequenceText.textContent = monthlyPact.consequence; consequence.lastElementChild.appendChild(consequenceText);
-    const allCheckins = [...(monthlyPact.checkins || [])].sort((left, right) => `${right.date}|${right.createdAt || ""}`.localeCompare(`${left.date}|${left.createdAt || ""}`));
-    title.prepend(back);
-    homeMonthPactDetail.append(title, goals, consequence);
-    if (allCheckins[0]) {
-        const latest = allCheckins[0]; const checkin = document.createElement("section"); checkin.className = "home-month-detail-latest";
-        const checkinHeading = document.createElement("div"); checkinHeading.innerHTML = `<h3>Latest check-in</h3><span>${formatMonthDate(latest.date)}</span>`;
-        const checkinCard = document.createElement("article"); checkinCard.className = "home-month-detail-note";
-        const author = document.createElement("strong"); author.textContent = latest.userId === athleteId ? "You" : latest.displayName;
-        const text = document.createElement("p"); text.textContent = latest.body; checkinCard.append(author, text); checkin.append(checkinHeading, checkinCard); homeMonthPactDetail.appendChild(checkin);
-    }
+    homeMonthPactDetail.append(topbar, people, goal, journey, consequence);
+}
+
+function openHomeMonthPactDetail() {
+    if (!monthlyPact || !homeMonthPactDetail || homeMonthPactDetailOpen) return;
+    homeMonthPactHomeScrollTop = dashboardContent?.scrollTop || 0;
+    homeMonthPactDetailOpen = true;
+    homeMonthPactDetailParticipantId = sessionStorage.getItem("gymPactSelectedAthleteId");
+    document.body.classList.add("is-home-pact-detail", "is-home-month-detail");
     dashboardTabContent.forEach(content => { content.hidden = true; });
     homeMonthPactDetail.hidden = false;
+    renderHomeMonthPactDetail();
     dashboardContent.scrollTop = 0;
     homeMonthPactDetail.focus({ preventScroll: true });
 }
@@ -3743,6 +3771,7 @@ function openHomeMonthPactDetail() {
 function closeHomeMonthPactDetail() {
     if (!homeMonthPactDetailOpen) return;
     homeMonthPactDetailOpen = false;
+    homeMonthPactDetailParticipantId = null;
     document.body.classList.remove("is-home-pact-detail");
     document.body.classList.remove("is-home-month-detail");
     homeMonthPactDetail.hidden = true;
@@ -3935,7 +3964,7 @@ function renderMonthPact() {
 
 async function loadMonthlyPact({ preserveOnError = false } = {}) {
     if (!monthPactContent) return;
-    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; renderMonthPact(); renderHomeMonthPact(); renderHomeToday(); }
+    try { const { data, error } = await monthlyRequest("get"); if (error) throw error; monthlyPact = data?.pact || null; monthlyCandidate = data || null; renderMonthPact(); renderHomeMonthPact(); renderHomeToday(); renderHomeMonthPactDetail(); }
     catch (error) { console.error("Unable to load Month Pact.", error); if (preserveOnError) throw error; monthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; homeMonthPactContent.innerHTML = '<p class="month-pact-copy">We couldn’t load the Month Pact. Please refresh and try again.</p>'; }
 }
 
