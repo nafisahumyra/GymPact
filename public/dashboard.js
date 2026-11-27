@@ -3479,6 +3479,13 @@ function renderCurrentChallenge(challenge) {
 
 function renderHomeToday() {
     if (!homeTodaySection || !homeTodayList) return;
+    // Do not briefly present an incomplete daily list while the current pact
+    // request is in flight. It is better to reveal the finished list once
+    // than to show Today without its authoritative Steps item.
+    if (!currentChallengeLoaded) {
+        homeTodaySection.hidden = true;
+        return;
+    }
     const athleteId = sessionStorage.getItem("gymPactSelectedAthleteId");
     const today = getCalendarDayInGymPactTimeZone(); const tasks = [];
     const ownWeekly = currentChallenge?.progress?.find(person => person.userId === athleteId);
