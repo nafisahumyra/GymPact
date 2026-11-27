@@ -47,6 +47,8 @@ body.dashboard-page {
 /* Home-owned Pact detail views are full screens, not dashboard sub-sections. */
 .dashboard-page.is-home-pact-detail .dashboard-app-header { display: none; }
 .dashboard-page.is-home-month-detail .dashboard-content-inner { padding-top: max(12px, env(safe-area-inset-top)); }
+.dashboard-page.is-home-month-detail [data-dashboard-tab-content] { display: none !important; }
+.dashboard-page.is-home-month-detail .home-month-pact-detail:not([hidden]) { display: grid; }
 
 .dashboard-header-content {
     padding: max(16px, env(safe-area-inset-top)) clamp(16px, 4vw, 40px) 12px;
