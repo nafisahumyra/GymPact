@@ -138,9 +138,10 @@ async function mapPact(
     requirements,
   );
   const progress = requirementProgress.map(participant => {
+    const { stepSummary: _stepSummary, ...publicParticipant } = participant;
     const workouts = participant.requirements.find(requirement => requirement.type === "workouts");
     return {
-      ...participant,
+      ...publicParticipant,
       completed: workouts?.completed ?? 0,
       target: workouts?.targetAmount ?? 0,
     };
