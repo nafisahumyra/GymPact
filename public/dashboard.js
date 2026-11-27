@@ -127,6 +127,7 @@ let profileDisplayName = currentUser;
 let monthlyCompletionBrandAssetsPromise = null;
 let activeDashboardTab = "overview";
 let dashboardRefreshInFlight = null;
+let lastDashboardRefreshAt = 0;
 const monthPactContent = document.getElementById("month-pact-content");
 const pactMonthPactContent = document.getElementById("pact-month-pact-content");
 const homeMonthPactContent = document.getElementById("home-month-pact");
@@ -184,39 +185,6 @@ function addCalendarDays(date, days) {
 }
 
 
-function calculatePactStreak(weeklyPacts, monthlyPacts, athleteId) {
-
-    const outcomes = [
-        ...weeklyPacts.map(pact => ({
-            completedAt: pact.completedAt,
-            successful: pact.result === "both_completed" || (pact.result === "winner" && pact.winnerId === athleteId)
-        })),
-        ...monthlyPacts.map(pact => {
-
-            const commitment = (pact.commitments || []).find(item => item.userId === athleteId);
-            return {
-                completedAt: pact.finalizedAt || `${pact.monthEnd}T23:59:59-05:00`,
-                successful: Boolean(commitment?.completedByDeadline)
-            };
-
-        })
-    ].filter(outcome => outcome.completedAt)
-        .sort((left, right) => new Date(right.completedAt) - new Date(left.completedAt));
-
-    let streak = 0;
-
-    for (const outcome of outcomes) {
-
-        if (!outcome.successful) break;
-        streak += 1;
-
-    }
-
-    return streak;
-
-}
-
-
 async function loadDashboardMetrics({ preserveOnError = false } = {}) {
 
     const sessionToken = sessionStorage.getItem("gymPactSessionToken");
@@ -230,41 +198,19 @@ async function loadDashboardMetrics({ preserveOnError = false } = {}) {
 
     try {
 
-        const supabase = GymPactSupabase.getClient();
-        const [workoutResponse, weeklyHistoryResponse, monthlyHistoryResponse] = await Promise.all([
-            supabase.functions.invoke("list-workouts", { body: { sessionToken, dataEnvironment: "production" } }),
-            supabase.functions.invoke("list-completed-pacts", { body: { sessionToken, dataEnvironment: "production" } }),
-            supabase.functions.invoke("monthly-pacts", { body: { action: "list", sessionToken, dataEnvironment: "production" } })
-        ]);
-        const { data, error } = workoutResponse;
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke(
+            "get-dashboard-summary",
+            { body: { sessionToken, dataEnvironment: "production" } }
+        );
 
-        if (error || !Array.isArray(data?.workouts)) {
+        if (error || !Number.isFinite(Number(data?.workoutCount)) || !Number.isFinite(Number(data?.pactStreak))) {
 
-            throw error || new Error("Workout data was unavailable.");
+            throw error || new Error("Dashboard summary was unavailable.");
 
         }
 
-        if (weeklyHistoryResponse.error || !Array.isArray(weeklyHistoryResponse.data?.pacts)) {
-
-            throw weeklyHistoryResponse.error || new Error("Weekly Pact history was unavailable.");
-
-        }
-
-        if (monthlyHistoryResponse.error || !Array.isArray(monthlyHistoryResponse.data?.pacts)) {
-
-            throw monthlyHistoryResponse.error || new Error("Month Pact history was unavailable.");
-
-        }
-
-        const athleteWorkouts = data.workouts.filter(workout => {
-
-            return workout.user_id === athleteId;
-
-        });
-        const streak = calculatePactStreak(weeklyHistoryResponse.data.pacts, monthlyHistoryResponse.data.pacts, athleteId);
-
-        workoutCount.textContent = athleteWorkouts.length;
-        streakCount.textContent = streak;
+        workoutCount.textContent = Number(data.workoutCount).toLocaleString();
+        streakCount.textContent = Number(data.pactStreak).toLocaleString();
 
     } catch (error) {
 
@@ -1613,10 +1559,6 @@ function openPactProgressDetails() {
     document.body.classList.add("is-home-pact-detail");
     document.body.classList.remove("is-home-month-detail");
     renderPactProgressDetails(currentChallenge);
-    pactStepBreakdown = null;
-    pactStepBreakdownPactId = null;
-    pactStepBreakdownRequest = null;
-    loadPactStepBreakdown(currentChallenge);
     dashboardTabContent.forEach(content => {
         content.hidden = true;
     });
@@ -3512,17 +3454,17 @@ function renderHomeToday() {
     const ownMonth = monthlyPact?.status === "active" && monthlyPact.commitments?.find(item => item.userId === athleteId);
     const checkinToday = Boolean(ownMonth && monthlyPact.checkins?.some(item => item.userId === athleteId && item.date === today));
     if (ownMonth && (!ownMonth.completedAt || getCalendarDayInGymPactTimeZone(ownMonth.completedAt) === today)) tasks.push({ key: "month", label: "Work toward your monthly goal", done: Boolean(ownMonth.completedAt) || checkinToday, open: Boolean(ownMonth.completedAt) || checkinToday ? "Check-in submitted" : "Add a check-in to mark this complete" });
-    const steps = ownWeekly?.requirements?.find(item => item.type === "steps"); const stepPerson = homeTodayStepData?.people?.find(item => item.userId === athleteId); const stepDay = stepPerson?.days?.find(item => item.isToday);
-    if (steps && stepDay && Number(stepPerson.total) < Number(stepPerson.target)) { const remaining = Math.max(0, Number(stepDay.suggestedSteps) - Number(stepDay.total || 0)); tasks.push({ key: "steps", label: remaining ? `Walk ${remaining.toLocaleString()} steps` : "Today’s step pace reached", done: remaining === 0, open: remaining === 0 ? "Today’s step pace reached" : "Update step tracker" }); }
+    const steps = ownWeekly?.requirements?.find(item => item.type === "steps"); const stepPacing = currentChallenge?.todayStepPacing;
+    if (steps && stepPacing && Number(stepPacing.weeklyTotal) < Number(stepPacing.target)) { const remaining = Math.max(0, Number(stepPacing.suggestedSteps) - Number(stepPacing.total || 0)); tasks.push({ key: "steps", label: remaining ? `Walk ${remaining.toLocaleString()} steps` : "Today’s step pace reached", done: remaining === 0, open: remaining === 0 ? "Today’s step pace reached" : "Update step tracker" }); }
     homeTodaySection.hidden = tasks.length === 0 || activeDashboardTab !== "overview" || homeMonthPactDetailOpen || pactProgressDetailsOpen; homeTodayCount.textContent = `${tasks.filter(task => task.done).length} of ${tasks.length}`; homeTodayList.replaceChildren();
     tasks.forEach(task => { const row = document.createElement("div"); row.className = "home-todo-row"; const button = document.createElement("button"); button.type = "button"; button.className = `home-todo${task.done ? " is-complete" : ""}`; button.setAttribute("aria-expanded", String(homeTodayPopup === task.key)); const box = document.createElement("span"); box.className = "home-todo-box"; box.setAttribute("aria-hidden", "true"); box.textContent = task.done ? "✓" : ""; const label = document.createElement("span"); label.textContent = task.label; button.append(box, label); button.addEventListener("click", event => { event.stopPropagation(); clearTimeout(homeTodayDismissTimer); homeTodayPopup = homeTodayPopup === task.key ? null : task.key; renderHomeToday(); if (homeTodayPopup) homeTodayDismissTimer = setTimeout(() => { homeTodayPopup = null; renderHomeToday(); }, 3500); }); row.appendChild(button); if (homeTodayPopup === task.key) { const popup = document.createElement("div"); popup.className = "home-todo-popup"; popup.id = `home-todo-${task.key}`; popup.textContent = task.open; row.appendChild(popup); } homeTodayList.appendChild(row); });
 }
 
 async function loadHomeTodaySteps() {
-    const token = sessionStorage.getItem("gymPactSessionToken");
-    if (!token || !currentChallenge?.id || !currentChallenge.requirements?.some(item => item.type === "steps")) { homeTodayStepData = null; renderHomeToday(); return; }
-    const { data, error } = await GymPactSupabase.getClient().functions.invoke("get-step-breakdown", { body: { sessionToken: token, pactId: currentChallenge.id } });
-    homeTodayStepData = !error && data?.people ? data : null; renderHomeToday();
+    // Today's pace comes with get-current-pact. Do not fetch a duplicate
+    // two-person, seven-day breakdown merely to render Home's one-line task.
+    homeTodayStepData = null;
+    renderHomeToday();
 }
 
 
@@ -3590,7 +3532,15 @@ function setDashboardRefreshFeedback(message = "") {
 }
 
 
-async function refreshDashboard() {
+async function refreshDashboard(options = {}) {
+
+    // A quick app switch should not replay Home's complete fetch bundle. A
+    // manual refresh and saves always bypass this small resume freshness window.
+    if (options?.background === true && Date.now() - lastDashboardRefreshAt < 30_000) {
+
+        return;
+
+    }
 
     if (dashboardRefreshInFlight) {
 
@@ -3621,6 +3571,7 @@ async function refreshDashboard() {
             const failures = results.filter(result => result.status === "rejected");
             if (failures.length === results.length) throw failures[0].reason;
             if (failures.length) console.warn("A non-critical dashboard refresh request failed.", failures);
+            lastDashboardRefreshAt = Date.now();
 
         } catch (error) {
 
@@ -4231,7 +4182,7 @@ document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
 
         if (activeDashboardTab === "overview") refreshHomeGreeting();
-        refreshDashboard();
+        refreshDashboard({ background: true });
 
     }
 
@@ -5077,7 +5028,7 @@ saveExerciseSetButton.addEventListener("click", async () => {
         logExerciseSetModal.style.display = "none";
         await loadExerciseTrackers({ preserveOnError: true });
         await loadCurrentChallenge({ preserveOnError: true });
-        if (isStepsTracker && currentChallenge?.id) {
+        if (isStepsTracker && currentChallenge?.id && activeDashboardTab === "progress" && progressSelectedRequirementType === "steps") {
             pactStepBreakdown = null;
             pactStepBreakdownPactId = null;
             pactStepBreakdownRequest = null;

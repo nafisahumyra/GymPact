@@ -206,7 +206,10 @@ export async function getPactRequirementProgress(
         rawCompleted: raw,
       };
     });
-    return { ...participant, requirements: progress, isComplete: progress.every(item => item.completed >= item.targetAmount) };
+    // Internal composition data: get-current-pact can derive today's pace
+    // without a second pass through the same three step-total queries.
+    const stepSummary = stepSummaries.find(item => item.userId === participant.userId)?.summary ?? null;
+    return { ...participant, requirements: progress, isComplete: progress.every(item => item.completed >= item.targetAmount), stepSummary };
   });
 }
 

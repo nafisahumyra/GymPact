@@ -2,7 +2,10 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { getAdminClient, verifyGymPactSession } from "../_shared/gympact-session.ts";
 import { finalizeDueActivePacts } from "../_shared/pact-finalization.ts";
 import {
+  addUtcDays,
   getPactWindow,
+  getLocalMidnightUtc,
+  getPactLocalDate,
   getPactRequirementProgress,
   getPactRequirements,
 } from "../_shared/pact-requirements.ts";
@@ -94,6 +97,7 @@ async function renewalCandidate(
 async function mapPact(
   admin: ReturnType<typeof getAdminClient>,
   pact: Record<string, unknown>,
+  viewerId: string | null,
 ) {
   const participantDetails = Array.isArray(pact.pact_participants)
     ? pact.pact_participants
@@ -141,6 +145,36 @@ async function mapPact(
       target: workouts?.targetAmount ?? 0,
     };
   });
+
+  // Home only needs the signed-in athlete's current-day pace. The complete
+  // seven-day breakdown stays lazy for the Week tab's Steps selection.
+  const stepsRequirement = requirements.find(requirement => requirement.type === "steps");
+  const viewerProgress = requirementProgress.find(participant => participant.userId === viewerId);
+  let todayStepPacing: { localDate: string; total: number | null; suggestedSteps: number; target: number; weeklyTotal: number } | null = null;
+  if (stepsRequirement && viewerProgress?.stepSummary && viewerId) {
+    const eligibleDates: string[] = [];
+    for (let date = String(pact.start_date); date <= String(pact.end_date); date = addUtcDays(date, 1)) {
+      if (getLocalMidnightUtc(date) >= new Date(pactWindow.start) && getLocalMidnightUtc(addUtcDays(date, 1)) <= pactWindow.endExclusive) eligibleDates.push(date);
+    }
+    const today = getPactLocalDate(new Date());
+    const todayIndex = eligibleDates.indexOf(today);
+    if (todayIndex >= 0) {
+      const summary = viewerProgress.stepSummary;
+      const prior = eligibleDates.slice(0, todayIndex).reduce((total, date) => total + (summary.explicitByDate.get(date) ?? summary.legacyByDate.get(date) ?? 0), 0);
+      const todayTotal = summary.explicitByDate.get(today) ?? summary.legacyByDate.get(today) ?? null;
+      const { data: paceReference, error: paceReferenceError } = await admin
+        .from("daily_step_pace_references")
+        .select("suggested_steps")
+        .eq("pact_id", String(pact.id))
+        .eq("user_id", viewerId)
+        .eq("local_date", today)
+        .eq("data_environment", dataEnvironment)
+        .maybeSingle();
+      if (paceReferenceError) throw paceReferenceError;
+      const calculatedPace = Math.max(0, Math.ceil((stepsRequirement.targetAmount - prior) / (eligibleDates.length - todayIndex)));
+      todayStepPacing = { localDate: today, total: todayTotal, suggestedSteps: Number(paceReference?.suggested_steps ?? calculatedPace), target: stepsRequirement.targetAmount, weeklyTotal: summary.total };
+    }
+  }
 
   const participantDetailsWithPhotos = await Promise.all(participantDetails.map(async participant => {
     if (!participant.profilePhotoPath) return { userId: participant.userId, displayName: participant.displayName, profilePhotoUrl: null };
@@ -201,6 +235,7 @@ async function mapPact(
     endsAt: pactWindow.endExclusive.toISOString(),
     cancelledAt: pact.cancelled_at,
     progress,
+    todayStepPacing,
     workoutDays,
   };
 }
@@ -243,8 +278,8 @@ serve(async (request) => {
       throw error;
     }
 
-    const mappedPact = pact ? await mapPact(admin, pact) : null;
     const viewerId = session.athlete_id ?? null;
+    const mappedPact = pact ? await mapPact(admin, pact, viewerId) : null;
     const candidate = !mappedPact ? await weeklyCandidate(admin, viewerId) : null;
     const renewal = !mappedPact ? await renewalCandidate(admin, viewerId, environment) : null;
 
