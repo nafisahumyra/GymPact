@@ -3753,7 +3753,7 @@ function renderHomeMonthPactDetail() {
     if (completionDate && /^\d{4}-\d{2}-\d{2}$/.test(completionDate)) events.push({ date: completionDate, createdAt: selected.completedAt, id: "goal-achieved", kind: "achievement" });
     sortMonthlyJourneyEntries(events).forEach(entry => {
         const item = document.createElement("li");
-        item.className = `home-month-journey-event${entry.kind === "achievement" ? " is-achievement" : ""}${entry.isLatest ? " is-latest" : ""}`;
+        item.className = `home-month-journey-event${entry.kind === "achievement" ? " is-achievement" : ""}${entry.isLatest && !selected.completedAt ? " is-latest" : ""}`;
         const dot = document.createElement("span"); dot.className = "home-month-journey-dot"; dot.setAttribute("aria-hidden", "true");
         if (entry.kind === "achievement") dot.textContent = "✓";
         const date = document.createElement("time"); date.dateTime = entry.date; date.textContent = formatMonthDate(entry.date);
