@@ -884,7 +884,7 @@ body.dashboard-page {
 .home-month-journey-event { position: relative; padding: 0 0 29px 31px; }.home-month-journey-event:not(:last-child)::after { position: absolute; top: 15px; bottom: 0; left: 6px; width: 1px; background: #3b503a; content: ""; }
 .home-month-journey-dot { position: absolute; top: 5px; left: 0; box-sizing: border-box; width: 13px; height: 13px; border: 1px solid #83987a; border-radius: 50%; background: #15261a; }.home-month-journey-event.is-latest:not(.is-start) .home-month-journey-dot { border-color: #a2e97b; background: #a2e97b; box-shadow: 0 0 0 4px #a2e97b12; }.home-month-journey-event.is-start { padding-bottom: 0; }.home-month-journey-event.is-start .home-month-journey-dot { border-color: #6d8564; background: #33462f; }
 .home-month-journey-event time { display: block; color: #e4eedf; font-size: 14px; font-weight: 500; }.home-month-journey-event p { margin: 6px 0 0; color: #afc1aa; font-size: 14px; font-weight: 400; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }.home-month-journey-event.is-start p { color: #99af93; font-size: 13px; }
-.home-month-detail-consequence { display: flex; gap: 12px; margin-top: 38px; padding: 22px 4px; border-bottom: 1px solid #405043; }
+.home-month-detail-consequence { display: flex; gap: 12px; margin-top: 38px; padding: 22px 4px; }
 .home-month-detail-consequence > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: rgba(206, 80, 70, .16); color: #ef766c; }
 .home-month-detail-consequence > span svg { width: 21px; height: 21px; }
 .home-month-detail-consequence small { color: #b0c19f; font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }

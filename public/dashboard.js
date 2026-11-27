@@ -3710,8 +3710,10 @@ function sortMonthlyJourneyEntries(entries) {
 
 function canAddMonthlyJourneyCheckin(participantId) {
     const today = `${currentMonthDate().year}-${currentMonthDate().month}-${currentMonthDate().day}`;
+    const commitment = monthlyPact?.commitments?.find(item => item.userId === participantId);
     return participantId === sessionStorage.getItem("gymPactSelectedAthleteId")
         && monthlyPact?.status === "active"
+        && !commitment?.completedAt
         && today >= monthlyPact.monthStart
         && today <= monthlyPact.monthEnd;
 }
