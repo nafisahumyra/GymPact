@@ -194,7 +194,7 @@ async function restoreAthleteSelection() {
 
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);
-            window.location.href = "dashboard.html";
+            window.location.href = "dashboard.html?build=performance-v4";
             return;
 
         }
@@ -322,7 +322,7 @@ userCards.forEach(card => {
             sessionStorage.setItem("gymPactSelectedAthleteId", athlete.id);
             localStorage.setItem("currentUser", athlete.display_name);
 
-            window.location.href = "dashboard.html";
+            window.location.href = "dashboard.html?build=performance-v4";
 
         } catch (error) {
 
