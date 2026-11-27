@@ -3157,7 +3157,10 @@ function renderProgressRace() {
     }
     const selectedStripRequirement = selectedParticipant?.requirements?.find(requirement => requirement.type === progressSelectedRequirementType) || null;
     const showingStepsStrip = progressSelectedRequirementType === "steps" && Boolean(selectedStripRequirement);
-    if (showingStepsStrip && pactStepBreakdownPactId !== challenge?.id) loadPactStepBreakdown(challenge);
+    if (showingStepsStrip && pactStepBreakdownPactId !== challenge?.id) {
+        pactStepBreakdown = null;
+        loadPactStepBreakdown(challenge);
+    }
 
     const days = challenge ? addProgressDays(challenge.startDate, challenge.endDate) : Array.from({ length: 7 }, (_, index) => {
 
