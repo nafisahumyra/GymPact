@@ -720,25 +720,37 @@ body.dashboard-page {
 .home-weekly-pact-copy strong { color: var(--text); font-size: 16px; font-weight: 500; }
 .home-weekly-pact-chevron { display: grid; place-items: center; width: 24px; height: 24px; color: #d3dbd4; }
 .home-weekly-pact-chevron svg { width: 24px; height: 24px; }
-.pact-progress-page { display: grid; gap: 0; max-width: 760px; padding: max(4px, env(safe-area-inset-top)) 0 calc(132px + env(safe-area-inset-bottom)); font-weight: 400; }
+.pact-progress-page { display: grid; gap: 0; max-width: 440px; padding: max(4px, env(safe-area-inset-top)) 0 calc(132px + env(safe-area-inset-bottom)); font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-weight: 400; }
 .pact-progress-page[hidden] { display: none; }
-.pact-progress-back { display: inline-flex; justify-self: start; align-items: center; gap: 4px; min-height: 44px; padding: 6px 0; border: 0; background: transparent; color: #a7d095; font-size: 14px; font-weight: 400; box-shadow: none; }
+.pact-progress-back { display: inline-flex; justify-self: start; align-items: center; gap: 4px; min-height: 44px; padding: 0; border: 0; background: transparent; color: #b6d7a5; font-size: 13px; font-weight: 400; box-shadow: none; }
 .pact-progress-back:hover:not(:disabled), .pact-progress-back:focus-visible { background: transparent; color: var(--green); box-shadow: none; transform: none; }
 .pact-progress-back svg { width: 16px; height: 16px; }
-.pact-progress-page > h2 { margin: 16px 0 0; color: var(--text); font-size: 24px; font-weight: 500; letter-spacing: -.03em; line-height: 1.2; }
-.pact-progress-dates { margin: 8px 0 0; color: #aab8ad; font-size: 14px; font-weight: 400; font-variant-numeric: tabular-nums; }
-.pact-progress-participants { display: grid; margin-top: 24px; }
-.pact-progress-participant { display: grid; gap: 16px; padding: 12px 0; }
-.pact-progress-participant:first-child { padding-top: 0; }
-.pact-progress-participant.has-divider { border-top: 1px solid #405046; }
-.pact-progress-participant h3 { display: flex; align-items: baseline; gap: 8px; margin: 0; color: var(--text); font-size: 18px; font-weight: 500; letter-spacing: -.02em; }
-.pact-progress-participant h3 small { color: #a7b4a9; font-size: 12px; font-weight: 400; }
-.pact-progress-requirement { display: grid; gap: 7px; }
-.pact-progress-requirement + .pact-progress-requirement { margin-top: 16px; }
-.pact-progress-requirement > div:first-child { display: flex; justify-content: space-between; gap: 14px; color: #c4cec6; font-size: 14px; font-weight: 400; line-height: 1.35; }
-.pact-progress-requirement strong { flex: 0 0 auto; color: #f0f3ef; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.pact-progress-bar { height: 5px; overflow: hidden; border-radius: 4px; background: #303e32; }
-.pact-progress-bar > span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--green); }
+.pact-progress-page > h2 { margin: 18px 0 3px; color: #edf2e9; font-size: 25px; font-weight: 650; letter-spacing: -.65px; line-height: 1.2; }
+.pact-progress-dates { margin: 0 0 26px; color: #a8bba6; font-size: 13px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.pact-progress-participants { display: grid; }
+.pact-progress-legend { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; padding: 17px 0; border-top: 1px solid #425344; }
+.pact-progress-legend > span { display: flex; align-items: center; gap: 7px; min-width: 0; color: #edf2e9; font-size: 13px; flex-wrap: wrap; }
+.pact-progress-legend i { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; background: currentColor; }
+.pact-progress-legend .is-you { color: #eee078; }
+.pact-progress-legend .is-partner { color: #a1bce7; }
+.pact-progress-legend small { color: #a2b59e; font-size: 11px; font-weight: 400; }
+.pact-progress-metric { padding: 22px 0 27px; border-bottom: 1px solid #425344; }
+.pact-progress-metric h3 { margin: 0 0 14px; color: #bbcab3; font-size: 12px; font-weight: 500; letter-spacing: 1.1px; line-height: 1.3; text-transform: uppercase; }
+.pact-progress-comparison { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+.pact-progress-person { min-width: 0; }
+.pact-progress-person.is-you { color: #eee078; }
+.pact-progress-person.is-partner { color: #a1bce7; }
+.pact-progress-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; margin-bottom: 13px; font-variant-numeric: tabular-nums; }
+.pact-progress-value strong { color: currentColor; font-size: 34px; font-weight: 400; letter-spacing: -1px; line-height: 1.2; }
+.pact-progress-value > span { color: #a7b89f; font-size: 16px; font-weight: 400; }
+.pact-progress-value.is-steps { display: block; }
+.pact-progress-value.is-steps strong { display: block; font-size: 30px; letter-spacing: -.9px; overflow-wrap: anywhere; }
+.pact-progress-value.is-steps > span { display: block; margin-top: 3px; font-size: 12px; }
+.pact-progress-segments { display: flex; gap: 6px; }
+.pact-progress-segments b { flex: 1 1 0; min-width: 0; height: 12px; border-radius: 4px; background: currentColor; }
+.pact-progress-segments .is-empty { background: #344638; }
+.pact-progress-comparison-bar { height: 7px; overflow: hidden; border-radius: 5px; background: #344638; }
+.pact-progress-comparison-bar > span { display: block; width: 0; height: 100%; border-radius: inherit; background: currentColor; }
 .pact-steps-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 9px; color: #aebfac; font-size: 11px; }
 .pact-steps-strip[aria-busy="true"] { display: block; color: #aebfac; }
 .pact-steps-day { display: grid; justify-items: center; gap: 5px; min-width: 0; padding: 6px 0; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; box-shadow: none; }
@@ -750,10 +762,23 @@ body.dashboard-page {
 .pact-steps-ring b { position: relative; color: #dbe5da; font-size: 10px; font-weight: 400; }
 .pact-steps-day small { max-width: 100%; overflow: hidden; color: #aebfac; font-size: 10px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
 .pact-steps-guide { grid-column: 1 / -1; margin: 8px 1px 0; color: #aebfac; font-size: 12px; line-height: 1.45; }
-.pact-progress-wager { display: grid; gap: 4px; padding-top: 24px; border-top: 1px solid #405046; }
-.pact-progress-wager h3 { margin: 0; color: #aab8ad; font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; }
-.pact-progress-wager p { margin: 0; color: #c4cec6; font-size: 14px; font-weight: 400; line-height: 1.5; }
-.pact-progress-wager .pact-progress-outcome { color: var(--muted); font-size: 14px; }
+.pact-progress-wager { display: flex; align-items: flex-start; gap: 13px; margin-top: 21px; padding: 16px; border: 1px solid #354b36; border-radius: 15px; background: #1b2a1f; }
+.pact-progress-wager-icon { display: grid; place-items: center; width: 35px; height: 35px; flex: 0 0 35px; border-radius: 11px; }
+.pact-progress-wager.is-reward .pact-progress-wager-icon { color: #eee078; background: #34442b; }
+.pact-progress-wager.is-consequence .pact-progress-wager-icon { color: #efab8d; background: #3b3026; }
+.pact-progress-wager-icon svg { width: 18px; height: 18px; }
+.pact-progress-wager > div { min-width: 0; flex: 1; }
+.pact-progress-wager h3 { margin: 0; color: #d7e0cd; font-size: 12px; font-weight: 500; line-height: 1.3; }
+.pact-progress-wager h3 > span { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
+.pact-progress-wager h3 small { padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 400; }
+.pact-progress-wager.is-reward h3 small { color: #dcd79a; background: #343d27; }
+.pact-progress-wager.is-consequence h3 small { color: #e9b79f; background: #3b3026; }
+.pact-progress-wager p { margin: 5px 0 0; color: #eef2e7; font-size: 14px; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; }
+.pact-progress-wager .pact-progress-outcome { color: #bacabd; }
+@media (max-width: 350px) {
+    .pact-progress-legend, .pact-progress-comparison { gap: 16px; }
+    .pact-progress-value.is-steps strong { font-size: 27px; }
+}
 @media (max-width: 370px) {
     .home-weekly-pact-card { padding: 18px 12px; border-radius: 20px; }
     .home-weekly-pact-rings { gap: 6px; }

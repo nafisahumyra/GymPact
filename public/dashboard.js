@@ -1374,79 +1374,165 @@ function renderPactProgressDetails(challenge) {
 
     back.className = "pact-progress-back";
     back.type = "button";
-    back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg><span>Back to Home</span>';
+    back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg><span>Home</span>';
     back.addEventListener("click", closePactProgressDetails);
     heading.id = "pact-progress-title";
     heading.textContent = "Pact progress";
     dateRange.className = "pact-progress-dates";
-    dateRange.textContent = `${formatShortPactDate(challenge.startDate)}–${formatShortPactDate(challenge.endDate)}, ${new Date(`${challenge.endDate}T12:00:00`).getFullYear()}`;
+    dateRange.textContent = formatPactComparisonDateRange(challenge.startDate, challenge.endDate);
     participantList.className = "pact-progress-participants";
+    participantList.appendChild(createPactComparisonLegend(participants, selectedAthleteId));
 
-    participants.forEach((participant, index) => {
-
-        const section = document.createElement("section");
-        const participantHeading = document.createElement("h3");
-        const name = document.createElement("span");
-
-        section.className = "pact-progress-participant";
-        if (index > 0) section.classList.add("has-divider");
-        name.textContent = participant.displayName || "Athlete";
-        participantHeading.appendChild(name);
-
-        if (participant.userId === selectedAthleteId) {
-
-            const you = document.createElement("small");
-            you.textContent = "You";
-            participantHeading.appendChild(you);
-
-        }
-
-        section.appendChild(participantHeading);
-
-        (participant.requirements || []).forEach(requirement => {
-
-            const row = document.createElement("div");
-            const labels = document.createElement("div");
-            const label = document.createElement("span");
-            const value = document.createElement("strong");
-            const bar = document.createElement("div");
-            const fill = document.createElement("span");
-
-            row.className = "pact-progress-requirement";
-            label.textContent = getRequirementLabel(requirement.type);
-            value.textContent = formatRequirementProgress(requirement);
-            labels.append(label, value);
-            bar.className = "pact-progress-bar";
-            fill.style.width = `${getRequirementProgressPercent(requirement)}%`;
-            bar.appendChild(fill);
-            row.append(labels, bar);
-            section.appendChild(row);
-
-        });
-
-        participantList.appendChild(section);
-
-    });
+    const requirementTypes = [...new Set(participants.flatMap(participant => (participant.requirements || []).map(requirement => requirement.type)))];
+    requirementTypes.forEach(type => participantList.appendChild(createPactComparisonMetric(type, participants, selectedAthleteId)));
 
     const wager = document.createElement("section");
     const wagerTitle = document.createElement("h3");
     const wagerCopy = document.createElement("p");
 
-    wager.className = "pact-progress-wager";
-    wagerTitle.textContent = "Wager";
-    wagerCopy.textContent = `${challenge.wagerType === "reward" ? "Reward" : "Punishment"}: ${challenge.wagerDescription || "Not set."}`;
-    wager.append(wagerTitle, wagerCopy);
+    wager.className = `pact-progress-wager is-${challenge.wagerType === "reward" ? "reward" : "consequence"}`;
+    const icon = document.createElement("span");
+    const wagerContent = document.createElement("div");
+    const wagerLabel = document.createElement("span");
+    const wagerType = document.createElement("small");
+    icon.className = "pact-progress-wager-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = challenge.wagerType === "reward"
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12h18M12 8H8.5a2.5 2.5 0 1 1 2.5-2.5V8Zm0 0h3.5A2.5 2.5 0 1 0 13 5.5V8Z"></path></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 0c4-3 7 3 14 0v10c-7 3-10-3-14 0"></path></svg>';
+    wagerLabel.textContent = "Wager";
+    wagerType.textContent = challenge.wagerType === "reward" ? "Reward" : "Consequence";
+    wagerLabel.appendChild(wagerType);
+    wagerTitle.appendChild(wagerLabel);
+    wagerCopy.textContent = challenge.wagerDescription || "Not set.";
+    wagerContent.append(wagerTitle, wagerCopy);
+    wager.append(icon, wagerContent);
 
     if (challenge.status !== "active") {
 
         const outcome = document.createElement("p");
         outcome.className = "pact-progress-outcome";
         outcome.textContent = getChallengeStatusText(challenge.status, challenge);
-        wager.appendChild(outcome);
+        wagerContent.appendChild(outcome);
 
     }
 
     pactProgressPage.append(back, heading, dateRange, participantList, wager);
+
+}
+
+function formatPactComparisonDateRange(startDate, endDate) {
+
+    const start = new Date(`${startDate}T12:00:00`);
+    const end = new Date(`${endDate}T12:00:00`);
+    const startMonth = start.toLocaleDateString(undefined, { month: "short" });
+    const endMonth = end.toLocaleDateString(undefined, { month: "short" });
+    const year = end.getFullYear();
+
+    return start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()
+        ? `${startMonth} ${start.getDate()}–${end.getDate()}, ${year}`
+        : `${startMonth} ${start.getDate()}–${endMonth} ${end.getDate()}, ${year}`;
+
+}
+
+function createPactComparisonLegend(participants, selectedAthleteId) {
+
+    const legend = document.createElement("div");
+    legend.className = "pact-progress-legend";
+    participants.slice(0, 2).forEach((participant, index) => {
+
+        const item = document.createElement("span");
+        const dot = document.createElement("i");
+        const name = document.createElement("span");
+        const qualifier = document.createElement("small");
+
+        item.className = `is-${participant.userId === selectedAthleteId ? "you" : "partner"}`;
+        dot.setAttribute("aria-hidden", "true");
+        name.textContent = participant.displayName || `Athlete ${index + 1}`;
+        if (participant.userId === selectedAthleteId) qualifier.textContent = " · You";
+        item.append(dot, name, qualifier);
+        legend.appendChild(item);
+
+    });
+    return legend;
+
+}
+
+function createPactComparisonMetric(type, participants, selectedAthleteId) {
+
+    const metric = document.createElement("section");
+    const title = document.createElement("h3");
+    const comparison = document.createElement("div");
+    const isSegmented = type === "workouts";
+
+    metric.className = "pact-progress-metric";
+    title.textContent = getRequirementLabel(type);
+    comparison.className = "pact-progress-comparison";
+    participants.slice(0, 2).forEach((participant, index) => {
+
+        const requirement = (participant.requirements || []).find(item => item.type === type);
+        comparison.appendChild(createPactComparisonPerson(requirement, participant, selectedAthleteId, type, isSegmented, index));
+
+    });
+    metric.append(title, comparison);
+    return metric;
+
+}
+
+function createPactComparisonPerson(requirement, participant, selectedAthleteId, type, useSegments, index) {
+
+    const person = document.createElement("div");
+    const value = document.createElement("div");
+    const achieved = document.createElement("strong");
+    const target = document.createElement("span");
+    const completed = Number(requirement?.completed) || 0;
+    const targetAmount = Number(requirement?.targetAmount) || 0;
+    const percent = getRequirementProgressPercent(requirement);
+    const isYou = participant.userId === selectedAthleteId;
+    const displayName = participant.displayName || `Athlete ${index + 1}`;
+
+    person.className = `pact-progress-person is-${isYou ? "you" : "partner"}`;
+    person.setAttribute("aria-label", `${displayName}: ${completed.toLocaleString()} of ${targetAmount.toLocaleString()} ${getRequirementLabel(type)}`);
+    value.className = `pact-progress-value${type === "steps" ? " is-steps" : ""}`;
+    achieved.textContent = completed.toLocaleString();
+    target.textContent = `/ ${targetAmount.toLocaleString()}`;
+    value.append(achieved, target);
+    person.appendChild(value);
+
+    if (useSegments && targetAmount > 0 && targetAmount <= 12) {
+
+        const segments = document.createElement("div");
+        const cappedCompleted = Math.min(Math.max(0, Math.floor(completed)), targetAmount);
+        segments.className = "pact-progress-segments";
+        segments.setAttribute("role", "img");
+        segments.setAttribute("aria-label", `${cappedCompleted} of ${targetAmount} complete`);
+        for (let index = 0; index < targetAmount; index += 1) {
+
+            const segment = document.createElement("b");
+            segment.classList.toggle("is-empty", index >= cappedCompleted);
+            segments.appendChild(segment);
+
+        }
+        person.appendChild(segments);
+
+    } else {
+
+        const bar = document.createElement("div");
+        const fill = document.createElement("span");
+
+        bar.className = "pact-progress-comparison-bar";
+        bar.setAttribute("role", "progressbar");
+        bar.setAttribute("aria-label", `${displayName} ${getRequirementLabel(type)}`);
+        bar.setAttribute("aria-valuemin", "0");
+        bar.setAttribute("aria-valuemax", String(Math.max(targetAmount, 0)));
+        bar.setAttribute("aria-valuenow", String(Math.max(completed, 0)));
+        fill.style.width = `${percent}%`;
+        bar.appendChild(fill);
+        person.appendChild(bar);
+
+    }
+
+    return person;
 
 }
 
