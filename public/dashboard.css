@@ -251,9 +251,9 @@ body.dashboard-page {
 .dashboard-page.is-overview-tab .dashboard-content-inner { padding-top: 20px; }
 .home-greeting-section { margin: 0 0 20px; }
 .home-greeting-line,
-.home-greeting-name { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overflow-wrap: anywhere; }
-.home-greeting-line { color: var(--muted); font-size: 14px; font-weight: 400; line-height: 1.35; }
-.home-greeting-name { margin-top: 4px; color: var(--text); font-size: 28px; font-weight: 500; line-height: 1.2; }
+.home-greeting-name { margin: 0; overflow-wrap: anywhere; }
+.home-greeting-line { color: #c6bb83; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; font-weight: 400; line-height: 1.35; }
+.home-greeting-name { margin-top: 4px; color: #f1f2e9; font-family: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 32px; font-weight: 700; line-height: 1.08; letter-spacing: -.035em; }
 
 .dashboard-bottom-nav {
     position: absolute;
