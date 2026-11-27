@@ -3495,16 +3495,26 @@ function renderHomeToday() {
     const ownMonth = monthlyPact?.status === "active" && monthlyPact.commitments?.find(item => item.userId === athleteId);
     const checkinToday = Boolean(ownMonth && monthlyPact.checkins?.some(item => item.userId === athleteId && item.date === today));
     if (ownMonth && (!ownMonth.completedAt || getCalendarDayInGymPactTimeZone(ownMonth.completedAt) === today)) tasks.push({ key: "month", label: "Work toward your monthly goal", done: Boolean(ownMonth.completedAt) || checkinToday, open: Boolean(ownMonth.completedAt) || checkinToday ? "Check-in submitted" : "Add a check-in to mark this complete" });
-    const steps = ownWeekly?.requirements?.find(item => item.type === "steps"); const stepPacing = currentChallenge?.todayStepPacing;
+    const steps = ownWeekly?.requirements?.find(item => item.type === "steps"); const stepPacing = currentChallenge?.todayStepPacing || homeTodayStepData?.pacing;
+    if (steps && !stepPacing) tasks.push({ key: "steps", label: "Checking today’s steps…", done: false, loading: true, open: "Checking today’s steps…" });
     if (steps && stepPacing && Number(stepPacing.weeklyTotal) < Number(stepPacing.target)) { const remaining = Math.max(0, Number(stepPacing.suggestedSteps) - Number(stepPacing.total || 0)); tasks.push({ key: "steps", label: remaining ? `Walk ${remaining.toLocaleString()} steps` : "Today’s step pace reached", done: remaining === 0, open: remaining === 0 ? "Today’s step pace reached" : "Update step tracker" }); }
     homeTodaySection.hidden = tasks.length === 0 || activeDashboardTab !== "overview" || homeMonthPactDetailOpen || pactProgressDetailsOpen; homeTodayCount.textContent = `${tasks.filter(task => task.done).length} of ${tasks.length}`; homeTodayList.replaceChildren();
-    tasks.forEach(task => { const row = document.createElement("div"); row.className = "home-todo-row"; const button = document.createElement("button"); button.type = "button"; button.className = `home-todo${task.done ? " is-complete" : ""}`; button.setAttribute("aria-expanded", String(homeTodayPopup === task.key)); const box = document.createElement("span"); box.className = "home-todo-box"; box.setAttribute("aria-hidden", "true"); box.textContent = task.done ? "✓" : ""; const label = document.createElement("span"); label.textContent = task.label; button.append(box, label); button.addEventListener("click", event => { event.stopPropagation(); clearTimeout(homeTodayDismissTimer); homeTodayPopup = homeTodayPopup === task.key ? null : task.key; renderHomeToday(); if (homeTodayPopup) homeTodayDismissTimer = setTimeout(() => { homeTodayPopup = null; renderHomeToday(); }, 3500); }); row.appendChild(button); if (homeTodayPopup === task.key) { const popup = document.createElement("div"); popup.className = "home-todo-popup"; popup.id = `home-todo-${task.key}`; popup.textContent = task.open; row.appendChild(popup); } homeTodayList.appendChild(row); });
+    tasks.forEach(task => { const row = document.createElement("div"); row.className = "home-todo-row"; const button = document.createElement("button"); button.type = "button"; button.disabled = Boolean(task.loading); button.className = `home-todo${task.done ? " is-complete" : ""}`; button.setAttribute("aria-expanded", String(homeTodayPopup === task.key)); const box = document.createElement("span"); box.className = "home-todo-box"; box.setAttribute("aria-hidden", "true"); box.textContent = task.done ? "✓" : ""; const label = document.createElement("span"); label.textContent = task.label; button.append(box, label); button.addEventListener("click", event => { event.stopPropagation(); clearTimeout(homeTodayDismissTimer); homeTodayPopup = homeTodayPopup === task.key ? null : task.key; renderHomeToday(); if (homeTodayPopup) homeTodayDismissTimer = setTimeout(() => { homeTodayPopup = null; renderHomeToday(); }, 3500); }); row.appendChild(button); if (homeTodayPopup === task.key) { const popup = document.createElement("div"); popup.className = "home-todo-popup"; popup.id = `home-todo-${task.key}`; popup.textContent = task.open; row.appendChild(popup); } homeTodayList.appendChild(row); });
 }
 
 async function loadHomeTodaySteps() {
-    // Today's pace comes with get-current-pact. Do not fetch a duplicate
-    // two-person, seven-day breakdown merely to render Home's one-line task.
-    homeTodayStepData = null;
+    const token = sessionStorage.getItem("gymPactSessionToken");
+    if (!token || !currentChallenge?.id || !currentChallenge.requirements?.some(item => item.type === "steps")) { homeTodayStepData = null; renderHomeToday(); return; }
+    homeTodayStepData = { loading: true };
+    renderHomeToday();
+    try {
+        const { data, error } = await GymPactSupabase.getClient().functions.invoke("get-today-step-pace", { body: { sessionToken: token, dataEnvironment: "production" } });
+        if (error || !data?.pacing || data.pacing.pactId !== currentChallenge?.id) throw error || new Error(data?.error || "Today's Steps were unavailable.");
+        homeTodayStepData = { pacing: data.pacing };
+    } catch (error) {
+        console.warn("Unable to load today's Steps", error);
+        homeTodayStepData = null;
+    }
     renderHomeToday();
 }
 
