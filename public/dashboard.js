@@ -1420,10 +1420,6 @@ function renderPactProgressDetails(challenge) {
             fill.style.width = `${getRequirementProgressPercent(requirement)}%`;
             bar.appendChild(fill);
             row.append(labels, bar);
-            if (requirement.type === "steps") {
-                const strip = createPactStepsStrip(participant, requirement, challenge);
-                row.appendChild(strip);
-            }
             section.appendChild(row);
 
         });
