@@ -3748,7 +3748,18 @@ function renderHomeMonthPactDetail() {
     if (!selected.completedAt && canAddMonthlyJourneyCheckin(selected.userId)) { const add = document.createElement("button"); add.type = "button"; add.className = "home-month-journey-add"; add.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Add check-in'; add.addEventListener("click", () => openMonthlyCheckin(getMonthlyDefaultSelectedDate(monthlyPact))); journeyHead.appendChild(add); }
     const timeline = document.createElement("ol"); timeline.className = "home-month-journey-timeline"; timeline.setAttribute("aria-label", "Monthly check-ins");
     const entries = sortMonthlyJourneyEntries((monthlyPact.checkins || []).filter(entry => entry.userId === selected.userId));
-    entries.forEach((entry, index) => { const item = document.createElement("li"); item.className = "home-month-journey-event"; const dot = document.createElement("span"); dot.className = "home-month-journey-dot"; dot.setAttribute("aria-hidden", "true"); const date = document.createElement("time"); date.dateTime = entry.date; date.textContent = formatMonthDate(entry.date); const text = document.createElement("p"); text.textContent = entry.body; item.append(dot, date, text); if (index === 0) item.classList.add("is-latest"); timeline.appendChild(item); });
+    const completionDate = selected.completedAt ? getCalendarDayInGymPactTimeZone(selected.completedAt) : null;
+    const events = entries.map((entry, index) => ({ ...entry, kind: "checkin", isLatest: index === 0 }));
+    if (completionDate && /^\d{4}-\d{2}-\d{2}$/.test(completionDate)) events.push({ date: completionDate, createdAt: selected.completedAt, id: "goal-achieved", kind: "achievement" });
+    sortMonthlyJourneyEntries(events).forEach(entry => {
+        const item = document.createElement("li");
+        item.className = `home-month-journey-event${entry.kind === "achievement" ? " is-achievement" : ""}${entry.isLatest ? " is-latest" : ""}`;
+        const dot = document.createElement("span"); dot.className = "home-month-journey-dot"; dot.setAttribute("aria-hidden", "true");
+        if (entry.kind === "achievement") dot.textContent = "✓";
+        const date = document.createElement("time"); date.dateTime = entry.date; date.textContent = formatMonthDate(entry.date);
+        const text = document.createElement("p"); text.textContent = entry.kind === "achievement" ? "Goal achieved" : entry.body;
+        item.append(dot, date, text); timeline.appendChild(item);
+    });
     const start = document.createElement("li"); start.className = "home-month-journey-event is-start"; const startDot = document.createElement("span"); startDot.className = "home-month-journey-dot"; startDot.setAttribute("aria-hidden", "true"); const startDate = document.createElement("time"); startDate.dateTime = monthlyPact.monthStart; startDate.textContent = formatMonthDate(monthlyPact.monthStart); const startText = document.createElement("p"); startText.textContent = "Challenge started"; start.append(startDot, startDate, startText); timeline.appendChild(start);
     journey.append(journeyHead, timeline);
 
