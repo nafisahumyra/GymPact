@@ -7,14 +7,14 @@ body {
 /* Home-only daily suggestions. */
 .home-today-section { padding-top: 0; }
 .home-today-section[hidden] { display: none; }
-.home-today-section h2 { margin: 0 0 10px; color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 17px; font-weight: 500; }
-.home-todo-row { position: relative; overflow: visible; }
-.home-todo { display: flex; align-items: center; gap: 13px; width: 100%; min-height: 47px; padding: 11px 0; border: 0; background: transparent; color: #e5ede0; font: 400 15px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-align: left; box-shadow: none; }
+.home-today-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; }.home-today-section h2 { margin: 0; color: #bdcbb8; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 18px; font-weight: 400; }.home-today-heading > span { color: #a5b5a1; font-size: 15px; font-weight: 400; }
+.home-todo-row { position: relative; overflow: visible; }.home-todo-row + .home-todo-row { border-top: 1px solid #2b3e2d; }
+.home-todo { display: flex; align-items: center; gap: 22px; width: 100%; min-height: 76px; padding: 14px 0; border: 0; background: transparent; color: #e5ede0; font: 400 24px/1.25 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-align: left; box-shadow: none; }
 .home-todo:hover, .home-todo:focus-visible { background: transparent; color: #e5ede0; box-shadow: none; transform: none; }
-.home-todo-box { display: grid; place-items: center; box-sizing: border-box; width: 19px; height: 19px; flex: 0 0 19px; border: 1.3px solid #89a17e; border-radius: 5px; color: #b1e78d; font-size: 13px; }
+.home-todo-box { display: grid; place-items: center; box-sizing: border-box; width: 66px; height: 66px; flex: 0 0 66px; border: 2px solid #afc2aa; border-radius: 50%; color: #d5ebcb; font-size: 25px; }
 .home-todo.is-complete > span:last-child { color: #94a38e; text-decoration: line-through; text-decoration-thickness: 1px; }
 .home-todo.is-complete .home-todo-box { border-color: #688d55; background: #314c29; }
-.home-todo-popup { position: absolute; bottom: calc(100% - 2px); left: 31px; z-index: 12; box-sizing: border-box; width: max-content; max-width: calc(100% - 43px); padding: 8px 11px; border: 1px solid #53634d; border-radius: 7px; background: #29372c; color: #d7e4d1; box-shadow: 0 7px 20px #0006; font: 12px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.home-todo-popup { position: absolute; bottom: calc(100% - 2px); left: 80px; z-index: 12; box-sizing: border-box; width: max-content; max-width: calc(100% - 92px); padding: 8px 11px; border: 1px solid #53634d; border-radius: 7px; background: #29372c; color: #d7e4d1; box-shadow: 0 7px 20px #0006; font: 12px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 
 body.dashboard-page {
     display: block;
