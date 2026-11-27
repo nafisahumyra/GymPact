@@ -214,12 +214,45 @@ async function loadDashboardMetrics({ preserveOnError = false } = {}) {
 
     } catch (error) {
 
-        console.error("Unable to load dashboard workout metrics.", error);
-        streakCount.textContent = "Unavailable";
+        // The compact endpoint is the normal fast path. Retain the existing
+        // authoritative history path as a resilience fallback so statistics
+        // never disappear if that endpoint is temporarily unavailable.
+        try {
 
-        if (preserveOnError) {
+            const supabase = GymPactSupabase.getClient();
+            const [workoutResponse, weeklyHistoryResponse, monthlyHistoryResponse] = await Promise.all([
+                supabase.functions.invoke("list-workouts", { body: { sessionToken, dataEnvironment: "production" } }),
+                supabase.functions.invoke("list-completed-pacts", { body: { sessionToken, dataEnvironment: "production" } }),
+                supabase.functions.invoke("monthly-pacts", { body: { action: "list", sessionToken, dataEnvironment: "production" } })
+            ]);
+            if (workoutResponse.error || !Array.isArray(workoutResponse.data?.workouts)) throw workoutResponse.error || new Error("Workout data was unavailable.");
+            if (weeklyHistoryResponse.error || !Array.isArray(weeklyHistoryResponse.data?.pacts)) throw weeklyHistoryResponse.error || new Error("Weekly Pact history was unavailable.");
+            if (monthlyHistoryResponse.error || !Array.isArray(monthlyHistoryResponse.data?.pacts)) throw monthlyHistoryResponse.error || new Error("Month Pact history was unavailable.");
 
-            throw error;
+            const outcomes = [
+                ...weeklyHistoryResponse.data.pacts.map(pact => ({ completedAt: pact.completedAt, successful: pact.result === "both_completed" || (pact.result === "winner" && pact.winnerId === athleteId) })),
+                ...monthlyHistoryResponse.data.pacts.map(pact => {
+                    const commitment = (pact.commitments || []).find(item => item.userId === athleteId);
+                    return { completedAt: pact.finalizedAt || `${pact.monthEnd}T23:59:59-05:00`, successful: Boolean(commitment?.completedByDeadline) };
+                })
+            ].filter(outcome => outcome.completedAt).sort((left, right) => new Date(right.completedAt) - new Date(left.completedAt));
+            let streak = 0;
+            for (const outcome of outcomes) { if (!outcome.successful) break; streak += 1; }
+            workoutCount.textContent = workoutResponse.data.workouts.filter(workout => workout.user_id === athleteId).length.toLocaleString();
+            streakCount.textContent = streak.toLocaleString();
+            console.warn("Dashboard summary failed; used the temporary history fallback.", error);
+            return;
+
+        } catch (fallbackError) {
+
+            console.error("Unable to load dashboard workout metrics.", fallbackError);
+            streakCount.textContent = "Unavailable";
+
+            if (preserveOnError) {
+
+                throw fallbackError;
+
+            }
 
         }
 
@@ -1625,6 +1658,7 @@ function showDashboardTab(tab) {
     renderExerciseTrackers();
 
     if (tab === "activity") loadActivityWorkouts();
+    if (tab === "track" && !exerciseTrackersLoaded) loadExerciseTrackers();
     if (tab === "progress") {
         renderProgressRace();
     }
@@ -3565,7 +3599,6 @@ async function refreshDashboard(options = {}) {
             const results = await Promise.allSettled([
                 loadCurrentChallenge({ preserveOnError: true }),
                 loadDashboardMetrics({ preserveOnError: true }),
-                loadExerciseTrackers({ preserveOnError: true }),
                 loadMonthlyPact({ preserveOnError: true })
             ]);
             const failures = results.filter(result => result.status === "rejected");

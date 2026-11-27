@@ -5,7 +5,6 @@ import {
   addUtcDays,
   getPactWindow,
   getLocalMidnightUtc,
-  getPactLocalDate,
   getPactRequirementProgress,
   getPactRequirements,
 } from "../_shared/pact-requirements.ts";
@@ -157,7 +156,10 @@ async function mapPact(
     for (let date = String(pact.start_date); date <= String(pact.end_date); date = addUtcDays(date, 1)) {
       if (getLocalMidnightUtc(date) >= new Date(pactWindow.start) && getLocalMidnightUtc(addUtcDays(date, 1)) <= pactWindow.endExclusive) eligibleDates.push(date);
     }
-    const today = getPactLocalDate(new Date());
+    // Use the same fixed-format New York date as the rest of this endpoint.
+    // Intl's direct string format is locale/runtime-dependent and did not
+    // always match the ISO pact-date keys.
+    const today = localDay();
     const todayIndex = eligibleDates.indexOf(today);
     if (todayIndex >= 0) {
       const summary = viewerProgress.stepSummary;
