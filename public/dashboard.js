@@ -52,6 +52,8 @@ const dashboardContent = document.getElementById("dashboard-content");
 let pactProgressDetailsOpen = false;
 let pactProgressHomeScrollTop = 0;
 let pactStepBreakdown = null;
+let pactStepBreakdownPactId = null;
+let pactStepBreakdownRequest = null;
 let dailyStepsLoadVersion = 0;
 let homeTodayStepData = null;
 let homeTodayPopup = null;
@@ -1452,9 +1454,11 @@ function renderPactProgressDetails(challenge) {
 
 }
 
-function createPactStepsStrip(participant, requirement, challenge) {
+function createPactStepsStrip(participant, requirement, challenge, { placement = "details" } = {}) {
     const shell = document.createElement("div");
     shell.className = "pact-steps-strip";
+    shell.classList.toggle("is-week-strip", placement === "week");
+    shell.setAttribute("aria-label", `${participant.userId === sessionStorage.getItem("gymPactSelectedAthleteId") ? "Your" : `${participant.displayName}'s`} daily Steps`);
     const data = pactStepBreakdown?.people?.find(person => person.userId === participant.userId);
     if (!data) { shell.setAttribute("aria-busy", "true"); shell.textContent = "Loading daily steps…"; return shell; }
     const target = Number(requirement.targetAmount) || 0;
@@ -1466,14 +1470,18 @@ function createPactStepsStrip(participant, requirement, challenge) {
         weekday.textContent = new Date(`${day.localDate}T12:00:00`).toLocaleDateString(undefined, { weekday: "narrow" });
         date.textContent = new Date(`${day.localDate}T12:00:00`).getDate();
         const amount = day.total === null ? 0 : Number(day.total);
-        ring.className = "pact-steps-ring"; ring.style.setProperty("--step-fill", `${day.total === null || day.isFuture ? 0 : Math.min(100, day.suggestedSteps ? (amount / day.suggestedSteps) * 100 : 100)}%`); ring.appendChild(date);
+        const formattedTotal = day.total === null ? "—" : amount >= 1000 ? `${(amount / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k` : amount.toLocaleString();
+        ring.className = "pact-steps-ring"; ring.style.setProperty("--step-fill", `${day.total === null || day.isFuture ? 0 : Math.min(100, day.suggestedSteps ? (amount / day.suggestedSteps) * 100 : 100)}%`);
+        if (placement === "week") { const amountInside = document.createElement("b"); amountInside.textContent = formattedTotal; ring.appendChild(amountInside); }
+        else ring.appendChild(date);
         total.textContent = day.total === null ? "—" : amount >= 1000 ? `${(amount / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k` : amount.toLocaleString();
         button.setAttribute("aria-label", `${day.localDate}: ${day.total === null ? "no entry" : `${amount.toLocaleString()} steps`}${day.isToday ? ", today" : ""}`);
-        button.append(weekday, ring, total);
+        button.append(weekday, ring);
+        if (placement !== "week") button.appendChild(total);
         if (!day.isFuture) button.addEventListener("click", () => own ? openDailyStepsForDate(day.localDate) : showPartnerStepsReadOnly(participant.displayName, day));
         shell.appendChild(button);
     });
-    if (Number(data.total) >= target) {
+    if (placement !== "week" && Number(data.total) >= target) {
         const note = document.createElement("p"); note.className = "pact-steps-guide";
         note.textContent = "Weekly goal reached";
         shell.appendChild(note);
@@ -1484,12 +1492,20 @@ function createPactStepsStrip(participant, requirement, challenge) {
 async function loadPactStepBreakdown(challenge) {
     const token = sessionStorage.getItem("gymPactSessionToken");
     if (!token || !challenge?.id) return;
+    if (pactStepBreakdownPactId === challenge.id && pactStepBreakdownRequest) return pactStepBreakdownRequest;
+    const requestedPactId = challenge.id;
+    pactStepBreakdownPactId = requestedPactId;
+    pactStepBreakdownRequest = (async () => {
     try {
         const { data, error } = await GymPactSupabase.getClient().functions.invoke("get-step-breakdown", { body: { sessionToken: token, pactId: challenge.id } });
         if (error || data?.error) throw error || new Error(data.error);
+        if (currentChallenge?.id !== requestedPactId) return;
         pactStepBreakdown = data;
         if (pactProgressDetailsOpen) renderPactProgressDetails(currentChallenge);
+        if (activeDashboardTab === "progress") renderProgressRace();
     } catch (error) { console.warn("Unable to load daily Steps", error); }
+    })();
+    return pactStepBreakdownRequest;
 }
 
 function openDailyStepsForDate(localDate) {
@@ -1516,6 +1532,8 @@ function openPactProgressDetails() {
     document.body.classList.remove("is-home-month-detail");
     renderPactProgressDetails(currentChallenge);
     pactStepBreakdown = null;
+    pactStepBreakdownPactId = null;
+    pactStepBreakdownRequest = null;
     loadPactStepBreakdown(currentChallenge);
     dashboardTabContent.forEach(content => {
         content.hidden = true;
@@ -3134,6 +3152,13 @@ function renderProgressRace() {
     // headline totals, and the large scene runner. The road remains shared.
     const selectedParticipant = stripParticipant;
 
+    if (challenge?.requirements?.length && !challenge.requirements.some(requirement => requirement.type === progressSelectedRequirementType)) {
+        progressSelectedRequirementType = challenge.requirements[0].type;
+    }
+    const selectedStripRequirement = selectedParticipant?.requirements?.find(requirement => requirement.type === progressSelectedRequirementType) || null;
+    const showingStepsStrip = progressSelectedRequirementType === "steps" && Boolean(selectedStripRequirement);
+    if (showingStepsStrip && pactStepBreakdownPactId !== challenge?.id) loadPactStepBreakdown(challenge);
+
     const days = challenge ? addProgressDays(challenge.startDate, challenge.endDate) : Array.from({ length: 7 }, (_, index) => {
 
         const date = new Date();
@@ -3150,7 +3175,8 @@ function renderProgressRace() {
     strip.className = `progress-week-strip${challenge ? "" : " is-empty"}`;
     stripHeader.className = "progress-week-strip-header";
     switcher.className = "progress-person-switch";
-    dayButtons.className = "progress-day-buttons";
+    dayButtons.className = showingStepsStrip ? "progress-step-buttons" : "progress-day-buttons";
+    dayButtons.setAttribute("aria-label", showingStepsStrip ? "Daily Steps" : "Workout days");
     summary.className = "progress-day-summary";
     summary.setAttribute("role", "status");
 
@@ -3173,7 +3199,9 @@ function renderProgressRace() {
 
     });
 
-    days.forEach(date => {
+    if (showingStepsStrip) {
+        dayButtons.appendChild(createPactStepsStrip(stripParticipant, selectedStripRequirement, challenge, { placement: "week" }));
+    } else days.forEach(date => {
 
         const button = document.createElement("button");
         const initial = document.createElement("span");
@@ -3203,7 +3231,7 @@ function renderProgressRace() {
 
     });
 
-    if (challenge && progressSelectedDay) {
+    if (!showingStepsStrip && challenge && progressSelectedDay) {
 
         const workouts = stripParticipant?.workoutDays?.filter(workout => workout.date === progressSelectedDay) || [];
         const label = stripParticipant?.userId === viewerId ? "You" : stripParticipant?.displayName || "Your partner";
@@ -3221,7 +3249,7 @@ function renderProgressRace() {
 
     stripHeader.append(switcher);
     strip.append(stripHeader, dayButtons);
-    if (challenge && progressSelectedDay) strip.appendChild(summary);
+    if (!showingStepsStrip && challenge && progressSelectedDay) strip.appendChild(summary);
     progressRaceContainer.appendChild(strip);
 
     if (!challenge || !viewer || !challenge.requirements?.length) {
@@ -3242,14 +3270,7 @@ function renderProgressRace() {
 
     }
 
-    if (!challenge.requirements.some(requirement => requirement.type === progressSelectedRequirementType)) {
-
-        progressSelectedRequirementType = challenge.requirements[0].type;
-
-    }
-
     const selectedType = progressSelectedRequirementType;
-    const selectedRequirement = challenge.requirements.find(requirement => requirement.type === selectedType);
     const selector = document.createElement("div");
     const summaryCard = document.createElement("section");
     const value = requirementTotal(selectedParticipant, selectedType);
@@ -4971,6 +4992,12 @@ saveExerciseSetButton.addEventListener("click", async () => {
         logExerciseSetModal.style.display = "none";
         await loadExerciseTrackers({ preserveOnError: true });
         await loadCurrentChallenge({ preserveOnError: true });
+        if (isStepsTracker && currentChallenge?.id) {
+            pactStepBreakdown = null;
+            pactStepBreakdownPactId = null;
+            pactStepBreakdownRequest = null;
+            await loadPactStepBreakdown(currentChallenge);
+        }
 
         if (data.pactParticipantComplete) {
 

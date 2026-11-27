@@ -455,6 +455,12 @@ body.dashboard-page {
 .progress-person-switch button { min-height: 27px; padding: 4px 9px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: .68rem; font-weight: 750; white-space: nowrap; }
 .progress-person-switch button.is-active { background: rgba(145, 242, 100, .14); color: var(--green); }
 .progress-day-buttons { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.progress-step-buttons { min-width: 0; }
+.progress-step-buttons .pact-steps-strip { margin-top: 0; }
+.progress-step-buttons .pact-steps-day { gap: 5px; min-height: 57px; padding: 0; border-radius: 10px; }
+.progress-step-buttons .pact-steps-ring { width: 32px; height: 32px; }
+.progress-step-buttons .pact-steps-ring b { max-width: 27px; overflow: hidden; font-size: 9px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.progress-step-buttons .pact-steps-day[aria-current="date"] { background: rgba(145,242,100,.07); }
 .progress-day { display: grid; justify-items: center; gap: 7px; min-height: 57px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: .68rem; font-weight: 800; }
 .progress-day > span:last-child { display: block; width: 27px; height: 27px; border: 2px solid #4a5652; border-radius: 50%; background: rgba(17, 22, 22, .76); }
 .progress-day.is-complete > span:last-child { border-color: var(--green); background: rgba(145, 242, 100, .17); box-shadow: 0 0 0 3px rgba(145,242,100,.08); }
